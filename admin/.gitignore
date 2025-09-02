@@ -73,3 +73,6 @@ Thumbs.db
 .firebase
 *-debug.log
 .runtimeconfig.json
+
+serviceAccountKey.json
+**/serviceAccountKey.json
