@@ -9,7 +9,8 @@ import {
   collectionData,
   onSnapshot,
   query,
-  orderBy
+  orderBy,
+  writeBatch
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 

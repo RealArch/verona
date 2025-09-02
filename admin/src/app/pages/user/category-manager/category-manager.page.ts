@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -28,7 +28,7 @@ import { CategoryModalComponent } from './category-modal/category-modal.componen
 export class CategoryManagerPage implements OnInit, OnDestroy {
   private categoriesService = inject(CategoriesService);
   private modalController = inject(ModalController);
-
+  private cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
   categories: Category[] = [];
   categoryTree: Category[] = [];
   private categoriesSub!: Subscription;
@@ -73,13 +73,5 @@ export class CategoryManagerPage implements OnInit, OnDestroy {
     // Aquí deberías agregar una confirmación antes de borrar
     await this.categoriesService.deleteCategory(id);
   }
-  reorderCategories(event: any, list: Category[]) {
-    const from = event.detail.from;
-    const to = event.detail.to;
 
-    const movedItem = list.splice(from, 1)[0]; // quitar del índice original
-    list.splice(to, 0, movedItem); // insertar en el índice destino
-
-    event.detail.complete(); // esto es crucial para que Ionic sepa que terminó
-  }
 }
