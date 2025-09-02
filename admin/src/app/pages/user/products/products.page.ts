@@ -44,6 +44,7 @@ export class ProductsPage implements OnInit {
 
   loadProducts() {
     this.products$ = this.productsService.getProductsByStatus(this.filterStatus);
+    console.log(this.products$)
   }
 
   segmentChanged(event: any) {

@@ -1,12 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent,
   IonItem, IonLabel, IonInput, IonTextarea, IonSelect, IonSelectOption,
   IonGrid, IonRow, IonCol, IonButton, IonIcon, IonFabButton,
-  ToastController, IonSpinner, IonProgressBar, IonCard, IonCardHeader, IonCardContent, IonCardTitle } from '@ionic/angular/standalone';
+  ToastController, IonSpinner, IonProgressBar, IonCard, IonCardHeader, IonCardContent, IonCardTitle
+} from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { save, cloudUploadOutline, folderOpenOutline, cameraOutline, trashOutline, addCircleOutline } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -29,7 +30,7 @@ interface ImageFile {
   templateUrl: './products-form.page.html',
   styleUrls: ['./products-form.page.scss'],
   standalone: true,
-  imports: [IonCardTitle, IonCardContent, IonCardHeader, IonCard, 
+  imports: [IonCardTitle, IonCardContent, IonCardHeader, IonCard,
     CommonModule, ReactiveFormsModule,
     IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent,
     IonItem, IonLabel, IonInput, IonTextarea, IonSelect, IonSelectOption,
@@ -70,7 +71,9 @@ export class ProductFormPage implements OnInit {
       stock: [null, [Validators.required, Validators.min(0)]],
       sku: [''],
       categoryId: [null, Validators.required],
-      status: ['active', Validators.required]
+      status: ['active', Validators.required],
+      fotos: this.fb.array([]) // Array para las fotos
+
     });
   }
 
@@ -93,6 +96,7 @@ export class ProductFormPage implements OnInit {
 
   private checkEditMode() {
     this.productId = this.route.snapshot.paramMap.get('id');
+    console.log(this.productId)
     if (this.productId) {
       this.isEditMode = true;
       this.productsService.getProduct(this.productId).subscribe(product => {
@@ -141,7 +145,7 @@ export class ProductFormPage implements OnInit {
 
   private handleFiles(files: File[]) {
     if (this.isUploading) return;
-    
+
     files.forEach(file => {
       const fileWrapper: ImageFile = {
         file,
@@ -161,7 +165,7 @@ export class ProductFormPage implements OnInit {
     try {
       const user = await firstValueFrom(this.authService.user$);
       if (!user) throw new Error('User not authenticated');
-      
+
       const result = await this.productsService.uploadTempImage(
         fileWrapper.file,
         user.uid,
@@ -170,6 +174,9 @@ export class ProductFormPage implements OnInit {
         }
       );
       fileWrapper.tempPath = result.path;
+      // Añadir la ruta al FormArray 'fotos'
+      const fotos = this.productForm.get('fotos') as FormArray;
+      fotos.push(this.fb.control(result.path));
     } catch (error) {
       console.error('Error uploading image:', error);
       // this.presentToast('Error al subir la imagen', 'danger');
@@ -188,6 +195,12 @@ export class ProductFormPage implements OnInit {
     if (fileWrapper.tempPath) {
       try {
         await this.productsService.deleteTempImage(fileWrapper.tempPath);
+        // Remover la ruta del FormArray 'fotos'
+        const fotos = this.productForm.get('fotos') as FormArray;
+        const fotoIndex = fotos.controls.findIndex(control => control.value === fileWrapper.tempPath);
+        if (fotoIndex > -1) {
+          fotos.removeAt(fotoIndex);
+        }
       } catch (error) {
         console.error('Error deleting temp image', error);
       }
@@ -196,8 +209,45 @@ export class ProductFormPage implements OnInit {
   }
 
   async saveProduct() {
-    // ... (rest of the saveProduct logic, adapted for multiple images)
-  }
+    if (this.productForm.invalid || this.isUploading) {
+      this.presentToast('Por favor, completa el formulario y espera a que terminen de subirse las imágenes.', 'warning');
+      return;
+    }
 
-  // ... (slugify, presentToast, etc.)
+    try {
+      console.log(this.isEditMode)
+      if (this.isEditMode && this.productId) {
+        // Para el modo de edición, solo necesitamos los valores del formulario.
+        // El servicio se encargará de añadir el 'updatedAt'.
+        const productData = this.productForm.value;
+        await this.productsService.updateProduct(this.productId, productData);
+        this.presentToast('Producto actualizado con éxito', 'success');
+      } else {
+        // Para un nuevo producto, añadimos el estado y los timestamps.
+        const newProductData = {
+          ...this.productForm.value,
+          processing: true, // Establece el estado a "processing"
+        };
+        await this.productsService.addProduct(newProductData);
+        this.presentToast('Producto creado con éxito. Se está procesando.', 'success');
+      }
+      this.router.navigate(['/products']);
+    } catch (error) {
+      console.error('Error saving product:', error);
+      this.presentToast('Error al guardar el producto', 'danger');
+    }
+
+
+  }
+  async presentToast(message: string, color: 'success' | 'warning' | 'danger') {
+    const toast = await this.toastCtrl.create({
+      message,
+      duration: 3000,
+      color,
+      position: 'top'
+    });
+    toast.present();
+  }
 }
+
+// ... (slugify, presentToast, etc.)

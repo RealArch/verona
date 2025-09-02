@@ -44,7 +44,7 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/user/products/products.page').then(m => m.ProductsPage)
       },
       {
-        path: 'products/:id',
+        path: 'products/:id/edit',
         loadComponent: () => import('./pages/user/products/products-form/products-form.page').then(m => m.ProductFormPage)
       },
       {

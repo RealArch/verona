@@ -32,9 +32,11 @@ export interface Product {
     thumbnail: string;
     standard: string;
   };
+  fotos: string[]; // Array de rutas de imágenes
   status: 'active' | 'paused' | 'processing';
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  processing?: boolean; // Indica si el producto está en procesamiento
 }
 
 @Injectable({
@@ -52,9 +54,9 @@ export class ProductsService {
   getProductsByStatus(status: 'all' | 'active' | 'paused'): Observable<Product[]> {
     let q;
     if (status === 'all') {
-      q = query(this.productsCollection, orderBy('createdAt', 'desc'));
+      q = query(this.productsCollection);
     } else {
-      q = query(this.productsCollection, where('status', '==', status), orderBy('createdAt', 'desc'));
+      q = query(this.productsCollection, where('status', '==', status));
     }
     return collectionData(q, { idField: 'id' }) as Observable<Product[]>;
   }
@@ -64,18 +66,19 @@ export class ProductsService {
     return docData(productDoc, { idField: 'id' }) as Observable<Product>;
   }
   
-  async addProduct(productData: Partial<Product>, tempImagePath: string): Promise<any> {
-    const payload = {
-      ...productData,
-      tempImagePath
-    };
-    return this.http.post(`${this.API_URL}/products`, payload).toPromise();
+  async addProduct(productData: Partial<Product>): Promise<any> {
+    // addDoc se encarga de añadir el documento a la colección especificada.
+    return addDoc(this.productsCollection, productData);
   }
 
   async updateProduct(id: string, productData: Partial<Product>): Promise<void> {
     const productDoc = doc(this.firestore, `products/${id}`);
-    await updateDoc(productDoc, { ...productData, updatedAt: serverTimestamp() });
+    return updateDoc(productDoc, {
+      ...productData,
+      updatedAt: serverTimestamp()
+    });
   }
+
 
   async deleteProduct(id: string): Promise<void> {
     const productDoc = doc(this.firestore, `products/${id}`);
