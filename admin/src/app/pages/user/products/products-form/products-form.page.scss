@@ -1,40 +1,106 @@
-.image-uploader {
-  border: 2px dashed var(--ion-color-medium);
-  border-radius: 10px;
-  padding: 20px;
-  text-align: center;
+.image-upload-card {
   margin-bottom: 20px;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Responsivo: 3-4 columnas en móvil, más en desktop */
+  gap: 10px;
+  justify-items: center; /* Centrar los items en la cuadrícula */
+
+  // Media query para pantallas más grandes
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+}
+
+.image-item {
   position: relative;
-  min-height: 200px;
+  width: 100%;
+  aspect-ratio: 1 / 1; /* Mantiene la proporción cuadrada */
+  border: 1px solid var(--ion-color-medium-shade, #e0e0e0);
+  border-radius: 8px;
+  overflow: hidden;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  cursor: pointer;
+  background-color: var(--ion-background-color);
 
-  .upload-placeholder {
-    color: var(--ion-color-medium-shade);
+  &.add-more {
+    border: 2px dashed var(--ion-color-medium, #92949c);
+    color: var(--ion-color-medium, #92949c);
+    flex-shrink: 0; // Evita que se encoja
     ion-icon {
-      font-size: 48px;
+      font-size: 3em;
+      margin-bottom: 5px;
+    }
+    p {
+      font-size: 0.9em;
+      margin: 0;
+      text-align: center;
+    }
+    &:hover {
+      background-color: var(--ion-color-light, #f4f5f8);
     }
   }
 
-  .image-preview {
-    max-height: 200px;
+  &.preview-item {
     img {
-      max-height: 200px;
-      width: auto;
-      border-radius: 8px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
+
+    .upload-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      z-index: 10; // Asegura que esté por encima de la imagen
+    }
+
+    ion-spinner {
+      font-size: 2em;
+    }
+
+    ion-progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      --progress-background: var(--ion-color-primary, #3880ff);
+      z-index: 11; // Asegura que esté por encima del overlay
+      height: 5px; // Altura de la barra de progreso
+    }
+
     .remove-btn {
       position: absolute;
-      top: 10px;
-      right: 10px;
-    }
-  }
+      top: 5px;
+      right: 5px;
+      --border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      --padding-start: 0;
+      --padding-end: 0;
+      --padding-top: 0;
+      --padding-bottom: 0;
+      z-index: 12; // Asegura que el botón de eliminar sea clickeable
+      opacity: 0.8;
 
-  .button-group {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 10px;
+      ion-icon {
+        font-size: 1.2em;
+      }
+    }
   }
 }

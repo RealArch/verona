@@ -14,32 +14,34 @@
 
 <ion-content class="ion-padding">
   <form [formGroup]="productForm">
-    <!-- Image Uploader -->
-    <div class="image-uploader" (drop)="onFileDrop($event)" (dragover)="$event.preventDefault()">
-      <div *ngIf="!imagePreviewUrl" class="upload-placeholder">
-        <ion-icon name="cloud-upload-outline"></ion-icon>
-        <p>Arrastra una imagen aquí o presiona para seleccionar</p>
-        <div class="button-group">
-            <ion-button (click)="fileInput.click()">
-                <ion-icon slot="start" name="folder-open-outline"></ion-icon>
-                Buscar
-            </ion-button>
-            <ion-button (click)="takePicture()">
-                <ion-icon slot="start" name="camera-outline"></ion-icon>
-                Tomar Foto
-            </ion-button>
-        </div>
-      </div>
-      <div *ngIf="imagePreviewUrl" class="image-preview">
-        <img [src]="imagePreviewUrl" />
-        <ion-fab-button color="danger" size="small" (click)="removeImage()" class="remove-btn">
-          <ion-icon name="trash-outline"></ion-icon>
-        </ion-fab-button>
-      </div>
-      <input type="file" hidden #fileInput (change)="onFileSelected($event)" accept="image/*" />
-    </div>
+    <ion-card class="image-upload-card">
+      <ion-card-header>
+        <ion-card-title>Imágenes del Producto</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="image-grid" (drop)="onFileDrop($event)" (dragover)="$event.preventDefault()">
 
-    <!-- Product Details -->
+          <div class="image-item add-more" (click)="fileInput.click()">
+            <ion-icon name="add-circle-outline"></ion-icon>
+            <p>Añadir Fotos</p>
+          </div>
+
+          <div *ngFor="let fileWrapper of imageFiles; let i = index" class="image-item preview-item">
+            <img [src]="fileWrapper.previewUrl" />
+            <div class="upload-overlay" *ngIf="fileWrapper.uploading">
+              <ion-spinner name="crescent"></ion-spinner>
+            </div>
+            <ion-progress-bar *ngIf="fileWrapper.uploading" [value]="fileWrapper.progress / 100"></ion-progress-bar>
+            <ion-button color="danger" size="small" class="remove-btn" (click)="removeImage(i)">
+              <ion-icon name="trash-outline"></ion-icon>
+            </ion-button>
+          </div>
+
+          <input type="file" hidden #fileInput (change)="onFileSelected($event)" accept="image/*" multiple />
+        </div>
+      </ion-card-content>
+    </ion-card>
+
     <ion-item>
       <ion-label position="stacked">Nombre del Producto</ion-label>
       <ion-input formControlName="name" type="text" required></ion-input>
@@ -81,6 +83,5 @@
         <ion-select-option value="paused">Pausado</ion-select-option>
       </ion-select>
     </ion-item>
-
   </form>
 </ion-content>

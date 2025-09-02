@@ -14,7 +14,7 @@ import {
   serverTimestamp,
   orderBy
 } from '@angular/fire/firestore';
-import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angular/fire/storage';
+import { Storage, ref, uploadBytes, getDownloadURL, deleteObject, uploadBytesResumable } from '@angular/fire/storage';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
@@ -84,13 +84,33 @@ export class ProductsService {
   }
 
   // Uploads image to a temporary path and returns the full path
-  async uploadTempImage(file: File, userId: string): Promise<{ path: string, url: string }> {
+  async uploadTempImage(
+    file: File, 
+    userId: string, 
+    onProgress: (progress: number) => void
+  ): Promise<{ path: string, url: string }> {
     console.log('Uploading temp image');
     const tempPath = `temp/${userId}/${Date.now()}_${file.name}`;
     const storageRef = ref(this.storage, tempPath);
-    const uploadResult = await uploadBytes(storageRef, file);
-    const downloadUrl = await getDownloadURL(uploadResult.ref);
-    return { path: tempPath, url: downloadUrl };
+    
+    return new Promise((resolve, reject) => {
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          onProgress(progress);
+        },
+        (error) => {
+          console.error("Upload failed", error);
+          reject(error);
+        },
+        async () => {
+          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          resolve({ path: tempPath, url: downloadUrl });
+        }
+      );
+    });
   }
 
   async deleteTempImage(path: string): Promise<void> {
