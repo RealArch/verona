@@ -38,32 +38,25 @@
 
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import '@ionic/angular/css/palettes/dark.system.css';
+// @import '@ionic/angular/css/palettes/dark.system.css';
 
-/* Estilos globales personalizados */
-// ion-content {
-//   --background: #f9fafb;
-// }
+//SHADOWS
+//
+ion-card {
+  border-radius: 15px;
+  // box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 0px;
+  @apply shadow-none;
+  background-color: var(--ion-color-light-shade);
+}
 
-/* Utilidades personalizadas */
-@layer components {
-  .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
-  }
+ion-item.input {
   
-  .btn-primary {
-    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
-  }
-  
-  .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
-  }
-  
-  .input-field {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors duration-200;
-  }
-  
-  .label {
-    @apply block text-sm font-medium text-gray-700 mb-2;
-  }
+    --border-radius: 15px;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 20px 0 10px 0;
 }

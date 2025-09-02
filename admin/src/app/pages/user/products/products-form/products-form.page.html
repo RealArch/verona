@@ -12,76 +12,87 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <form [formGroup]="productForm">
-    <ion-card class="image-upload-card">
-      <ion-card-header>
-        <ion-card-title>Imágenes del Producto</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <div class="image-grid" (drop)="onFileDrop($event)" (dragover)="$event.preventDefault()">
+<ion-content class="ion-padding" color="light">
+  <div class="max-w-4xl mx-auto">
+    <form [formGroup]="productForm">
+      <ion-card class="image-upload-card">
+        <ion-card-header>
+          <ion-card-title>Imágenes del Producto</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4" (drop)="onFileDrop($event)"
+            (dragover)="$event.preventDefault()">
 
-          <div class="image-item add-more" (click)="fileInput.click()">
-            <ion-icon name="add-circle-outline"></ion-icon>
-            <p>Añadir Fotos</p>
-          </div>
-
-          <div *ngFor="let fileWrapper of imageFiles; let i = index" class="image-item preview-item">
-            <img [src]="fileWrapper.previewUrl" />
-            <div class="upload-overlay" *ngIf="fileWrapper.uploading">
-              <ion-spinner name="crescent"></ion-spinner>
+            <div class="image-item add-more" (click)="fileInput.click()">
+              <ion-icon name="add-circle-outline"></ion-icon>
+              <p>Añadir Fotos</p>
             </div>
-            <ion-progress-bar *ngIf="fileWrapper.uploading" [value]="fileWrapper.progress / 100"></ion-progress-bar>
-            <ion-button color="danger" size="small" class="remove-btn" (click)="removeImage(i)">
-              <ion-icon name="trash-outline"></ion-icon>
-            </ion-button>
+
+            <div *ngFor="let fileWrapper of imageFiles; let i = index" class="image-item preview-item">
+              <img [src]="fileWrapper.previewUrl" />
+              <div class="upload-overlay" *ngIf="fileWrapper.uploading">
+                <ion-spinner name="crescent"></ion-spinner>
+              </div>
+              <ion-progress-bar *ngIf="fileWrapper.uploading" [value]="fileWrapper.progress / 100"></ion-progress-bar>
+              <ion-button color="danger" size="small" class="remove-btn" (click)="removeImage(i)">
+                <ion-icon name="trash-outline"></ion-icon>
+              </ion-button>
+            </div>
+
+            <input type="file" hidden #fileInput (change)="onFileSelected($event)" accept="image/*" multiple />
           </div>
+        </ion-card-content>
+      </ion-card>
+      <ion-card>
 
-          <input type="file" hidden #fileInput (change)="onFileSelected($event)" accept="image/*" multiple />
-        </div>
-      </ion-card-content>
-    </ion-card>
+      </ion-card>
 
-    <ion-item>
-      <ion-label position="stacked">Nombre del Producto</ion-label>
-      <ion-input formControlName="name" type="text" required></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="stacked">Descripción</ion-label>
-      <ion-textarea formControlName="description" rows="5" autoGrow="true"></ion-textarea>
-    </ion-item>
-    <ion-item>
-      <ion-label position="stacked">Categoría</ion-label>
-      <ion-select formControlName="categoryId" placeholder="Seleccionar categoría">
-        <ion-select-option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</ion-select-option>
-      </ion-select>
-    </ion-item>
-    <ion-grid>
-      <ion-row>
-        <ion-col size="6">
-          <ion-item>
-            <ion-label position="stacked">Precio</ion-label>
-            <ion-input formControlName="price" type="number" required></ion-input>
-          </ion-item>
-        </ion-col>
-        <ion-col size="6">
-          <ion-item>
-            <ion-label position="stacked">Stock</ion-label>
-            <ion-input formControlName="stock" type="number" required></ion-input>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
-    <ion-item>
-      <ion-label position="stacked">SKU</ion-label>
-      <ion-input formControlName="sku" type="text"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label>Estado</ion-label>
-      <ion-select formControlName="status" interface="popover">
-        <ion-select-option value="active">Activo</ion-select-option>
-        <ion-select-option value="paused">Pausado</ion-select-option>
-      </ion-select>
-    </ion-item>
-  </form>
+      <div class="subtitle">
+        Información del Producto
+      </div>
+
+      <div class="grid grid-cols-12 gap-3">
+        <ion-item class="col-span-6 input">
+          <ion-label position="stacked">Titulo del Producto</ion-label>
+          <ion-input formControlName="name" type="text" required></ion-input>
+        </ion-item>
+        <ion-item class="col-span-12">
+          <ion-label position="stacked">Descripción</ion-label>
+          <ion-textarea formControlName="description" rows="5" autoGrow="true"></ion-textarea>
+        </ion-item>
+        <ion-item class="col-span-6">
+          <ion-label position="stacked">Categoría</ion-label>
+          <ion-select formControlName="categoryId" placeholder="Seleccionar categoría">
+            <ion-select-option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</ion-select-option>
+          </ion-select>
+        </ion-item>
+      </div>
+
+
+
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ion-item>
+          <ion-label position="stacked">Precio</ion-label>
+          <ion-input formControlName="price" type="number" required></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Stock</ion-label>
+          <ion-input formControlName="stock" type="number" required></ion-input>
+        </ion-item>
+      </div>
+
+      <ion-item>
+        <ion-label position="stacked">SKU</ion-label>
+        <ion-input formControlName="sku" type="text"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-label>Estado</ion-label>
+        <ion-select formControlName="status" interface="popover">
+          <ion-select-option value="active">Activo</ion-select-option>
+          <ion-select-option value="paused">Pausado</ion-select-option>
+        </ion-select>
+      </ion-item>
+    </form>
+  </div>
 </ion-content>

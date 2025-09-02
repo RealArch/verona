@@ -2,18 +2,6 @@
   margin-bottom: 20px;
 }
 
-.image-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Responsivo: 3-4 columnas en móvil, más en desktop */
-  gap: 10px;
-  justify-items: center; /* Centrar los items en la cuadrícula */
-
-  // Media query para pantallas más grandes
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  }
-}
-
 .image-item {
   position: relative;
   width: 100%;
