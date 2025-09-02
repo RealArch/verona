@@ -1,0 +1,68 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Gestor de Productos</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [(ngModel)]="filterStatus" (ionChange)="segmentChanged($event)">
+      <ion-segment-button value="all">
+        <ion-label>Todos</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="active">
+        <ion-label>Activos</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="paused">
+        <ion-label>Pausados</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div *ngIf="products$ | async as products; else loadingOrError">
+    <div *ngIf="products.length === 0" class="empty-state">
+      <ion-icon name="cube-outline"></ion-icon>
+      <p>No hay productos para mostrar.</p>
+      <p>¡Añade tu primer producto!</p>
+    </div>
+
+    <ion-list *ngIf="products.length > 0">
+      <ion-item-sliding *ngFor="let product of products">
+        <ion-item button [routerLink]="['/product-form', product.id]">
+          <ion-thumbnail slot="start">
+            <img [src]="product.images?.thumbnail || 'assets/placeholder.png'" (error)="onImgError($event)"/>
+          </ion-thumbnail>
+          <ion-label>
+            <h2>{{ product.name }}</h2>
+            <p>SKU: {{ product.sku }} | Stock: {{ product.stock }}</p>
+            <p>{{ product.price | currency:'USD' }}</p>
+          </ion-label>
+          <ion-note slot="end" [color]="product.status === 'active' ? 'success' : 'warning'">
+            {{ product.status }}
+          </ion-note>
+        </ion-item>
+        <ion-item-options side="end">
+          <ion-item-option (click)="deleteProduct(product.id!)" color="danger" expandable>
+            <ion-icon slot="icon-only" name="trash"></ion-icon>
+          </ion-item-option>
+        </ion-item-options>
+      </ion-item-sliding>
+    </ion-list>
+  </div>
+
+  <ng-template #loadingOrError>
+    <!-- Puedes añadir un spinner de carga o un mensaje de error aquí -->
+    <div class="loading-state">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Cargando productos...</p>
+    </div>
+  </ng-template>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button [routerLink]="['/products/add']">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

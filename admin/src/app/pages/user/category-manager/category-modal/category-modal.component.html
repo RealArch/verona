@@ -21,3 +21,24 @@
     </div>
   </form>
 </ion-content>
+
+<!-- anade al admin un botn en el manu debajo de categorias que se llame productos. alli dentro tendremos el sistema de
+productos. necesito:
+
+
+
+-en la pagina principal d eproductos, un selector que me permita elegir por productos, activos y pausados. de acuerdo a
+lo que selecciones, que me muestre una lista de los productos con la infomas importante. incluyendo la foto thumb. Un
+boton tipo ion fab button abajo a la derecha con el simbolo d emas qu epermita anadir productos. eso vaya una oagina
+siguiente donde podre publicar el articulo. quiero que ese formulario de reactive formas con formbuilder tenga too lo
+necesario para subir un articulo. guia te por lo que piden los cms generalmentepara la publicacion d eun articulo.
+incluye el selector de categroia para aplicar las actegorias existentes que hemos creado antes. para las fotos, permite
+arrastarr o buscar en en almacenmiento o tomar foto si esta en un dispositivo movil. que en loq ue se seleccione la foto
+=, se suba a una carpeta temporaral del storage, se vea la foto que se subio enuna miniatura y s eperita borrar. una vez
+s efinalice la ediciond el articulo, se envie la data a un endpoint en el servicio articulos y que vaya el backend
+firebase functions. luego alli en functions, reciba la data la guarde, la sume a los metadatos de conteo de prodcutos, y
+ponga el status del articulo en procesando. luego que guarde la data se active una funcion automatica que procese las
+imagenes. generele lonecesario para obetenr las imagene spara los tamanos standard y thumbnail y las comprima lo mas
+optimo posible. luego compie las imagenes en la carpeta de storage en la ruta img/products y las borre de la carpeta
+temporal. si todo sale bien, obetenr el url de la foto y ponerla dentro del objeto del articulo en firestore para poder
+acceder a el. lo gaurde en la db y actualice el estatus a activo -->

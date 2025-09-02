@@ -7,7 +7,7 @@ import { AuthService } from './services/auth.service';
 import { Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { addIcons } from 'ionicons';
-import { speedometer, layers, logOut } from 'ionicons/icons';
+import { speedometer, layers, logOut, cube } from 'ionicons/icons';
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
@@ -24,7 +24,7 @@ export class AppComponent implements OnInit {
   hasAdminUsers = false;
   isCheckingAdmin = true;
   constructor() {
-    addIcons({ speedometer, layers, logOut });
+    addIcons({ speedometer, layers, logOut, cube });
   }
 
   async ngOnInit() {

@@ -40,6 +40,18 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/user/category-manager/category-manager.page').then(m => m.CategoryManagerPage)
       },
       {
+        path: 'products',
+        loadComponent: () => import('./pages/user/products/products.page').then(m => m.ProductsPage)
+      },
+      {
+        path: 'products/:id',
+        loadComponent: () => import('./pages/user/products/products-form/products-form.page').then(m => m.ProductFormPage)
+      },
+      {
+        path: 'products/add',
+        loadComponent: () => import('./pages/user/products/products-form/products-form.page').then(m => m.ProductFormPage)
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'
@@ -47,10 +59,11 @@ export const routes: Routes = [
     ]
 
   },
-  {
-    path: '**',
-    redirectTo: 'dashboard'
-  }
+  // {
+  //   path: '**',
+  //   redirectTo: 'dashboard'
+  // },
+
 
 
 
