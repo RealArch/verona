@@ -1,0 +1,103 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Dashboard</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+
+  <div class="p-6">
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Bienvenido al Panel de Administración</h1>
+      <p class="text-gray-600">Desde aquí puedes gestionar todas las categorías de tu aplicación.</p>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div class="card">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 p-3 rounded-lg bg-blue-100">
+            <ion-icon name="stats-chart" class="h-6 w-6 text-blue-600"></ion-icon>
+          </div>
+          <div class="ml-4">
+            <h2 class="text-2xl font-bold text-gray-900">150</h2>
+            <p class="text-sm text-gray-600">Categorías totales</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 p-3 rounded-lg bg-green-100">
+            <ion-icon name="layers" class="h-6 w-6 text-green-600"></ion-icon>
+          </div>
+          <div class="ml-4">
+            <h2 class="text-2xl font-bold text-gray-900">5</h2>
+            <p class="text-sm text-gray-600">Niveles de categorías</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 p-3 rounded-lg bg-yellow-100">
+            <ion-icon name="time" class="h-6 w-6 text-yellow-600"></ion-icon>
+          </div>
+          <div class="ml-4">
+            <h2 class="text-2xl font-bold text-gray-900">Hoy</h2>
+            <p class="text-sm text-gray-600">Última actualización</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flex items-center">
+          <div class="flex-shrink-0 p-3 rounded-lg bg-red-100">
+            <ion-icon name="people" class="h-6 w-6 text-red-600"></ion-icon>
+          </div>
+          <div class="ml-4">
+            <h2 class="text-2xl font-bold text-gray-900">3</h2>
+            <p class="text-sm text-gray-600">Administradores</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actividad Reciente -->
+    <div class="card">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">Actividad Reciente</h2>
+      <div class="divide-y divide-gray-200">
+        <div class="py-4 flex items-start">
+          <div class="flex-shrink-0 p-2 rounded-full bg-green-100">
+            <ion-icon name="add-circle" class="h-5 w-5 text-green-600"></ion-icon>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-sm font-medium text-gray-900">Nueva categoría agregada</h3>
+            <p class="text-sm text-gray-500">Electrónica - Hace 2 horas</p>
+          </div>
+        </div>
+        
+        <div class="py-4 flex items-start">
+          <div class="flex-shrink-0 p-2 rounded-full bg-yellow-100">
+            <ion-icon name="create" class="h-5 w-5 text-yellow-600"></ion-icon>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-sm font-medium text-gray-900">Categoría actualizada</h3>
+            <p class="text-sm text-gray-500">Ropa - Hace 5 horas</p>
+          </div>
+        </div>
+        
+        <div class="py-4 flex items-start">
+          <div class="flex-shrink-0 p-2 rounded-full bg-red-100">
+            <ion-icon name="trash" class="h-5 w-5 text-red-600"></ion-icon>
+          </div>
+          <div class="ml-4">
+            <h3 class="text-sm font-medium text-gray-900">Categoría eliminada</h3>
+            <p class="text-sm text-gray-500">Antiguo - Hace 1 día</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ion-content>

@@ -17,6 +17,10 @@
     "@angular/common": "^20.0.0",
     "@angular/compiler": "^20.0.0",
     "@angular/core": "^20.0.0",
+<<<<<<< HEAD
+=======
+    "@angular/fire": "^20.0.1",
+>>>>>>> 389fa33 (Elimina credenciales y añade configuración de funciones)
     "@angular/forms": "^20.0.0",
     "@angular/platform-browser": "^20.0.0",
     "@angular/platform-browser-dynamic": "^20.0.0",
@@ -27,8 +31,16 @@
     "@capacitor/keyboard": "7.0.2",
     "@capacitor/status-bar": "7.0.2",
     "@ionic/angular": "^8.0.0",
+<<<<<<< HEAD
     "ionicons": "^7.0.0",
     "rxjs": "~7.8.0",
+=======
+    "@tailwindcss/postcss": "^4.1.12",
+    "ionicons": "^7.0.0",
+    "postcss": "^8.5.6",
+    "rxjs": "~7.8.0",
+    "tailwindcss": "^4.1.12",
+>>>>>>> 389fa33 (Elimina credenciales y añade configuración de funciones)
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
   },
