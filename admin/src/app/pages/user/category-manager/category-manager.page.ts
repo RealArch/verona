@@ -16,7 +16,7 @@ import { CategoryModalComponent } from './category-modal/category-modal.componen
 @Component({
   selector: 'app-category-manager',
   templateUrl: './category-manager.page.html',
-  styleUrls: ['./category-manager.page.scss'] ,
+  styleUrls: ['./category-manager.page.scss'],
   standalone: true,
   imports: [
     IonReorder, IonReorderGroup, IonItemOptions, IonItemOption, IonButton,
@@ -72,5 +72,14 @@ export class CategoryManagerPage implements OnInit, OnDestroy {
   async deleteCategory(id: string) {
     // Aquí deberías agregar una confirmación antes de borrar
     await this.categoriesService.deleteCategory(id);
+  }
+  reorderCategories(event: any, list: Category[]) {
+    const from = event.detail.from;
+    const to = event.detail.to;
+
+    const movedItem = list.splice(from, 1)[0]; // quitar del índice original
+    list.splice(to, 0, movedItem); // insertar en el índice destino
+
+    event.detail.complete(); // esto es crucial para que Ionic sepa que terminó
   }
 }

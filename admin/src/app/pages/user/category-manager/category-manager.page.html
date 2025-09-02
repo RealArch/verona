@@ -19,7 +19,7 @@
 </ion-content>
 
 <ng-template #categoryTreeTemplate let-categories="categories" let-level="level">
-  <ion-reorder-group [disabled]="false">
+  <ion-reorder-group [disabled]="false" >
     @for(category of categories; track category){
       <ng-container >
       <ion-item-sliding>
