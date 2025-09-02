@@ -3,6 +3,7 @@ import { Auth, authState, createUserWithEmailAndPassword, signInWithEmailAndPass
 import { doc, Firestore, setDoc, getDoc } from '@angular/fire/firestore';
 import { firstValueFrom, map, Observable, take } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
 
 export interface AdminUser {
   uid: string;
@@ -39,7 +40,7 @@ export class AuthService {
   }): Promise<void> {
     // Llamar a la función de Firebase para crear usuario admin de forma segura
     // Esta función debe estar implementada en tu backend
-    await firstValueFrom(this.http.post('/api/createAdminUser', userData));
+    await firstValueFrom(this.http.post(`${environment.api}/admin/createAdminUser`, userData));
   }
 
   async hasAdminUsers(): Promise<boolean> {

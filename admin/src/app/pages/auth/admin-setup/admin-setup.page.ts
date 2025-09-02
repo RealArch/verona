@@ -2,7 +2,10 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 // Importa los módulos necesarios para Reactive Forms
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonIcon, IonItem, IonLabel, IonButton } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonIcon, IonItem, IonLabel, IonButton,
+IonInput
+
+ } from '@ionic/angular/standalone';
 import { AuthService } from 'src/app/services/auth.service';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
@@ -14,7 +17,10 @@ import { personAdd, warning } from 'ionicons/icons';
   styleUrls: ['./admin-setup.page.scss'],
   standalone: true,
   // Añade ReactiveFormsModule y quita FormsModule
-  imports: [IonButton, IonLabel, IonItem, IonIcon, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, ReactiveFormsModule]
+  imports: [IonButton, IonLabel, IonItem, IonIcon, IonContent,
+    IonHeader, IonTitle, IonToolbar, CommonModule, ReactiveFormsModule,
+    IonInput,
+  ]
 })
 export class AdminSetupPage implements OnInit {
   private authService = inject(AuthService);
@@ -23,15 +29,11 @@ export class AdminSetupPage implements OnInit {
   private fb = inject(FormBuilder);
 
   // Define la propiedad del FormGroup
-  adminSetupForm!: FormGroup;
+  adminSetupForm: FormGroup = this.fb.group({});
   errorMessage = '';
 
-  constructor() { 
-    addIcons({personAdd,warning});
-  }
-
-  ngOnInit() {
-    // Inicializa el formulario y sus controles con validadores
+  constructor() {
+    addIcons({ personAdd, warning });
     this.adminSetupForm = this.fb.group({
       firstName: ['', [Validators.required]],
       lastName: ['', [Validators.required]],
@@ -39,6 +41,11 @@ export class AdminSetupPage implements OnInit {
       // El placeholder sugería un mínimo de 6 caracteres, así que se añade el validador
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
+  }
+
+  ngOnInit() {
+    // Inicializa el formulario y sus controles con validadores
+
   }
 
   async createAdmin() {

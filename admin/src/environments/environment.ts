@@ -4,7 +4,8 @@
 
 export const environment = {
   production: false,
-  useEmulators: true
+  useEmulators: true,
+  api:'http://localhost:5001/verona-ffbcd/us-central1/api'
 };
 
 /*

@@ -29,7 +29,7 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () => import('./pages/user/user.page').then(m => m.UserPage),
-    // canActivate: [authGuard],
+    canActivate: [authGuard],
     children: [
       {
         path: 'dashboard',

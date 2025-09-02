@@ -15,6 +15,7 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { AuthService } from 'src/app/services/auth.service';
 import { ProductsService } from 'src/app/services/products.service';
 import { CategoriesService, Category } from 'src/app/services/categories.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-product-form',
@@ -57,7 +58,7 @@ export class ProductFormPage implements OnInit {
     this.loadCategories();
     this.checkEditMode();
   }
-  
+
   private initForm() {
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
@@ -69,7 +70,7 @@ export class ProductFormPage implements OnInit {
       status: ['active', Validators.required]
     });
   }
-  
+
   private loadCategories() {
     this.categoriesService.getCategories().subscribe(cats => {
       this.categories = this.flattenCategories(cats);
@@ -79,20 +80,20 @@ export class ProductFormPage implements OnInit {
   private flattenCategories(categories: Category[], level = 0, prefix = ''): Category[] {
     let flatList: Category[] = [];
     for (const category of categories) {
-      flatList.push({ ...category, name: `${prefix}${category.name}`});
+      flatList.push({ ...category, name: `${prefix}${category.name}` });
       if (category.children) {
         flatList = flatList.concat(this.flattenCategories(category.children, level + 1, `${prefix}- `));
       }
     }
     return flatList;
   }
-  
+
   private checkEditMode() {
     this.productId = this.route.snapshot.paramMap.get('id');
     if (this.productId) {
       this.isEditMode = true;
       this.productsService.getProduct(this.productId).subscribe(product => {
-        if(product) {
+        if (product) {
           this.productForm.patchValue(product);
           this.imagePreviewUrl = product.images?.thumbnail || null;
         }
@@ -136,7 +137,7 @@ export class ProductFormPage implements OnInit {
   }
 
   private async handleFile(file: File) {
-                console.log(3)
+    console.log(3)
 
     if (this.isUploading) return;
     this.isUploading = true;
@@ -144,7 +145,7 @@ export class ProductFormPage implements OnInit {
     loading.present();
 
     try {
-            console.log(1)
+      console.log(1)
 
       // if (this.tempImagePath) {
       //   await this.productsService.deleteTempImage(this.tempImagePath);
@@ -152,8 +153,8 @@ export class ProductFormPage implements OnInit {
 
       this.selectedFile = file;
       this.imagePreviewUrl = URL.createObjectURL(file);
-      
-      const user = await this.authService.user$.toPromise();
+
+      const user = await firstValueFrom(this.authService.user$);
       console.log(2)
       if (!user) throw new Error('User not authenticated');
       console.log(0)
@@ -170,7 +171,7 @@ export class ProductFormPage implements OnInit {
       loading.dismiss();
     }
   }
-  
+
   async removeImage() {
     if (this.tempImagePath) {
       try {
@@ -183,7 +184,7 @@ export class ProductFormPage implements OnInit {
     this.tempImagePath = null;
     this.selectedFile = null;
   }
-  
+
   async saveProduct() {
     if (this.productForm.invalid) {
       this.presentToast('Por favor, completa todos los campos requeridos.', 'warning');
@@ -193,10 +194,10 @@ export class ProductFormPage implements OnInit {
       this.presentToast('Por favor, sube una imagen para el producto.', 'warning');
       return;
     }
-    
+
     const loading = await this.loadingCtrl.create({ message: 'Guardando producto...' });
     await loading.present();
-    
+
     try {
       const productData = this.productForm.value;
       productData.slug = this.slugify(productData.name);
@@ -206,7 +207,7 @@ export class ProductFormPage implements OnInit {
       } else {
         await this.productsService.addProduct(productData, this.tempImagePath!);
       }
-      
+
       this.presentToast(`Producto ${this.isEditMode ? 'actualizado' : 'creado'} con éxito`, 'success');
       this.router.navigate(['/products']);
     } catch (error) {

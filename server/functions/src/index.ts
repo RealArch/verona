@@ -10,17 +10,11 @@
 import { setGlobalOptions } from "firebase-functions";
 import express from "express";
 import { onRequest } from "firebase-functions/v2/https";
-import * as admin from "firebase-admin";
 //IMPORT RUTAS
 import adminRouter from "./routes/admin.router";
 import categoriesRouter from "./routes/categories.router";
-//Inicializando la app de firebase
-import serviceAccountJson from './serviceAccountKey.json'
-const serviceAccount = serviceAccountJson as admin.ServiceAccount;
-import { initializeApp, cert } from 'firebase-admin/app';
-initializeApp({
-    credential: cert(serviceAccount),
-})
+//importamos la app de firebase
+import "./firebase-init"; 
 
 const app = express();
 
