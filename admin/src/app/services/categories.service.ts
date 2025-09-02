@@ -16,11 +16,15 @@ import { Observable } from 'rxjs';
 export interface Category {
   id?: string;
   name: string;
+  slug: string; // Para URLs amigables
+  description?: string; // Descripción para SEO y para el usuario
+  image?: string; // URL de la imagen de la categoría
   parentId?: string | null;
   path?: string[];
   order: number;
   createdAt: Date;
   updatedAt: Date;
+  children?: Category[]; // Para anidar las subcategorías
 }
 
 @Injectable({
@@ -49,10 +53,11 @@ export class CategoriesService {
     });
   }
 
-  async addCategory(category: Omit<Category, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+  async addCategory(category: Partial<Category>): Promise<string> {
     const now = new Date();
     const docRef = await addDoc(this.categoriesCollection, {
       ...category,
+      slug: this.slugify(category.name!),
       createdAt: now,
       updatedAt: now
     });
@@ -61,6 +66,9 @@ export class CategoriesService {
 
   async updateCategory(id: string, updates: Partial<Category>): Promise<void> {
     const docRef = doc(this.firestore, `categories/${id}`);
+    if (updates.name) {
+      updates.slug = this.slugify(updates.name);
+    }
     await updateDoc(docRef, {
       ...updates,
       updatedAt: new Date()
@@ -72,28 +80,26 @@ export class CategoriesService {
     await deleteDoc(docRef);
   }
 
-  buildCategoryTree(categories: Category[]): Category[] {
-    const categoryMap = new Map<string, Category>();
-    const rootCategories: Category[] = [];
-
-    // Primero, mapear todas las categorías
+  buildCategoryTree(categories: Category[], parentId: string | null = null): Category[] {
+    const tree: Category[] = [];
     categories.forEach(category => {
-      categoryMap.set(category.id!, { ...category, children: [] } as any);
-    });
-
-    // Luego, construir la jerarquía
-    categories.forEach(category => {
-      const categoryWithChildren = categoryMap.get(category.id!) as any;
-
-      if (category.parentId && categoryMap.has(category.parentId)) {
-        const parent = categoryMap.get(category.parentId) as any;
-        if (!parent.children) parent.children = [];
-        parent.children.push(categoryWithChildren);
-      } else {
-        rootCategories.push(categoryWithChildren);
+      if (category.parentId === parentId) {
+        const children = this.buildCategoryTree(categories, category.id);
+        if (children.length) {
+          category.children = children;
+        }
+        tree.push(category);
       }
     });
+    return tree;
+  }
 
-    return rootCategories;
+  private slugify(text: string): string {
+    return text.toString().toLowerCase()
+      .replace(/\s+/g, '-')           // Replace spaces with -
+      .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+      .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+      .replace(/^-+/, '')             // Trim - from start of text
+      .replace(/-+$/, '');            // Trim - from end of text
   }
 }

@@ -1,0 +1,55 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Gestor de Categorías</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="category-list-container">
+    <ion-list>
+      <ng-container *ngTemplateOutlet="categoryTreeTemplate; context: { categories: categoryTree, level: 0 }"></ng-container>
+    </ion-list>
+  </div>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="addCategory()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>
+
+<ng-template #categoryTreeTemplate let-categories="categories" let-level="level">
+  <ion-reorder-group [disabled]="false">
+    @for(category of categories; track category){
+      <ng-container >
+      <ion-item-sliding>
+        <ion-item [style.padding-left.px]="level * 20">
+          <ion-reorder slot="start"></ion-reorder>
+          <ion-label>
+            <h2>{{ category.name }}</h2>
+            <p>{{ category.description || 'Sin descripción' }}</p>
+          </ion-label>
+          <ion-buttons slot="end">
+            <ion-button (click)="addCategory(category.id)" fill="clear" color="success">
+              <ion-icon slot="icon-only" name="add-circle"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-item>
+        <ion-item-options side="end">
+          <ion-item-option (click)="editCategory(category)" color="primary">
+            <ion-icon slot="icon-only" name="create"></ion-icon>
+          </ion-item-option>
+          <ion-item-option (click)="deleteCategory(category.id!)" color="danger">
+            <ion-icon slot="icon-only" name="trash"></ion-icon>
+          </ion-item-option>
+        </ion-item-options>
+      </ion-item-sliding>
+
+      <ng-container *ngIf="category.children && category.children.length > 0">
+        <ng-container *ngTemplateOutlet="categoryTreeTemplate; context: { categories: category.children, level: level + 1 }"></ng-container>
+      </ng-container>
+    </ng-container>
+    }
+    
+  </ion-reorder-group>
+</ng-template>

@@ -1,8 +1,30 @@
-// Estilos personalizados para la página de gestión de categorías
-.card {
-  background-color: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  border: 1px solid #e5e7eb;
-  padding: 1.5rem;
+ion-list {
+  padding: 0;
+}
+
+ion-item {
+  --padding-start: 16px;
+  --inner-padding-end: 16px;
+  border-bottom: 1px solid var(--ion-color-step-150, #e0e0e0);
+}
+
+ion-item-sliding {
+  margin-bottom: 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+ion-label h2 {
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+ion-label p {
+  font-size: 0.9rem;
+  color: var(--ion-color-step-600, #666);
+}
+
+ion-fab-button {
+  --background: var(--ion-color-primary);
+  --background-activated: var(--ion-color-primary-shade);
 }

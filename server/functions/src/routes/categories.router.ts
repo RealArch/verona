@@ -3,22 +3,38 @@ import * as admin from "firebase-admin";
 
 const categoriesRouter: Router = Router();
 
-categoriesRouter.get('/', async (req: Request, res: Response) => {
-    try {
-        const snapshot = await admin.firestore().collection('categories')
-            .orderBy('order')
-            .get();
+categoriesRouter.post('/', async (req: Request, res: Response) => {
+  try {
+    const newCategory = req.body;
+    const docRef = await admin.firestore().collection('categories').add(newCategory);
+    res.status(201).json({ id: docRef.id });
+  } catch (error) {
+    console.error('Error adding category:', error);
+    res.status(500).json({ error: 'Failed to add category' });
+  }
+});
 
-        const categories = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+categoriesRouter.put('/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    await admin.firestore().collection('categories').doc(id).update(updates);
+    res.status(200).json({ message: 'Category updated' });
+  } catch (error) {
+    console.error('Error updating category:', error);
+    res.status(500).json({ error: 'Failed to update category' });
+  }
+});
 
-        res.json(categories);
-    } catch (error) {
-        console.error('Error fetching categories:', error);
-        res.status(500).json({ error: 'Failed to fetch categories' });
-    }
+categoriesRouter.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await admin.firestore().collection('categories').doc(id).delete();
+    res.status(200).json({ message: 'Category deleted' });
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    res.status(500).json({ error: 'Failed to delete category' });
+  }
 });
 
 export default categoriesRouter;

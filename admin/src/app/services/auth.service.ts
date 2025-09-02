@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { Auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, user, User } from '@angular/fire/auth';
+import { Auth, authState, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, user, User } from '@angular/fire/auth';
 import { doc, Firestore, setDoc, getDoc } from '@angular/fire/firestore';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, map, Observable, take } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 
 export interface AdminUser {
@@ -22,7 +22,7 @@ export class AuthService {
   private http = inject(HttpClient);
 
   user$ = user(this.auth);
-
+  public authState$ = authState(this.auth);
   async login(email: string, password: string): Promise<void> {
     await signInWithEmailAndPassword(this.auth, email, password);
   }
@@ -55,5 +55,11 @@ export class AuthService {
 
     const userDoc = await getDoc(doc(this.firestore, `users/${currentUser.uid}`));
     return userDoc.exists() ? userDoc.data() as AdminUser : null;
+  }
+  isAuthenticated(): Observable<boolean> {
+    return this.authState$.pipe(
+      take(1), // Toma el primer valor emitido para evitar que el guardia se quede escuchando
+      map(user => !!user) // Convierte el objeto de usuario (o null) en un booleano
+    );
   }
 }
