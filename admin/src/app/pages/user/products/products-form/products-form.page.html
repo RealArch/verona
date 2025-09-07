@@ -46,10 +46,11 @@
       <ion-card>
 
       </ion-card>
-
       <div class="subtitle">
         Información del Producto
       </div>
+
+
 
       <div class="grid grid-cols-12 gap-3">
         <ion-item class="col-span-6 input">
@@ -75,45 +76,67 @@
         </ion-item>
       </div>
 
+      <div class="subtitle">
+        Estructura de Variantes
+      </div>
+
+      <ion-row>
+        <ion-col>
+          <ion-button id="add-variant">Anadir variante</ion-button>
+          <!-- popover con opciones color, Tamano -->
+          <ion-popover trigger="add-variant">
+            <ng-template>
+              <ion-list>
+                <ion-item [disabled]="attributesAdded.includes('color')" button
+                  (click)="addAttribute('color')">Color</ion-item>
+                <ion-item [disabled]="attributesAdded.includes('size')" button
+                  (click)="addAttribute('size')">Tamaño</ion-item>
+              </ion-list>
+            </ng-template>
+          </ion-popover>
+        </ion-col>
+        <ion-col size="12">
+          @for(att of formAttributes.controls; let i = $index; track att){
+          <ion-toolbar>
+            <div>{{att.value.type}}</div>
+            <ion-buttons slot="end">
+              <ion-button color="danger" fill="clear" size="small" (click)="removeAttribute(i)">
+                <ion-icon name="trash-outline"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+
+          </ion-toolbar>
+          <ion-toolbar>
+            @for(opt of att.value.options; track opt){
+            <div>{{opt.name}}</div>
+            }
+          </ion-toolbar>
+          <ion-button (click)="addOption(att, att.value.type)">Anadir {{att.value.type}} </ion-button>
+
+          }
+        </ion-col>
+      </ion-row>
+
+      <ion-row class="mb-5">
+        <div class="subtitle">
+          Variantes
+        </div>
+        <ion-col size="12">
+          @for(att of formAttributes.controls; let i = $index; track att){
+          @for(opt of att.value.options; track opt){
+            <div>{{opt.name}}</div>
+            }
+          }
+
+        </ion-col>
 
 
-        <ion-item class="col-span-12">
-          <ion-label position="stacked">Variaciones</ion-label>
-          <ion-button expand="block" (click)="addVariation()">Añadir variación</ion-button>
-          <div *ngFor="let variation of variations; let vIdx = index" class="variation-block">
-            <ion-item>
-              <ion-label position="stacked">Tipo de variación</ion-label>
-              <ion-select [(ngModel)]="variation.type">
-                <ion-select-option value="color">Color</ion-select-option>
-                <ion-select-option value="size">Tamaño</ion-select-option>
-                <ion-select-option value="material">Material</ion-select-option>
-                <ion-select-option value="custom">Personalizado</ion-select-option>
-              </ion-select>
-            </ion-item>
-            <ion-button expand="block" (click)="addVariationProduct(vIdx)">Añadir producto</ion-button>
-            <div *ngFor="let prod of variation.products; let i = index" class="variation-product-bar">
-              <ion-item>
-                <ion-label position="stacked">Nombre</ion-label>
-                <ion-input [(ngModel)]="prod.name" placeholder="Nombre"></ion-input>
-              </ion-item>
-              <ion-item>
-                <ion-label position="stacked">Stock</ion-label>
-                <ion-input type="number" [(ngModel)]="prod.stock" placeholder="Stock"></ion-input>
-              </ion-item>
-              <ion-item>
-                <ion-label position="stacked">SKU</ion-label>
-                <ion-input [(ngModel)]="prod.sku" placeholder="SKU"></ion-input>
-              </ion-item>
-              <ion-item>
-                <ion-label position="stacked">Precio</ion-label>
-                <ion-input type="number" [(ngModel)]="prod.price" placeholder="Precio"></ion-input>
-              </ion-item>
-              <ion-button color="danger" size="small" (click)="removeVariationProduct(vIdx, i)">Eliminar</ion-button>
-            </div>
-            <ion-button color="danger" size="small" (click)="removeVariation(vIdx)">Eliminar variación</ion-button>
-          </div>
-        </ion-item>
 
+      </ion-row>
+
+      <div>
+
+      </div>
 
 
 

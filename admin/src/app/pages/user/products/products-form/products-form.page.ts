@@ -6,11 +6,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent,
   IonItem, IonLabel, IonInput, IonTextarea, IonSelect, IonSelectOption,
-  IonGrid, IonRow, IonCol, IonButton, IonIcon, IonFabButton,
   ToastController, IonSpinner, IonProgressBar, IonCard, IonCardHeader, IonCardContent, IonCardTitle,
-  ModalController, IonPopover, IonList } from '@ionic/angular/standalone';
+  ModalController, IonPopover, IonList, IonButton, IonIcon, IonRow, IonCol
+} from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { save, cloudUploadOutline, folderOpenOutline, cameraOutline, trashOutline, addCircleOutline } from 'ionicons/icons';
+import { save, cloudUploadOutline, folderOpenOutline, cameraOutline, trashOutline, addCircleOutline, add } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 import { AuthService } from 'src/app/services/auth.service';
@@ -33,39 +33,121 @@ interface ImageFile {
   templateUrl: './products-form.page.html',
   styleUrls: ['./products-form.page.scss'],
   standalone: true,
-  imports: [IonList, IonPopover, IonCardTitle, IonCardContent, IonCardHeader, IonCard,
-  CommonModule, ReactiveFormsModule, FormsModule,
+  imports: [IonCol, IonRow, IonIcon, IonButton, IonList, IonPopover, IonCardTitle, IonCardContent, IonCardHeader, IonCard,
+    CommonModule, ReactiveFormsModule, FormsModule,
     IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent,
     IonItem, IonLabel, IonInput, IonTextarea, IonSelect, IonSelectOption,
-    IonGrid, IonRow, IonCol, IonButton, IonIcon, IonFabButton, IonSpinner, IonProgressBar
+    IonButton, IonIcon, IonSpinner, IonProgressBar
   ]
 })
 export class ProductFormPage implements OnInit {
-  variations: {
-    type: 'color' | 'size' | 'material' | 'custom';
-    products: {
-      name: string;
-      stock: number;
-      sku?: string;
-      price: number;
-    }[];
-  }[] = [];
 
-  addVariation() {
-    this.variations.push({ type: 'color', products: [] });
+
+
+
+  private fb = inject(FormBuilder);
+  private productsService = inject(ProductsService);
+  private categoriesService = inject(CategoriesService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private toastCtrl = inject(ToastController);
+
+  productForm!: FormGroup;
+  isEditMode = false;
+  productId: string | null = null;
+  categories: Category[] = [];
+  imageFiles: ImageFile[] = [];
+  isUploading = false;
+
+  constructor() {
+    addIcons({save,addCircleOutline,trashOutline,add,cloudUploadOutline,folderOpenOutline,cameraOutline}); // Añadir aquí
   }
 
-  removeVariation(index: number) {
-    this.variations.splice(index, 1);
+  ngOnInit() {
+    this.initForm();
+    this.loadCategories();
+    this.checkEditMode();
   }
 
-  addVariationProduct(variationIdx: number) {
-    this.variations[variationIdx].products.push({ name: '', stock: 0, sku: '', price: 0 });
+  private initForm() {
+    this.productForm = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(3)]],
+      description: [''],
+      price: [null, [Validators.required, Validators.min(0)]],
+      stock: [null, [Validators.required, Validators.min(0)]],
+      sku: [''],
+      categoryId: [null, Validators.required],
+      status: ['active', Validators.required],
+      photos: this.fb.array([]),
+      attributes: this.fb.array([]),
+      variants: this.fb.array([]),
+    });
   }
 
-  removeVariationProduct(variationIdx: number, productIdx: number) {
-    this.variations[variationIdx].products.splice(productIdx, 1);
+  //get product form attributes
+  get formAttributes(): FormArray {
+    return this.productForm.get('attributes') as FormArray;
   }
+  get variants(): FormArray {
+  return this.productForm.get('variants') as FormArray;
+}
+  //VARIANTES
+  attributesAdded: string[] = [];
+  addOption(att:any, type:string){
+    console.log(att)
+    const options = att.get('options') as FormArray;
+    options.push(this.fb.group({ name: `${type} ${options.length + 1}`, value: '' }));
+  }
+  addAttribute(type: string) {
+    this.attributesAdded.push(type);
+    const attributes = this.productForm.get('attributes') as FormArray;
+    attributes.push(this.fb.group({
+      type: [type],
+      name: [type],
+      options: this.fb.array([
+        this.fb.group({ name: `${type} 1`, value: '' })
+      ])
+    }));
+  }
+  addVariant() {
+  this.variants.push(
+    this.fb.group({
+      name: ['', Validators.required],
+      price: [null, Validators.required],
+      stock: [null, Validators.required],
+    })
+  );
+}
+  removeAttribute(index: number) {
+    const attributes = this.productForm.get('attributes') as FormArray;
+    const type = attributes.at(index).value.type;
+    attributes.removeAt(index);
+    const idx = this.attributesAdded.indexOf(type);
+    if (idx > -1) {
+      this.attributesAdded.splice(idx, 1);
+    }
+  }
+  
+  //`
+
+  private loadCategories() {
+    this.categoriesService.getCategories().subscribe(cats => {
+      this.categories = this.flattenCategories(cats);
+    });
+  }
+
+  private flattenCategories(categories: Category[], level = 0, prefix = ''): Category[] {
+    let flatList: Category[] = [];
+    for (const category of categories) {
+      flatList.push({ ...category, name: `${prefix}${category.name}` });
+      if (category.children) {
+        flatList = flatList.concat(this.flattenCategories(category.children, level + 1, `${prefix}- `));
+      }
+    }
+    return flatList;
+  }
+
   async modifySelectedCategory() {
     const modal = await this.modalCtrl.create({
       component: SelectCategoryModalComponent,
@@ -92,61 +174,6 @@ export class ProductFormPage implements OnInit {
   removeSelectedCategory() {
     this.selectedCategoryPath = [];
     this.productForm.get('categoryId')?.setValue(null);
-  }
-  private fb = inject(FormBuilder);
-  private productsService = inject(ProductsService);
-  private categoriesService = inject(CategoriesService);
-  private authService = inject(AuthService);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-  private toastCtrl = inject(ToastController);
-
-  productForm!: FormGroup;
-  isEditMode = false;
-  productId: string | null = null;
-  categories: Category[] = [];
-  imageFiles: ImageFile[] = [];
-  isUploading = false;
-
-  constructor() {
-    addIcons({ save, cloudUploadOutline, folderOpenOutline, cameraOutline, trashOutline, addCircleOutline }); // Añadir aquí
-  }
-
-  ngOnInit() {
-    this.initForm();
-    this.loadCategories();
-    this.checkEditMode();
-  }
-
-  private initForm() {
-    this.productForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(3)]],
-      description: [''],
-      price: [null, [Validators.required, Validators.min(0)]],
-      stock: [null, [Validators.required, Validators.min(0)]],
-      sku: [''],
-      categoryId: [null, Validators.required],
-      status: ['active', Validators.required],
-      photos: this.fb.array([]) // Array para las fotos
-
-    });
-  }
-
-  private loadCategories() {
-    this.categoriesService.getCategories().subscribe(cats => {
-      this.categories = this.flattenCategories(cats);
-    });
-  }
-
-  private flattenCategories(categories: Category[], level = 0, prefix = ''): Category[] {
-    let flatList: Category[] = [];
-    for (const category of categories) {
-      flatList.push({ ...category, name: `${prefix}${category.name}` });
-      if (category.children) {
-        flatList = flatList.concat(this.flattenCategories(category.children, level + 1, `${prefix}- `));
-      }
-    }
-    return flatList;
   }
 
   private checkEditMode() {
@@ -280,14 +307,12 @@ export class ProductFormPage implements OnInit {
       if (this.isEditMode && this.productId) {
         const productData = {
           ...this.productForm.value,
-          variations: this.variations
         };
         await this.productsService.updateProduct(this.productId, productData);
         this.presentToast('Producto actualizado con éxito', 'success');
       } else {
         const newProductData = {
           ...this.productForm.value,
-          variations: this.variations,
           processing: true,
         };
         await this.productsService.addProduct(newProductData);
