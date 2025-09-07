@@ -1,93 +1,296 @@
-.image-upload-card {
-  margin-bottom: 20px;
+// Global styles
+ion-content {
+  --background: #f8fafc;
 }
 
-.image-item {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1; /* Mantiene la proporción cuadrada */
-  border: 1px solid var(--ion-color-medium-shade, #e0e0e0);
-  border-radius: 8px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  background-color: var(--ion-background-color);
+// Component styles
+.image-upload-card {
+  .image-item {
+    position: relative;
+    aspect-ratio: 1;
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
 
-  &.add-more {
-    border: 2px dashed var(--ion-color-medium, #92949c);
-    color: var(--ion-color-medium, #92949c);
-    flex-shrink: 0; // Evita que se encoja
-    ion-icon {
-      font-size: 3em;
-      margin-bottom: 5px;
+    &.add-more {
+      border: 2px dashed var(--ion-color-medium);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--ion-color-light);
+      
+      &:hover {
+        border-color: var(--ion-color-primary);
+        background: var(--ion-color-primary-tint);
+      }
+
+      ion-icon {
+        font-size: 2rem;
+        color: var(--ion-color-medium);
+      }
+
+      p {
+        margin: 0.5rem 0 0 0;
+        font-size: 0.875rem;
+        color: var(--ion-color-medium);
+      }
     }
-    p {
-      font-size: 0.9em;
+
+    &.preview-item {
+      border: 2px solid var(--ion-color-light);
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .upload-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .remove-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        --border-radius: 50%;
+        --padding-start: 8px;
+        --padding-end: 8px;
+      }
+
+      ion-progress-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+      }
+    }
+  }
+}
+
+// Category selection
+.selected-path {
+  .flex {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--ion-color-light);
+    border-radius: 8px;
+    margin-top: 0.5rem;
+  }
+}
+
+// Attributes section
+.attribute-block {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--ion-color-light);
+  border-radius: 12px;
+  border: 1px solid var(--ion-color-light-shade);
+
+  .attribute-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+
+    .attribute-title {
       margin: 0;
-      text-align: center;
-    }
-    &:hover {
-      background-color: var(--ion-color-light, #f4f5f8);
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      &::before {
+        content: '';
+        width: 4px;
+        height: 20px;
+        background: var(--ion-color-primary);
+        border-radius: 2px;
+      }
     }
   }
 
-  &.preview-item {
-    img {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
+  .options-grid {
+    display: grid;
+    gap: 0.75rem;
+
+    .option-item {
+      background: white;
+      border-radius: 8px;
+      border: 1px solid var(--ion-color-light-shade);
+
+      ion-item {
+        --background: transparent;
+        --border-width: 0;
+        --padding-start: 1rem;
+        --padding-end: 1rem;
+      }
+
+      .flex {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      input[type="color"] {
+        border: 2px solid var(--ion-color-light-shade);
+        border-radius: 4px;
+        cursor: pointer;
+      }
+    }
+  }
+}
+
+// Variants section
+.variants-grid {
+  display: grid;
+  gap: 1rem;
+
+  .variant-card {
+    background: white;
+    border: 1px solid var(--ion-color-light-shade);
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
-    .upload-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(0, 0, 0, 0.5);
+    .variant-header {
       display: flex;
-      justify-content: center;
       align-items: center;
-      color: white;
-      z-index: 10; // Asegura que esté por encima de la imagen
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--ion-color-light);
+
+      .variant-name {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--ion-color-dark);
+      }
     }
 
-    ion-spinner {
-      font-size: 2em;
+    .variant-fields {
+      .grid {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      ion-item {
+        --background: var(--ion-color-light);
+        --border-radius: 8px;
+        --border-width: 0;
+        margin-bottom: 0.5rem;
+      }
+    }
+  }
+}
+
+// Nueva UI para variantes anidadas
+.variant-block {
+  background: white;
+  border: 1px solid var(--ion-color-light-shade);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+
+  .primary-option-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--ion-color-light);
+
+    h4 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+    }
+  }
+
+  .secondary-options {
+    margin-top: 1rem;
+
+    h5 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--ion-color-medium-shade);
     }
 
-    ion-progress-bar {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      --progress-background: var(--ion-color-primary, #3880ff);
-      z-index: 11; // Asegura que esté por encima del overlay
-      height: 5px; // Altura de la barra de progreso
+    .secondary-options-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+
+      .secondary-option-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: var(--ion-color-light);
+        padding: 0.5rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+
+        span {
+          color: var(--ion-color-dark);
+        }
+      }
     }
+  }
+}
 
-    .remove-btn {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      --border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      --padding-start: 0;
-      --padding-end: 0;
-      --padding-top: 0;
-      --padding-bottom: 0;
-      z-index: 12; // Asegura que el botón de eliminar sea clickeable
-      opacity: 0.8;
-
-      ion-icon {
-        font-size: 1.2em;
+// Estilos para productos por atributo
+.products-for-attribute {
+  margin-top: 1rem;
+  
+  .products-list {
+    .product-item {
+      background: var(--ion-color-light);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--ion-color-light-shade);
+      
+      .product-fields {
+        ion-item {
+          --background: white;
+          --border-radius: 6px;
+          --border-width: 0;
+          margin-bottom: 0.5rem;
+        }
+      }
+      
+      // Estilo para botón de eliminar disabled
+      ion-button[disabled] {
+        opacity: 0.4;
+        pointer-events: none;
+        
+        ion-icon {
+          opacity: 0.5;
+        }
       }
     }
   }

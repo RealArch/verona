@@ -1,16 +1,15 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray, AbstractControl, FormControl } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent,
   IonItem, IonLabel, IonInput, IonTextarea, IonSelect, IonSelectOption,
   ToastController, IonSpinner, IonProgressBar, IonCard, IonCardHeader, IonCardContent, IonCardTitle,
-  ModalController, IonPopover, IonList, IonButton, IonIcon, IonRow, IonCol
-} from '@ionic/angular/standalone';
+  ModalController, IonPopover, IonList, IonButton, IonIcon, IonRow, IonCol, IonGrid, IonModal } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { save, cloudUploadOutline, folderOpenOutline, cameraOutline, trashOutline, addCircleOutline, add } from 'ionicons/icons';
+import { save, cloudUploadOutline, folderOpenOutline, cameraOutline, trashOutline, addCircleOutline, add, informationCircleOutline, folderOutline, optionsOutline, colorPaletteOutline, resizeOutline, closeOutline, layersOutline, close, cubeOutline } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 import { AuthService } from 'src/app/services/auth.service';
@@ -33,7 +32,7 @@ interface ImageFile {
   templateUrl: './products-form.page.html',
   styleUrls: ['./products-form.page.scss'],
   standalone: true,
-  imports: [IonCol, IonRow, IonIcon, IonButton, IonList, IonPopover, IonCardTitle, IonCardContent, IonCardHeader, IonCard,
+  imports: [IonModal, IonGrid, IonRow, IonCol, IonIcon, IonButton, IonList, IonPopover, IonCardTitle, IonCardContent, IonCardHeader, IonCard,
     CommonModule, ReactiveFormsModule, FormsModule,
     IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent,
     IonItem, IonLabel, IonInput, IonTextarea, IonSelect, IonSelectOption,
@@ -52,6 +51,7 @@ export class ProductFormPage implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private toastCtrl = inject(ToastController);
+  private cdr = inject(ChangeDetectorRef);
 
   productForm!: FormGroup;
   isEditMode = false;
@@ -61,7 +61,7 @@ export class ProductFormPage implements OnInit {
   isUploading = false;
 
   constructor() {
-    addIcons({save,addCircleOutline,trashOutline,add,cloudUploadOutline,folderOpenOutline,cameraOutline}); // Añadir aquí
+    addIcons({save,cameraOutline,addCircleOutline,trashOutline,informationCircleOutline,folderOutline,optionsOutline,add,colorPaletteOutline,resizeOutline,closeOutline,layersOutline,close,cloudUploadOutline,folderOpenOutline,cubeOutline}); // Añadir aquí
   }
 
   ngOnInit() {
@@ -94,21 +94,177 @@ export class ProductFormPage implements OnInit {
 }
   //VARIANTES
   attributesAdded: string[] = [];
-  addOption(att:any, type:string){
-    console.log(att)
-    const options = att.get('options') as FormArray;
-    options.push(this.fb.group({ name: `${type} ${options.length + 1}`, value: '' }));
+  // Nueva estructura para variaciones anidadas
+  nestedVariants: any[] = [];
+  showAddPrimaryModal = false;
+  showAddSecondaryModalFlag = false;
+  currentPrimaryOptionId = '';
+  
+  // Variables para el modal
+  newPrimaryName = '';
+  newPrimaryColor = '#000000';
+  
+  // Obtener el primer atributo (principal)
+  get primaryAttribute() {
+    return this.attributesAdded.length > 0 ? this.attributesAdded[0] : null;
+  }
+  
+  // Obtener el segundo atributo (anidado)
+  get secondaryAttribute() {
+    return this.attributesAdded.length > 1 ? this.attributesAdded[1] : null;
+  }
+  
+  // Obtener el tercer atributo
+  get tertiaryAttribute() {
+    return this.attributesAdded.length > 2 ? this.attributesAdded[2] : null;
+  }
+  
+  // Método para añadir una nueva opción del atributo principal
+  addPrimaryOption(name: string, colorHex?: string | null) {
+    const newOption = {
+      id: Date.now().toString(),
+      name: name,
+      colorHex: colorHex || null,
+      products: [{
+        id: Date.now().toString() + '_product',
+        sku: '',
+        price: null,
+        stock: null,
+        status: 'active'
+      }] // Automáticamente añadir el primer producto
+    };
+    this.nestedVariants.push(newOption);
+    this.cdr.detectChanges(); // Forzar detección de cambios
+  }
+  
+  // Método para añadir un producto a un atributo específico
+  addProductToAttribute(attributeId: string) {
+    const attribute = this.nestedVariants.find(v => v.id === attributeId);
+    if (attribute) {
+      const newProduct = {
+        id: Date.now().toString(),
+        sku: '',
+        price: null,
+        stock: null,
+        status: 'active'
+      };
+      if (!attribute.products) {
+        attribute.products = [];
+      }
+      attribute.products.push(newProduct);
+      this.cdr.detectChanges(); // Forzar detección de cambios
+    }
+  }
+  
+  // Método para eliminar un producto de un atributo
+  removeProductFromAttribute(attributeId: string, productIndex: number) {
+    const attribute = this.nestedVariants.find(v => v.id === attributeId);
+    if (attribute && attribute.products && attribute.products.length > 1) {
+      attribute.products.splice(productIndex, 1);
+      this.cdr.detectChanges(); // Forzar detección de cambios
+    }
+  }
+  
+  // Método para verificar si se puede eliminar un producto (debe haber al menos 2)
+  canRemoveProduct(attributeId: string): boolean {
+    const attribute = this.nestedVariants.find(v => v.id === attributeId);
+    const canRemove = attribute && attribute.products ? attribute.products.length > 1 : false;
+    return canRemove;
+  }
+  
+  // Función trackBy para mejor performance en ngFor
+  trackByAttributeId(index: number, item: any): any {
+    return item.id;
+  }
+  
+  trackByProductId(index: number, item: any): any {
+    return item.id;
+  }
+  
+  // Método para eliminar una opción principal
+  removePrimaryOption(optionId: string) {
+    const index = this.nestedVariants.findIndex(v => v.id === optionId);
+    if (index > -1) {
+      this.nestedVariants.splice(index, 1);
+    }
+  }
+  
+  // Crear una variante individual
+  createVariant(attributes: any[]) {
+    const variantName = attributes.map(attr => attr.name).join(' - ');
+    const variantGroup = this.fb.group({
+      name: [variantName],
+      attributes: [attributes.reduce((acc: any, attr) => {
+        acc[attr.type] = { name: attr.name, colorHex: attr.colorHex };
+        return acc;
+      }, {})],
+      sku: [null, [Validators.required]],
+      stock: [0, [Validators.required, Validators.min(0)]],
+      price: [null, [Validators.required, Validators.min(0)]],
+      photos: this.fb.array([]),
+      status: ['active']
+    });
+    this.variants.push(variantGroup);
+  }
+  
+  // Métodos para la UI de modales
+  showAddSecondaryModal(primaryOptionId: string) {
+    this.currentPrimaryOptionId = primaryOptionId;
+    this.showAddSecondaryModalFlag = true;
+  }
+  
+  confirmAddPrimary() {
+    if (this.newPrimaryName.trim()) {
+      const colorHex = this.primaryAttribute === 'color' ? this.newPrimaryColor : null;
+      this.addPrimaryOption(this.newPrimaryName.trim(), colorHex);
+      this.closeAddPrimaryModal();
+    }
+  }
+  
+  // Método para cerrar el modal y detectar cambios
+  closeAddPrimaryModal() {
+    this.showAddPrimaryModal = false;
+    // Reset form
+    this.newPrimaryName = '';
+    this.newPrimaryColor = '#000000';
+    this.cdr.detectChanges(); // Forzar detección de cambios
+  }
+  
+  addOption(attribute: FormGroup, type: string) {
+    const options = this.getOptions(attribute);
+    options.push(this.fb.group({ 
+      name: [`${type} ${options.length + 1}`], 
+      value: type === 'color' ? '#000000' : '',
+      colorHex: type === 'color' ? '#000000' : null
+    }));
+  }
+
+  removeOption(attribute: FormGroup, index: number) {
+    const options = this.getOptions(attribute);
+    if (options.length > 1) {
+      options.removeAt(index);
+    }
+  }
+
+  removeVariant(index: number) {
+    this.variants.removeAt(index);
   }
   addAttribute(type: string) {
-    this.attributesAdded.push(type);
-    const attributes = this.productForm.get('attributes') as FormArray;
-    attributes.push(this.fb.group({
-      type: [type],
-      name: [type],
-      options: this.fb.array([
-        this.fb.group({ name: `${type} 1`, value: '' })
-      ])
-    }));
+    if (!this.attributesAdded.includes(type)) {
+      this.attributesAdded.push(type);
+      const attributes = this.productForm.get('attributes') as FormArray;
+      attributes.push(this.fb.group({
+        type: [type],
+        name: [type],
+        options: this.fb.array([])
+      }));
+      
+      // Si es el primer atributo, no crear variantes automáticamente
+      // El usuario las creará manualmente en la nueva UI
+      if (this.attributesAdded.length === 1) {
+        this.nestedVariants = [];
+      }
+    }
   }
   addVariant() {
   this.variants.push(
@@ -127,6 +283,10 @@ export class ProductFormPage implements OnInit {
     if (idx > -1) {
       this.attributesAdded.splice(idx, 1);
     }
+    
+    // Limpiar la estructura anidada cuando se remueven atributos
+    this.nestedVariants = [];
+    this.variants.clear();
   }
   
   //`
@@ -341,6 +501,28 @@ export class ProductFormPage implements OnInit {
     }
   }
 
+
+  // Utility functions for type safety
+  getOptions(attribute: FormGroup): FormArray {
+    return attribute.get('options') as FormArray;
+  }
+
+  getOptionsArray(attribute: AbstractControl): FormArray {
+    return this.getOptions(attribute as FormGroup);
+  }
+
+  getOptionFormControl(option: AbstractControl, controlName: string): FormControl {
+    return (option as FormGroup).get(controlName) as FormControl;
+  }
+
+  getVariantFormControl(variant: AbstractControl, controlName: string): FormControl {
+    return (variant as FormGroup).get(controlName) as FormControl;
+  }
+
+  // Utility function to cast AbstractControl to FormGroup
+  asFormGroup(control: AbstractControl): FormGroup {
+    return control as FormGroup;
+  }
 
   async presentToast(message: string, color: 'success' | 'warning' | 'danger') {
     const toast = await this.toastCtrl.create({

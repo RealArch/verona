@@ -13,155 +13,333 @@
 </ion-header>
 
 <ion-content class="ion-padding" color="light">
-  <div class="max-w-4xl mx-auto">
+  <div style="max-width: 56rem; margin: 0 auto; padding: 1rem;">
     <form [formGroup]="productForm">
+
+      <!-- Sección de Imágenes -->
       <ion-card class="image-upload-card">
         <ion-card-header>
-          <ion-card-title>Imágenes del Producto</ion-card-title>
+          <ion-card-title class="flex items-center gap-2">
+            <ion-icon name="camera-outline"></ion-icon>
+            Imágenes del Producto
+          </ion-card-title>
         </ion-card-header>
         <ion-card-content>
-          <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4" (drop)="onFileDrop($event)"
-            (dragover)="$event.preventDefault()">
+          <ion-grid>
+            <ion-row>
+              <ion-col size="2" class="image-item add-more" (click)="fileInput.click()">
+                <ion-icon name="add-circle-outline"></ion-icon>
+                <p>Añadir Fotos</p>
+              </ion-col>
+              <ng-container *ngFor="let fileWrapper of imageFiles; let i = index">
+                <ion-col size="2" class="image-item preview-item">
+                  <img [src]="fileWrapper.previewUrl" />
+                  <div class="upload-overlay" *ngIf="fileWrapper.uploading">
+                    <ion-spinner name="crescent"></ion-spinner>
+                  </div>
+                  <ion-progress-bar *ngIf="fileWrapper.uploading"
+                    [value]="fileWrapper.progress / 100"></ion-progress-bar>
+                  <ion-button color="danger" size="small" class="remove-btn" (click)="removeImage(i)">
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </ion-button>
+                </ion-col>
+              </ng-container>
+              <input type="file" hidden #fileInput (change)="onFileSelected($event)" accept="image/*" multiple />
+            </ion-row>
+          </ion-grid>
+        </ion-card-content>
+      </ion-card>
 
-            <div class="image-item add-more" (click)="fileInput.click()">
-              <ion-icon name="add-circle-outline"></ion-icon>
-              <p>Añadir Fotos</p>
-            </div>
+      <!-- Información Básica -->
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title class="flex items-center gap-2">
+            <ion-icon name="information-circle-outline"></ion-icon>
+            Información del Producto
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content class="space-y-4">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+            <ion-item>
+              <ion-label position="stacked">Nombre del Producto *</ion-label>
+              <ion-input formControlName="name" type="text" placeholder="Ej: Camiseta deportiva"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">SKU</ion-label>
+              <ion-input formControlName="sku" type="text" placeholder="Ej: CAM-001"></ion-input>
+            </ion-item>
+          </div>
 
-            <div *ngFor="let fileWrapper of imageFiles; let i = index" class="image-item preview-item">
-              <img [src]="fileWrapper.previewUrl" />
-              <div class="upload-overlay" *ngIf="fileWrapper.uploading">
-                <ion-spinner name="crescent"></ion-spinner>
+          <ion-item>
+            <ion-label position="stacked">Descripción</ion-label>
+            <ion-textarea formControlName="description" rows="4" autoGrow="true"
+              placeholder="Describe las características del producto..."></ion-textarea>
+          </ion-item>
+
+          <ion-item>
+            <ion-label position="stacked">Categoría *</ion-label>
+            <div *ngIf="selectedCategoryPath && selectedCategoryPath.length > 0" class="selected-path">
+              <div class="flex items-center gap-2 p-3 bg-gray-100 rounded-lg">
+                <span *ngFor="let cat of selectedCategoryPath; let last = last" class="text-sm">
+                  {{cat.name}}<span *ngIf="!last" class="mx-1 text-gray-400">></span>
+                </span>
+                <ion-button fill="outline" size="small" (click)="modifySelectedCategory()">
+                  Cambiar
+                </ion-button>
               </div>
-              <ion-progress-bar *ngIf="fileWrapper.uploading" [value]="fileWrapper.progress / 100"></ion-progress-bar>
-              <ion-button color="danger" size="small" class="remove-btn" (click)="removeImage(i)">
-                <ion-icon name="trash-outline"></ion-icon>
-              </ion-button>
             </div>
+            <ion-button *ngIf="!selectedCategoryPath || selectedCategoryPath.length === 0" expand="block" fill="outline"
+              (click)="openSelectCategoryModal()" [disabled]="isUploading">
+              <ion-icon name="folder-outline" slot="start"></ion-icon>
+              Seleccionar categoría
+            </ion-button>
+          </ion-item>
 
-            <input type="file" hidden #fileInput (change)="onFileSelected($event)" accept="image/*" multiple />
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <ion-item>
+              <ion-label position="stacked">Precio Base *</ion-label>
+              <ion-input formControlName="price" type="number" placeholder="0.00">
+                <div slot="start">€</div>
+              </ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Stock Base *</ion-label>
+              <ion-input formControlName="stock" type="number" placeholder="0"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-label position="stacked">Estado</ion-label>
+              <ion-select formControlName="status" interface="popover">
+                <ion-select-option value="active">Activo</ion-select-option>
+                <ion-select-option value="paused">Pausado</ion-select-option>
+                <ion-select-option value="archived">Archivado</ion-select-option>
+              </ion-select>
+            </ion-item>
           </div>
         </ion-card-content>
       </ion-card>
+
+      <!-- Atributos de Variación -->
       <ion-card>
-
-      </ion-card>
-      <div class="subtitle">
-        Información del Producto
-      </div>
-
-
-
-      <div class="grid grid-cols-12 gap-3">
-        <ion-item class="col-span-6 input">
-          <ion-label position="stacked">Titulo del Producto</ion-label>
-          <ion-input formControlName="name" type="text" required></ion-input>
-        </ion-item>
-        <ion-item class="col-span-12">
-          <ion-label position="stacked">Descripción</ion-label>
-          <ion-textarea formControlName="description" rows="5" autoGrow="true"></ion-textarea>
-        </ion-item>
-        <ion-item class="col-span-6">
-          <ion-label position="stacked">Categoría</ion-label>
-          <div *ngIf="selectedCategoryPath && selectedCategoryPath.length > 0" class="selected-path">
-            <span *ngFor="let cat of selectedCategoryPath; let last = last">
-              {{cat.name}}{{!last ? ' > ' : ''}}
-            </span>
-            <ion-button color="primary" size="small" (click)="modifySelectedCategory()">Modificar</ion-button>
-          </div>
-          <ion-button *ngIf="!selectedCategoryPath || selectedCategoryPath.length === 0" expand="block"
-            (click)="openSelectCategoryModal()" [disabled]="isUploading">
-            Seleccionar categoría
-          </ion-button>
-        </ion-item>
-      </div>
-
-      <div class="subtitle">
-        Estructura de Variantes
-      </div>
-
-      <ion-row>
-        <ion-col>
-          <ion-button id="add-variant">Anadir variante</ion-button>
-          <!-- popover con opciones color, Tamano -->
-          <ion-popover trigger="add-variant">
+        <ion-card-header>
+          <ion-card-title class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <ion-icon name="options-outline"></ion-icon>
+              Atributos de Variación
+            </div>
+            <ion-button id="add-attribute-btn" fill="outline" size="small">
+              <ion-icon name="add" slot="start"></ion-icon>
+              Añadir Atributo
+            </ion-button>
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-popover trigger="add-attribute-btn" dismissOnSelect="true">
             <ng-template>
-              <ion-list>
-                <ion-item [disabled]="attributesAdded.includes('color')" button
-                  (click)="addAttribute('color')">Color</ion-item>
-                <ion-item [disabled]="attributesAdded.includes('size')" button
-                  (click)="addAttribute('size')">Tamaño</ion-item>
-              </ion-list>
+              <ion-content>
+                <ion-list>
+                  <ion-item button (click)="addAttribute('color')" [disabled]="attributesAdded.includes('color')">
+                    <ion-icon name="color-palette-outline" slot="start"></ion-icon>
+                    <ion-label>Color</ion-label>
+                  </ion-item>
+                  <ion-item button (click)="addAttribute('size')" [disabled]="attributesAdded.includes('size')">
+                    <ion-icon name="resize-outline" slot="start"></ion-icon>
+                    <ion-label>Talla</ion-label>
+                  </ion-item>
+                </ion-list>
+              </ion-content>
             </ng-template>
           </ion-popover>
-        </ion-col>
-        <ion-col size="12">
-          @for(att of formAttributes.controls; let i = $index; track att){
-          <ion-toolbar>
-            <div>{{att.value.type}}</div>
-            <ion-buttons slot="end">
-              <ion-button color="danger" fill="clear" size="small" (click)="removeAttribute(i)">
+
+          <div *ngIf="formAttributes.length === 0" class="text-center py-8 text-gray-500">
+            <ion-icon name="options-outline" size="large"></ion-icon>
+            <p class="mt-2">No hay atributos de variación configurados</p>
+            <p class="text-sm">Añade atributos como color o talla para crear variantes del producto</p>
+          </div>
+
+          <div *ngFor="let attribute of formAttributes.controls; let i = index" class="attribute-block">
+            <div class="attribute-header">
+              <h4 class="attribute-title">{{attribute.value.name}}</h4>
+              <ion-button fill="clear" color="danger" size="small" (click)="removeAttribute(i)">
                 <ion-icon name="trash-outline"></ion-icon>
               </ion-button>
-            </ion-buttons>
+            </div>
 
-          </ion-toolbar>
-          <ion-toolbar>
-            @for(opt of att.value.options; track opt){
-            <div>{{opt.name}}</div>
-            }
-          </ion-toolbar>
-          <ion-button (click)="addOption(att, att.value.type)">Anadir {{att.value.type}} </ion-button>
+            <div class="options-grid">
+              <div *ngFor="let option of getOptionsArray(attribute).controls; let j = index" class="option-item">
+                <ion-item>
+                  <ion-label position="stacked">Opción {{j + 1}}</ion-label>
+                  <ion-input [formControl]="getOptionFormControl(option, 'name')"
+                    placeholder="Nombre de la opción"></ion-input>
+                  <div slot="end" style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input *ngIf="attribute.value.type === 'color'" type="color"
+                      [value]="getOptionFormControl(option, 'colorHex').value || '#000000'"
+                      (change)="getOptionFormControl(option, 'colorHex').setValue($event.target.value)"
+                      style="width: 2rem; height: 2rem; border-radius: 0.25rem; border: 1px solid var(--ion-color-light-shade);">
+                    <ion-button fill="clear" color="danger" size="small" *ngIf="getOptionsArray(attribute).length > 1"
+                      (click)="removeOption(asFormGroup(attribute), j)">
+                      <ion-icon name="close-outline"></ion-icon>
+                    </ion-button>
+                  </div>
+                </ion-item>
+              </div>
+              <!-- <ion-button fill="outline" size="small" (click)="addOption(asFormGroup(attribute), attribute.value.type)">
+                <ion-icon name="add" slot="start"></ion-icon>
+                Añadir opción
+              </ion-button> -->
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
 
-          }
-        </ion-col>
-      </ion-row>
+      <!-- Nueva UI para Variantes Anidadas -->
+      <ion-card *ngIf="attributesAdded.length > 0">
+        <ion-card-header>
+          <ion-card-title class="flex items-center gap-2">
+            <ion-icon name="layers-outline"></ion-icon>
+            Gestión de Variantes
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content class="p-0 m-0">
 
-      <ion-row class="mb-5">
-        <div class="subtitle">
-          Variantes
-        </div>
-        <ion-col size="12">
-          @for(att of formAttributes.controls; let i = $index; track att){
-          @for(opt of att.value.options; track opt){
-            <div>{{opt.name}}</div>
-            }
-          }
+          <!-- Botón para añadir atributo principal -->
+          <div *ngIf="primaryAttribute && nestedVariants.length === 0" class="text-center py-4">
+            <ion-button fill="solid" (click)="showAddPrimaryModal = true">
+              <ion-icon name="add" slot="start"></ion-icon>
+              Añadir {{ primaryAttribute === 'color' ? 'Color' : primaryAttribute === 'size' ? 'Talla' : 'Material' }}
+            </ion-button>
+          </div>
 
-        </ion-col>
+          <!-- Lista de opciones del atributo principal -->
+          <div *ngFor="let primaryOption of nestedVariants; trackBy: trackByAttributeId" class="variant-block">
+              <div class="primary-option-header">
+              <div class="flex items-center gap-2">
+                <!-- Color square triggers native color picker directly -->
+                <ng-container *ngIf="primaryAttribute === 'color'">
+                  <input #colorPicker type="color" hidden
+                         [value]="primaryOption.colorHex || '#000000'"
+                         (input)="primaryOption.colorHex = $event.target.value" />
+                  <div
+                    [style.background-color]="primaryOption.colorHex || '#000000'"
+                    (click)="colorPicker.click()"
+                    style="width: 20px; height: 20px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer;"
+                    title="Cambiar color"></div>
+                </ng-container>
+                <!-- Inline IonInput for color name -->
+                <ion-input
+                  [(ngModel)]="primaryOption.name"
+                  [ngModelOptions]="{ standalone: true }"
+                  placeholder="Nombre del color"
+                  style="--padding-start: 6px; --padding-end: 6px; height: 28px; min-width: 140px; border: 1px solid #ddd; border-radius: 4px;">
+                </ion-input>
+              </div>
+              <ion-button fill="clear" color="danger" size="small" (click)="removePrimaryOption(primaryOption.id)">
+                <ion-icon name="trash-outline"></ion-icon>
+              </ion-button>
+            </div>
+
+            <!-- Productos asociados a este color/atributo -->
+            <div class="products-for-attribute">
+              <div *ngIf="primaryOption.products && primaryOption.products.length > 0" class="products-list">
+                <div *ngFor="let product of primaryOption.products; let i = index; trackBy: trackByProductId" class="product-item">
+                  <div class="product-fields">
+                    <div style="display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                      <ion-item>
+                        <ion-label position="stacked">SKU</ion-label>
+                        <ion-input [(ngModel)]="product.sku" placeholder="Ej: CAM-001-{{ primaryOption.name.charAt(0).toUpperCase() }}"></ion-input>
+                      </ion-item>
+                      <ion-item>
+                        <ion-label position="stacked">Precio *</ion-label>
+                        <ion-input [(ngModel)]="product.price" type="number" placeholder="0.00">
+                          <div slot="start">€</div>
+                        </ion-input>
+                      </ion-item>
+                      <ion-item>
+                        <ion-label position="stacked">Stock *</ion-label>
+                        <ion-input [(ngModel)]="product.stock" type="number" placeholder="0"></ion-input>
+                      </ion-item>
+                      <ion-item>
+                        <ion-label position="stacked">Estado</ion-label>
+                        <ion-select [(ngModel)]="product.status" interface="popover">
+                          <ion-select-option value="active">Activo</ion-select-option>
+                          <ion-select-option value="paused">Pausado</ion-select-option>
+                          <ion-select-option value="archived">Archivado</ion-select-option>
+                        </ion-select>
+                      </ion-item>
+                    </div>
+                    <div class="flex justify-end mt-2">
+                      <ion-button 
+                        fill="clear" 
+                        color="danger" 
+                        size="small" 
+                        [disabled]="!canRemoveProduct(primaryOption.id)"
+                        (click)="removeProductFromAttribute(primaryOption.id, i)">
+                        <ion-icon name="trash-outline"></ion-icon>
+                        Eliminar Producto
+                      </ion-button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Botón para añadir producto a este atributo -->
+              <div class="text-center py-3">
+                <ion-button fill="solid" size="small" (click)="addProductToAttribute(primaryOption.id)">
+                  <ion-icon name="add" slot="start"></ion-icon>
+                  Añadir Producto a {{ primaryOption.name }}
+                </ion-button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botón para añadir más opciones del atributo principal -->
+          <div *ngIf="nestedVariants.length > 0" class="text-center py-2">
+            <ion-button fill="outline" (click)="showAddPrimaryModal = true">
+              <ion-icon name="add" slot="start"></ion-icon>
+              Añadir otro {{ primaryAttribute === 'color' ? 'Color' : primaryAttribute === 'size' ? 'Talla' : 'Material'
+              }}
+            </ion-button>
+          </div>
+
+        </ion-card-content>
+      </ion-card>
+      <br><br><br><br><br><br>
 
 
-
-      </ion-row>
-
-      <div>
-
-      </div>
-
-
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ion-item>
-          <ion-label position="stacked">Precio</ion-label>
-          <ion-input formControlName="price" type="number" required></ion-input>
-        </ion-item>
-        <ion-item>
-          <ion-label position="stacked">Stock</ion-label>
-          <ion-input formControlName="stock" type="number" required></ion-input>
-        </ion-item>
-      </div>
-
-      <ion-item>
-        <ion-label position="stacked">SKU</ion-label>
-        <ion-input formControlName="sku" type="text"></ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-label>Estado</ion-label>
-        <ion-select formControlName="status" interface="popover">
-          <ion-select-option value="active">Activo</ion-select-option>
-          <ion-select-option value="paused">Pausado</ion-select-option>
-        </ion-select>
-      </ion-item>
     </form>
   </div>
 </ion-content>
+
+<!-- Modal para añadir atributo principal -->
+<ion-modal [isOpen]="showAddPrimaryModal" (didDismiss)="closeAddPrimaryModal()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Añadir {{ primaryAttribute === 'color' ? 'Color' : primaryAttribute === 'size' ? 'Talla' : 'Material' }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeAddPrimaryModal()">
+            <ion-icon name="close"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <ion-item>
+        <ion-label position="stacked">Nombre</ion-label>
+        <ion-input [(ngModel)]="newPrimaryName" placeholder="Ej: Rojo, Azul, M, L..."></ion-input>
+      </ion-item>
+
+      <ion-item *ngIf="primaryAttribute === 'color'">
+        <ion-label position="stacked">Color (Hex)</ion-label>
+        <input type="color" [(ngModel)]="newPrimaryColor" value="#000000"
+          style="width: 100%; height: 40px; border: none; border-radius: 4px;">
+      </ion-item>
+
+      <div class="ion-margin-top">
+        <ion-button expand="block" (click)="confirmAddPrimary()">
+          <ion-icon name="add" slot="start"></ion-icon>
+          Añadir {{ primaryAttribute === 'color' ? 'Color' : primaryAttribute === 'size' ? 'Talla' : 'Material' }}
+        </ion-button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
