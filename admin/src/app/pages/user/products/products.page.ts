@@ -10,8 +10,10 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { cubeOutline, add, trash } from 'ionicons/icons';
-import { Observable } from 'rxjs';
-import { Product, ProductsService } from '../../../services/products.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { ProductsService } from '../../../services/products.service';
+import { Product } from 'src/app/interfaces/product';
 import { CurrencyPipe } from '@angular/common';
 
 @Component({
@@ -28,10 +30,16 @@ import { CurrencyPipe } from '@angular/common';
   ]
 })
 export class ProductsPage implements OnInit {
+  // ...existing code...
+
+  trackProduct(index: number, product: Product) {
+    return product.id;
+  }
   private productsService = inject(ProductsService);
   private alertCtrl = inject(AlertController);
 
-  products$!: Observable<Product[]>;
+  products: Product[] = [];
+  private destroy$ = new Subject<void>();
   filterStatus: 'all' | 'active' | 'paused' = 'all';
 
   constructor() {
@@ -43,12 +51,19 @@ export class ProductsPage implements OnInit {
   }
 
   loadProducts() {
-    this.products$ = this.productsService.getProductsByStatus(this.filterStatus);
-    console.log(this.products$)
+    this.productsService.getProductsByStatus(this.filterStatus)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(products => {
+        this.products = products;
+      });
   }
 
   segmentChanged(event: any) {
     this.loadProducts();
+  }
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
   
   async deleteProduct(productId: string) {

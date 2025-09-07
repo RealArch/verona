@@ -1,0 +1,28 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Seleccionar Categoría</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="close()">Cerrar</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+<ion-content>
+  <div *ngIf="selectedPath.length > 0">
+    <ion-button (click)="goBack()">Atrás</ion-button>
+    <div>
+      <strong>Ruta seleccionada:</strong>
+      <span *ngFor="let cat of selectedPath; let last = last">
+        {{cat.name}}{{!last ? ' > ' : ''}}
+      </span>
+    </div>
+  </div>
+  <ion-list *ngIf="categories.length > 0">
+    <ion-item *ngFor="let category of categories" (click)="selectCategory(category)">
+      <ion-label>{{category.name}}</ion-label>
+    </ion-item>
+  </ion-list>
+  <div *ngIf="loading">Cargando...</div>
+  <div *ngIf="categories.length === 0 && selectedPath.length > 0 && !loading">
+    <ion-button expand="block" color="primary" (click)="confirmSelection()">Seleccionar árbol</ion-button>
+  </div>
+</ion-content>

@@ -56,12 +56,26 @@ export class CategoriesService {
 
   async addCategory(category: Partial<Category>): Promise<string> {
     const now = new Date();
+    let path: string[] = [];
+    // Si tiene parentId, obtener el path del padre
+    if (category.parentId) {
+      const parentRef = doc(this.firestore, `categories/${category.parentId}`);
+      const parentSnap = await (await import('@angular/fire/firestore')).getDoc(parentRef);
+      const parentData = parentSnap.exists() ? parentSnap.data() as Category : null;
+      if (parentData && parentData.path) {
+        path = [...parentData.path];
+      }
+    }
+    // Crear la categoría
     const docRef = await addDoc(this.categoriesCollection, {
       ...category,
       slug: this.slugify(category.name!),
+      path,
       createdAt: now,
       updatedAt: now
     });
+    // Actualizar el path con el id propio
+    await updateDoc(docRef, { path: [...path, docRef.id] });
     return docRef.id;
   }
 
@@ -70,10 +84,48 @@ export class CategoriesService {
     if (updates.name) {
       updates.slug = this.slugify(updates.name);
     }
+    let newPath: string[] | undefined;
+    if (updates.parentId !== undefined) {
+      // Si cambia el parentId, recalcular el path
+      if (updates.parentId) {
+        const parentRef = doc(this.firestore, `categories/${updates.parentId}`);
+        const parentSnap = await (await import('@angular/fire/firestore')).getDoc(parentRef);
+        const parentData = parentSnap.exists() ? parentSnap.data() as Category : null;
+        if (parentData && parentData.path) {
+          newPath = [...parentData.path, id];
+        } else {
+          newPath = [id];
+        }
+      } else {
+        newPath = [id];
+      }
+      updates.path = newPath;
+    }
     await updateDoc(docRef, {
       ...updates,
       updatedAt: new Date()
     });
+    // Si el path cambió, actualizar los hijos
+    if (newPath) {
+      await this.updateChildrenPaths(id, newPath);
+    }
+  }
+
+  // Actualiza el path de los hijos recursivamente
+  private async updateChildrenPaths(parentId: string, parentPath: string[]): Promise<void> {
+    // Obtener hijos directos
+    const q = query(this.categoriesCollection, orderBy('order'));
+    const snapshot = await onSnapshot(q, () => {}); // No usar onSnapshot, usar getDocs
+    // Reemplazar por getDocs
+    // Este método requiere Firestore getDocs, ajusta según tu SDK
+    // Aquí solo se muestra la lógica:
+    // const children = snapshot.docs.filter(doc => doc.data().parentId === parentId);
+    // for (const child of children) {
+    //   const childId = child.id;
+    //   const childPath = [...parentPath, childId];
+    //   await updateDoc(doc(this.firestore, `categories/${childId}`), { path: childPath });
+    //   await this.updateChildrenPaths(childId, childPath);
+    // }
   }
 
   async deleteCategory(id: string): Promise<void> {

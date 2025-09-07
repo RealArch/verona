@@ -21,42 +21,42 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <div *ngIf="products$ | async as products; else loadingOrError">
-    <div *ngIf="products.length === 0" class="empty-state">
+  <div *ngIf="products.length !== undefined; else loadingOrError">
+  <div *ngIf="products.length === 0" class="empty-state">
       <ion-icon name="cube-outline"></ion-icon>
       <p>No hay productos para mostrar.</p>
       <p>¡Añade tu primer producto!</p>
     </div>
 
     <ion-list *ngIf="products.length > 0">
-      @for(product of products; track product){
-      <ion-item-sliding>
-        <ion-item button [routerLink]="['/product-form', product.id]">
+      <ng-container *ngFor="let product of products; trackBy: trackProduct">
+        <ion-item-sliding>
+          <ion-item button [routerLink]="['/product-form', product.id]">
+            <ion-thumbnail slot="start">
+              <ng-container *ngIf="product.processing === false; else loading">
+                <img [src]="product.photos[0]?.thumbnail?.url" (error)="onImgError($event)" />
+              </ng-container>
+              <ng-template #loading>
+                <ion-spinner></ion-spinner>
+              </ng-template>
+            </ion-thumbnail>
 
-          <ion-thumbnail slot="start">
-            @if(product.processing == false){
-            <img [src]="product.images?.thumbnail" (error)="onImgError($event)" />
-            } @else {
-              <ion-spinner></ion-spinner>
-            }
-          </ion-thumbnail>
-
-          <ion-label>
-            <h2>{{ product.name }}</h2>
-            <p>SKU: {{ product.sku }} | Stock: {{ product.stock }}</p>
-            <p>{{ product.price | currency:'USD' }}</p>
-          </ion-label>
-          <ion-note slot="end" [color]="product.status === 'active' ? 'success' : 'warning'">
-            {{ product.status }}
-          </ion-note>
-        </ion-item>
-        <ion-item-options side="end">
-          <ion-item-option (click)="deleteProduct(product.id!)" color="danger" expandable>
-            <ion-icon slot="icon-only" name="trash"></ion-icon>
-          </ion-item-option>
-        </ion-item-options>
-      </ion-item-sliding>
-      }
+            <ion-label>
+              <h2>{{ product.name }}</h2>
+              <p>SKU: {{ product.sku }} | Stock: {{ product.stock }}</p>
+              <p>{{ product.price | currency:'USD' }}</p>
+            </ion-label>
+            <ion-note slot="end" [color]="product.status === 'active' ? 'success' : 'warning'">
+              {{ product.status }}
+            </ion-note>
+          </ion-item>
+          <ion-item-options side="end">
+            <ion-item-option (click)="deleteProduct(product.id!)" color="danger" expandable>
+              <ion-icon slot="icon-only" name="trash"></ion-icon>
+            </ion-item-option>
+          </ion-item-options>
+        </ion-item-sliding>
+      </ng-container>
     </ion-list>
   </div>
 

@@ -11,6 +11,7 @@ const serviceAccount = serviceAccountJson as admin.ServiceAccount;
 // Llama a initializeApp() UNA SOLA VEZ en toda tu aplicación
 initializeApp({
     credential: cert(serviceAccount),
+    storageBucket: 'verona-ffbcd.firebasestorage.app' // Reemplaza con el nombre de tu bucket
 });
 
 // Crea y exporta las instancias de los servicios que usarás

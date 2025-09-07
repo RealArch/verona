@@ -8,13 +8,15 @@
  */
 
 import { setGlobalOptions } from "firebase-functions";
+// import { onProductCreated } from "./productImageTrigger";
 import express from "express";
 import { onRequest } from "firebase-functions/v2/https";
 //IMPORT RUTAS
 import adminRouter from "./routes/admin.router";
 import categoriesRouter from "./routes/categories.router";
+import productsRouter, { onProductCreated, onProductDeleted } from "./routes/products.router";
 //importamos la app de firebase
-import "./firebase-init"; 
+import "./firebase-init";
 
 const app = express();
 
@@ -26,8 +28,12 @@ app.get("/", (req, res) => {
 //RUTAS
 app.use("/admin", adminRouter)
 app.use('/categories', categoriesRouter);
+app.use('/products', productsRouter);
 
 export const api = onRequest(app)
+//PRODUCTS TRIGGERS
+export { onProductCreated };
+export { onProductDeleted };
 // import {onRequest} from "firebase-functions/https";
 // import * as logger from "firebase-functions/logger";
 

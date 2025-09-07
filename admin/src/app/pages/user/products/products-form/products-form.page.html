@@ -62,11 +62,57 @@
         </ion-item>
         <ion-item class="col-span-6">
           <ion-label position="stacked">Categoría</ion-label>
-          <ion-select formControlName="categoryId" placeholder="Seleccionar categoría">
-            <ion-select-option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</ion-select-option>
-          </ion-select>
+          <div *ngIf="selectedCategoryPath && selectedCategoryPath.length > 0" class="selected-path">
+            <span *ngFor="let cat of selectedCategoryPath; let last = last">
+              {{cat.name}}{{!last ? ' > ' : ''}}
+            </span>
+            <ion-button color="primary" size="small" (click)="modifySelectedCategory()">Modificar</ion-button>
+          </div>
+          <ion-button *ngIf="!selectedCategoryPath || selectedCategoryPath.length === 0" expand="block"
+            (click)="openSelectCategoryModal()" [disabled]="isUploading">
+            Seleccionar categoría
+          </ion-button>
         </ion-item>
       </div>
+
+
+
+        <ion-item class="col-span-12">
+          <ion-label position="stacked">Variaciones</ion-label>
+          <ion-button expand="block" (click)="addVariation()">Añadir variación</ion-button>
+          <div *ngFor="let variation of variations; let vIdx = index" class="variation-block">
+            <ion-item>
+              <ion-label position="stacked">Tipo de variación</ion-label>
+              <ion-select [(ngModel)]="variation.type">
+                <ion-select-option value="color">Color</ion-select-option>
+                <ion-select-option value="size">Tamaño</ion-select-option>
+                <ion-select-option value="material">Material</ion-select-option>
+                <ion-select-option value="custom">Personalizado</ion-select-option>
+              </ion-select>
+            </ion-item>
+            <ion-button expand="block" (click)="addVariationProduct(vIdx)">Añadir producto</ion-button>
+            <div *ngFor="let prod of variation.products; let i = index" class="variation-product-bar">
+              <ion-item>
+                <ion-label position="stacked">Nombre</ion-label>
+                <ion-input [(ngModel)]="prod.name" placeholder="Nombre"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">Stock</ion-label>
+                <ion-input type="number" [(ngModel)]="prod.stock" placeholder="Stock"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">SKU</ion-label>
+                <ion-input [(ngModel)]="prod.sku" placeholder="SKU"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-label position="stacked">Precio</ion-label>
+                <ion-input type="number" [(ngModel)]="prod.price" placeholder="Precio"></ion-input>
+              </ion-item>
+              <ion-button color="danger" size="small" (click)="removeVariationProduct(vIdx, i)">Eliminar</ion-button>
+            </div>
+            <ion-button color="danger" size="small" (click)="removeVariation(vIdx)">Eliminar variación</ion-button>
+          </div>
+        </ion-item>
 
 
 

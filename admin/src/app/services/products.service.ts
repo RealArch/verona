@@ -18,26 +18,8 @@ import { Storage, ref, uploadBytes, getDownloadURL, deleteObject, uploadBytesRes
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { Product } from 'src/app/interfaces/product';
 
-export interface Product {
-  id?: string;
-  name: string;
-  slug: string;
-  description: string;
-  price: number;
-  sku: string;
-  stock: number;
-  categoryId: string;
-  images: {
-    thumbnail: string;
-    standard: string;
-  };
-  fotos: string[]; // Array de rutas de imágenes
-  status: 'active' | 'paused' | 'processing';
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  processing?: boolean; // Indica si el producto está en procesamiento
-}
 
 @Injectable({
   providedIn: 'root'

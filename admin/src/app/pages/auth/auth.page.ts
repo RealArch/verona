@@ -34,6 +34,7 @@ export class AuthPage implements OnInit {
       this.authSubscription = this.authService.user$.subscribe(user => {
         const currentUrl = this.router.url;
         if (user) {
+          console.log(user)
           // Usuario autenticado
           if (currentUrl === '/login' || currentUrl === '/admin-setup' || currentUrl === '/') {
             this.router.navigate(['/dashboard']);
@@ -41,7 +42,7 @@ export class AuthPage implements OnInit {
         } else {
           // Usuario no autenticado
           if (this.hasAdminUsers) {
-            this.router.navigate(['/login']);
+            this.router.navigate(['auth/login']);
           } else {
             this.router.navigate(['/auth/admin-setup']);
           }

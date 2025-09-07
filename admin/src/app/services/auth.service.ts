@@ -45,9 +45,9 @@ export class AuthService {
 
   async hasAdminUsers(): Promise<boolean> {
     // Verificar si ya existen usuarios administradores
-    const adminUsersRef = doc(this.firestore, 'metadata/adminUsers');
+    const adminUsersRef = doc(this.firestore, 'metadata/counters');
     const snapshot = await getDoc(adminUsersRef);
-    return snapshot.exists() && snapshot.data()['count'] > 0;
+    return snapshot.exists() && snapshot.data()['adminUsers'] > 0;
   }
 
   async getCurrentUserData(): Promise<AdminUser | null> {

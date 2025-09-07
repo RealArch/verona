@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
-import * as admin from "firebase-admin";
-import { FieldValue, Timestamp, getFirestore } from 'firebase-admin/firestore';
+// import * as admin from "firebase-admin";
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { db, auth } from '../firebase-init';
-import { info } from 'firebase-functions/logger';
+// import { info } from 'firebase-functions/logger';
 
 const usersRouter: Router = Router();
 

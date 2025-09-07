@@ -1,13 +1,14 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent,
   IonItem, IonLabel, IonInput, IonTextarea, IonSelect, IonSelectOption,
   IonGrid, IonRow, IonCol, IonButton, IonIcon, IonFabButton,
-  ToastController, IonSpinner, IonProgressBar, IonCard, IonCardHeader, IonCardContent, IonCardTitle
-} from '@ionic/angular/standalone';
+  ToastController, IonSpinner, IonProgressBar, IonCard, IonCardHeader, IonCardContent, IonCardTitle,
+  ModalController, IonPopover, IonList } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { save, cloudUploadOutline, folderOpenOutline, cameraOutline, trashOutline, addCircleOutline } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -16,6 +17,8 @@ import { AuthService } from 'src/app/services/auth.service';
 import { ProductsService } from 'src/app/services/products.service';
 import { CategoriesService, Category } from 'src/app/services/categories.service';
 import { firstValueFrom } from 'rxjs';
+import { NewPhoto, ProductPhoto } from 'src/app/interfaces/product-photo';
+import { SelectCategoryModalComponent } from './select-category/select-category-modal.component';
 
 interface ImageFile {
   file: File;
@@ -30,14 +33,66 @@ interface ImageFile {
   templateUrl: './products-form.page.html',
   styleUrls: ['./products-form.page.scss'],
   standalone: true,
-  imports: [IonCardTitle, IonCardContent, IonCardHeader, IonCard,
-    CommonModule, ReactiveFormsModule,
+  imports: [IonList, IonPopover, IonCardTitle, IonCardContent, IonCardHeader, IonCard,
+  CommonModule, ReactiveFormsModule, FormsModule,
     IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent,
     IonItem, IonLabel, IonInput, IonTextarea, IonSelect, IonSelectOption,
     IonGrid, IonRow, IonCol, IonButton, IonIcon, IonFabButton, IonSpinner, IonProgressBar
   ]
 })
 export class ProductFormPage implements OnInit {
+  variations: {
+    type: 'color' | 'size' | 'material' | 'custom';
+    products: {
+      name: string;
+      stock: number;
+      sku?: string;
+      price: number;
+    }[];
+  }[] = [];
+
+  addVariation() {
+    this.variations.push({ type: 'color', products: [] });
+  }
+
+  removeVariation(index: number) {
+    this.variations.splice(index, 1);
+  }
+
+  addVariationProduct(variationIdx: number) {
+    this.variations[variationIdx].products.push({ name: '', stock: 0, sku: '', price: 0 });
+  }
+
+  removeVariationProduct(variationIdx: number, productIdx: number) {
+    this.variations[variationIdx].products.splice(productIdx, 1);
+  }
+  async modifySelectedCategory() {
+    const modal = await this.modalCtrl.create({
+      component: SelectCategoryModalComponent,
+      componentProps: {
+        initialPath: this.selectedCategoryPath
+      }
+    });
+    modal.present();
+    const { data, role } = await modal.onWillDismiss();
+    if (role === 'confirm' && data && Array.isArray(data) && data.length > 0) {
+      this.selectedCategoryPath = data;
+      this.productForm.get('categoryId')?.setValue(data[data.length - 1].id);
+    } else if (role === 'confirm' && (!data || data.length === 0)) {
+      this.selectedCategoryPath = [];
+      this.productForm.get('categoryId')?.setValue(null);
+    }
+  }
+  selectedCategoryPath: Category[] = [];
+  modalCtrl = inject(ModalController);
+
+
+
+
+  removeSelectedCategory() {
+    this.selectedCategoryPath = [];
+    this.productForm.get('categoryId')?.setValue(null);
+  }
   private fb = inject(FormBuilder);
   private productsService = inject(ProductsService);
   private categoriesService = inject(CategoriesService);
@@ -72,7 +127,7 @@ export class ProductFormPage implements OnInit {
       sku: [''],
       categoryId: [null, Validators.required],
       status: ['active', Validators.required],
-      fotos: this.fb.array([]) // Array para las fotos
+      photos: this.fb.array([]) // Array para las fotos
 
     });
   }
@@ -174,9 +229,16 @@ export class ProductFormPage implements OnInit {
         }
       );
       fileWrapper.tempPath = result.path;
-      // Añadir la ruta al FormArray 'fotos'
-      const fotos = this.productForm.get('fotos') as FormArray;
-      fotos.push(this.fb.control(result.path));
+      // Añadir el objeto ProductPhoto al FormArray 'photos'
+      const photos = this.productForm.get('photos') as FormArray;
+      const productPhoto: NewPhoto = {
+        name: fileWrapper.file.name,
+        path: result.path,
+        url: result.url || '',
+        type: fileWrapper.file.type,
+        processing: true,
+      };
+      photos.push(this.fb.control(productPhoto));
     } catch (error) {
       console.error('Error uploading image:', error);
       // this.presentToast('Error al subir la imagen', 'danger');
@@ -195,11 +257,11 @@ export class ProductFormPage implements OnInit {
     if (fileWrapper.tempPath) {
       try {
         await this.productsService.deleteTempImage(fileWrapper.tempPath);
-        // Remover la ruta del FormArray 'fotos'
-        const fotos = this.productForm.get('fotos') as FormArray;
-        const fotoIndex = fotos.controls.findIndex(control => control.value === fileWrapper.tempPath);
-        if (fotoIndex > -1) {
-          fotos.removeAt(fotoIndex);
+        // Remover el objeto ProductPhoto del FormArray 'photos' comparando el path
+        const photos = this.productForm.get('photos') as FormArray;
+        const photoIndex = photos.controls.findIndex(control => control.value && control.value.path === fileWrapper.tempPath);
+        if (photoIndex > -1) {
+          photos.removeAt(photoIndex);
         }
       } catch (error) {
         console.error('Error deleting temp image', error);
@@ -215,18 +277,18 @@ export class ProductFormPage implements OnInit {
     }
 
     try {
-      console.log(this.isEditMode)
       if (this.isEditMode && this.productId) {
-        // Para el modo de edición, solo necesitamos los valores del formulario.
-        // El servicio se encargará de añadir el 'updatedAt'.
-        const productData = this.productForm.value;
+        const productData = {
+          ...this.productForm.value,
+          variations: this.variations
+        };
         await this.productsService.updateProduct(this.productId, productData);
         this.presentToast('Producto actualizado con éxito', 'success');
       } else {
-        // Para un nuevo producto, añadimos el estado y los timestamps.
         const newProductData = {
           ...this.productForm.value,
-          processing: true, // Establece el estado a "processing"
+          variations: this.variations,
+          processing: true,
         };
         await this.productsService.addProduct(newProductData);
         this.presentToast('Producto creado con éxito. Se está procesando.', 'success');
@@ -236,9 +298,25 @@ export class ProductFormPage implements OnInit {
       console.error('Error saving product:', error);
       this.presentToast('Error al guardar el producto', 'danger');
     }
-
-
   }
+
+
+
+  async openSelectCategoryModal() {
+    const modal = await this.modalCtrl.create({
+      component: SelectCategoryModalComponent,
+    });
+    modal.present();
+
+
+    const { data, role } = await modal.onWillDismiss();
+    if (role === 'confirm' && data && Array.isArray(data) && data.length > 0) {
+      this.selectedCategoryPath = data;
+      this.productForm.get('categoryId')?.setValue(data[data.length - 1].id);
+    }
+  }
+
+
   async presentToast(message: string, color: 'success' | 'warning' | 'danger') {
     const toast = await this.toastCtrl.create({
       message,
