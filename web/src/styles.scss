@@ -1,0 +1,56 @@
+/* You can add global styles to this file, and also import other style files */
+
+@use "tailwindcss";
+@plugin "daisyui";
+
+
+@plugin "daisyui/theme" {
+  name: "veronaTheme";
+  default: true;
+  prefersdark: false;
+  color-scheme: "light";
+
+  /* Colores base inspirados en Verona - tonos mediterráneos */
+  --color-base-100: #fefefe; /* Blanco puro */
+  --color-base-200: #f8f9fa; /* Gris muy claro */
+  --color-base-300: #e9ecef; /* Gris claro */
+  --color-base-content: #212529; /* Gris oscuro para texto */
+
+  /* Colores primarios - Verde oliva mediterráneo */
+  --color-primary: #4a7c59; /* Verde oliva principal */
+  --color-primary-content: #ffffff; /* Blanco sobre verde */
+
+  /* Colores secundarios - Azul mediterráneo */
+  --color-secondary: #2c5f5d; /* Verde azulado */
+  --color-secondary-content: #ffffff; /* Blanco sobre azul */
+
+  /* Colores de acento - Dorado antiguo */
+  --color-accent: #d4af37; /* Dorado */
+  --color-accent-content: #1a1a1a; /* Negro sobre dorado */
+
+  /* Colores neutrales - Piedra y mármol */
+  --color-neutral: #6c757d; /* Gris neutro */
+  --color-neutral-content: #ffffff; /* Blanco sobre gris */
+
+  /* Colores de estado */
+  --color-info: #0dcaf0; /* Azul info */
+  --color-info-content: #ffffff;
+  --color-success: #198754; /* Verde éxito */
+  --color-success-content: #ffffff;
+  --color-warning: #ffc107; /* Amarillo warning */
+  --color-warning-content: #000000;
+  --color-error: #dc3545; /* Rojo error */
+  --color-error-content: #ffffff;
+
+  /* Bordes y radios inspirados en arquitectura romana/veronesa */
+  --radius-selector: 0.5rem; /* Bordes suaves */
+  --radius-field: 0.75rem; /* Campos más redondeados */
+  --radius-box: 1rem; /* Cajas con curvas elegantes */
+
+  /* Tamaños y profundidades */
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px; /* Bordes finos */
+  --depth: 0.5; /* Sombras sutiles */
+  --noise: 0; /* Sin ruido */
+}
