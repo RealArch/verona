@@ -76,6 +76,5 @@ firebase-debug.*.log
 .firestore/
 .storage/
 .database/
-/dir/
-/.dir/
+dir
 
