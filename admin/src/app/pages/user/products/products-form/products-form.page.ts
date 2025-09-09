@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, NgZone, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray, AbstractControl, FormControl } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
@@ -27,11 +27,29 @@ interface ImageFile {
   tempPath?: string;
 }
 
+// Domain models for variants
+interface VariantProduct {
+  id: string;
+  sku: string;
+  price: number | null;
+  stock: number | null;
+  status: 'active' | 'paused' | 'archived';
+}
+
+interface PrimaryOption {
+  id: string;
+  name: string;
+  colorHex: string | null;
+  products: VariantProduct[];
+  showColorPicker?: boolean;
+}
+
 @Component({
   selector: 'app-product-form',
   templateUrl: './products-form.page.html',
   styleUrls: ['./products-form.page.scss'],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [IonModal, IonGrid, IonRow, IonCol, IonIcon, IonButton, IonList, IonPopover, IonCardTitle, IonCardContent, IonCardHeader, IonCard,
     CommonModule, ReactiveFormsModule, FormsModule,
     IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent,
@@ -52,6 +70,7 @@ export class ProductFormPage implements OnInit {
   private route = inject(ActivatedRoute);
   private toastCtrl = inject(ToastController);
   private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
 
   productForm!: FormGroup;
   isEditMode = false;
@@ -95,7 +114,7 @@ export class ProductFormPage implements OnInit {
   //VARIANTES
   attributesAdded: string[] = [];
   // Nueva estructura para variaciones anidadas
-  nestedVariants: any[] = [];
+  nestedVariants: PrimaryOption[] = [];
   showAddPrimaryModal = false;
   showAddSecondaryModalFlag = false;
   currentPrimaryOptionId = '';
@@ -103,6 +122,8 @@ export class ProductFormPage implements OnInit {
   // Variables para el modal
   newPrimaryName = '';
   newPrimaryColor = '#000000';
+  // Etiqueta del atributo principal precomputada para UI
+  primaryAttrLabel: 'Color' | 'Talla' | 'Material' | '' = '';
   
   // Obtener el primer atributo (principal)
   get primaryAttribute() {
@@ -119,74 +140,71 @@ export class ProductFormPage implements OnInit {
     return this.attributesAdded.length > 2 ? this.attributesAdded[2] : null;
   }
   
-  // Método para añadir una nueva opción del atributo principal
-  addPrimaryOption(name: string, colorHex?: string | null) {
-    const newOption = {
-      id: Date.now().toString(),
-      name: name,
+  // Helpers
+  private createVariantProduct(baseId?: string): VariantProduct {
+    return {
+      id: (baseId ? `${baseId}_product` : Date.now().toString()),
+      sku: '',
+      price: null,
+      stock: null,
+      status: 'active'
+    } as VariantProduct;
+  }
+  
+  private createPrimaryOption(name: string, colorHex?: string | null): PrimaryOption {
+    const id = Date.now().toString();
+    return {
+      id,
+      name,
       colorHex: colorHex || null,
-      products: [{
-        id: Date.now().toString() + '_product',
-        sku: '',
-        price: null,
-        stock: null,
-        status: 'active'
-      }] // Automáticamente añadir el primer producto
-    };
-    this.nestedVariants.push(newOption);
-    this.cdr.detectChanges(); // Forzar detección de cambios
+      products: [this.createVariantProduct(id)],
+      showColorPicker: false
+    } as PrimaryOption;
   }
   
   // Método para añadir un producto a un atributo específico
-  addProductToAttribute(attributeId: string) {
-    const attribute = this.nestedVariants.find(v => v.id === attributeId);
-    if (attribute) {
-      const newProduct = {
-        id: Date.now().toString(),
-        sku: '',
-        price: null,
-        stock: null,
-        status: 'active'
-      };
-      if (!attribute.products) {
-        attribute.products = [];
-      }
-      attribute.products.push(newProduct);
-      this.cdr.detectChanges(); // Forzar detección de cambios
-    }
-  }
+  // Eliminada la función addProductToAttribute: cada variante solo puede tener un producto
   
   // Método para eliminar un producto de un atributo
-  removeProductFromAttribute(attributeId: string, productIndex: number) {
-    const attribute = this.nestedVariants.find(v => v.id === attributeId);
-    if (attribute && attribute.products && attribute.products.length > 1) {
-      attribute.products.splice(productIndex, 1);
-      this.cdr.detectChanges(); // Forzar detección de cambios
+  removeProductFromAttribute(attributeId: string) {
+      this.ngZone.run(() => {
+        this.nestedVariants = this.nestedVariants.map(v => {
+          if (v.id !== attributeId) return v;
+          // Solo elimina el producto si hay más de una variante
+          return { ...v, products: [] } as PrimaryOption;
+        });
+        this.cdr.markForCheck();
+      });
     }
-  }
   
   // Método para verificar si se puede eliminar un producto (debe haber al menos 2)
   canRemoveProduct(attributeId: string): boolean {
-    const attribute = this.nestedVariants.find(v => v.id === attributeId);
-    const canRemove = attribute && attribute.products ? attribute.products.length > 1 : false;
-    return canRemove;
+      // Solo permite eliminar el producto si hay más de una variante
+      return this.nestedVariants.length > 1;
+    }
+  
+  // Método para verificar si se puede eliminar una variante principal (debe haber al menos 2)
+  canRemovePrimaryVariant(): boolean {
+    return this.nestedVariants.length > 1;
   }
   
   // Función trackBy para mejor performance en ngFor
-  trackByAttributeId(index: number, item: any): any {
+  trackByAttributeId(index: number, item: PrimaryOption): any {
     return item.id;
   }
   
-  trackByProductId(index: number, item: any): any {
+  trackByProductId(index: number, item: VariantProduct): any {
     return item.id;
   }
   
   // Método para eliminar una opción principal
   removePrimaryOption(optionId: string) {
-    const index = this.nestedVariants.findIndex(v => v.id === optionId);
-    if (index > -1) {
-      this.nestedVariants.splice(index, 1);
-    }
+    this.ngZone.run(() => {
+      if (this.nestedVariants.length > 1) {
+  this.nestedVariants = this.nestedVariants.filter(v => v.id !== optionId);
+  this.cdr.markForCheck();
+      }
+    });
   }
   
   // Crear una variante individual
@@ -216,8 +234,10 @@ export class ProductFormPage implements OnInit {
   confirmAddPrimary() {
     if (this.newPrimaryName.trim()) {
       const colorHex = this.primaryAttribute === 'color' ? this.newPrimaryColor : null;
-      this.addPrimaryOption(this.newPrimaryName.trim(), colorHex);
+      const newOption = this.createPrimaryOption(this.newPrimaryName.trim(), colorHex);
+      this.nestedVariants = [...this.nestedVariants, newOption];
       this.closeAddPrimaryModal();
+      this.cdr.markForCheck();
     }
   }
   
@@ -227,9 +247,30 @@ export class ProductFormPage implements OnInit {
     // Reset form
     this.newPrimaryName = '';
     this.newPrimaryColor = '#000000';
-    this.cdr.detectChanges(); // Forzar detección de cambios
+    this.cdr.markForCheck();
   }
   
+  // Añadir variante principal directamente sin modal
+  addPrimaryVariantDirect() {
+    this.ngZone.run(() => {
+      const index = this.nestedVariants.length + 1;
+      let name = '';
+      let colorHex = null;
+      
+      if (this.primaryAttribute === 'color') {
+        name = `Color ${index}`;
+        colorHex = '#000000';
+      } else if (this.primaryAttribute === 'size') {
+        name = `Talla ${index}`;
+      } else {
+        name = `${this.primaryAttribute ? this.primaryAttribute.charAt(0).toUpperCase() + this.primaryAttribute.slice(1) : 'Variante'} ${index}`;
+      }
+      
+  const newOption = this.createPrimaryOption(name, colorHex);
+  this.nestedVariants = [...this.nestedVariants, newOption];
+  this.cdr.markForCheck();
+    });
+  }
   addOption(attribute: FormGroup, type: string) {
     const options = this.getOptions(attribute);
     options.push(this.fb.group({ 
@@ -250,20 +291,22 @@ export class ProductFormPage implements OnInit {
     this.variants.removeAt(index);
   }
   addAttribute(type: string) {
-    if (!this.attributesAdded.includes(type)) {
-      this.attributesAdded.push(type);
-      const attributes = this.productForm.get('attributes') as FormArray;
-      attributes.push(this.fb.group({
-        type: [type],
-        name: [type],
-        options: this.fb.array([])
-      }));
-      
-      // Si es el primer atributo, no crear variantes automáticamente
-      // El usuario las creará manualmente en la nueva UI
-      if (this.attributesAdded.length === 1) {
+  if (this.attributesAdded.length === 0 && !this.attributesAdded.includes(type)) {
+      this.ngZone.run(() => {
+        this.attributesAdded.push(type);
+        // Actualizar etiqueta precomputada
+        this.primaryAttrLabel = type === 'color' ? 'Color' : type === 'size' ? 'Talla' : 'Material';
+        const attributes = this.productForm.get('attributes') as FormArray;
+        attributes.push(this.fb.group({
+          type: [type],
+          name: [type],
+          options: this.fb.array([])
+        }));
+        
+        // Limpiar variantes existentes y añadir la primera automáticamente
         this.nestedVariants = [];
-      }
+        this.addPrimaryVariantDirect();
+      });
     }
   }
   addVariant() {
@@ -284,9 +327,14 @@ export class ProductFormPage implements OnInit {
       this.attributesAdded.splice(idx, 1);
     }
     
-    // Limpiar la estructura anidada cuando se remueven atributos
+    // Limpiar completamente la estructura anidada cuando se remueven atributos
     this.nestedVariants = [];
-    this.variants.clear();
+  this.variants.clear();
+  this.cdr.markForCheck();
+    // Actualizar etiqueta
+    this.primaryAttrLabel = this.attributesAdded.length > 0
+      ? (this.attributesAdded[0] === 'color' ? 'Color' : this.attributesAdded[0] === 'size' ? 'Talla' : 'Material')
+      : '';
   }
   
   //`

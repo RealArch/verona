@@ -59,16 +59,22 @@
           </ion-card-title>
         </ion-card-header>
         <ion-card-content class="space-y-4">
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
-            <ion-item>
-              <ion-label position="stacked">Nombre del Producto *</ion-label>
-              <ion-input formControlName="name" type="text" placeholder="Ej: Camiseta deportiva"></ion-input>
-            </ion-item>
-            <ion-item>
-              <ion-label position="stacked">SKU</ion-label>
-              <ion-input formControlName="sku" type="text" placeholder="Ej: CAM-001"></ion-input>
-            </ion-item>
-          </div>
+          <ion-grid class="ion-no-padding">
+            <ion-row class="ion-gutter">
+              <ion-col size="12" size-md="6">
+                <ion-item>
+                  <ion-label position="stacked">Nombre del Producto *</ion-label>
+                  <ion-input formControlName="name" type="text" placeholder="Ej: Camiseta deportiva"></ion-input>
+                </ion-item>
+              </ion-col>
+              <ion-col size="12" size-md="6">
+                <ion-item>
+                  <ion-label position="stacked">SKU</ion-label>
+                  <ion-input formControlName="sku" type="text" placeholder="Ej: CAM-001"></ion-input>
+                </ion-item>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
 
           <ion-item>
             <ion-label position="stacked">Descripción</ion-label>
@@ -95,104 +101,39 @@
             </ion-button>
           </ion-item>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <ion-item>
-              <ion-label position="stacked">Precio Base *</ion-label>
-              <ion-input formControlName="price" type="number" placeholder="0.00">
-                <div slot="start">€</div>
-              </ion-input>
-            </ion-item>
-            <ion-item>
-              <ion-label position="stacked">Stock Base *</ion-label>
-              <ion-input formControlName="stock" type="number" placeholder="0"></ion-input>
-            </ion-item>
-            <ion-item>
-              <ion-label position="stacked">Estado</ion-label>
-              <ion-select formControlName="status" interface="popover">
-                <ion-select-option value="active">Activo</ion-select-option>
-                <ion-select-option value="paused">Pausado</ion-select-option>
-                <ion-select-option value="archived">Archivado</ion-select-option>
-              </ion-select>
-            </ion-item>
-          </div>
-        </ion-card-content>
-      </ion-card>
-
-      <!-- Atributos de Variación -->
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <ion-icon name="options-outline"></ion-icon>
-              Atributos de Variación
-            </div>
-            <ion-button id="add-attribute-btn" fill="outline" size="small">
-              <ion-icon name="add" slot="start"></ion-icon>
-              Añadir Atributo
-            </ion-button>
-          </ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <ion-popover trigger="add-attribute-btn" dismissOnSelect="true">
-            <ng-template>
-              <ion-content>
-                <ion-list>
-                  <ion-item button (click)="addAttribute('color')" [disabled]="attributesAdded.includes('color')">
-                    <ion-icon name="color-palette-outline" slot="start"></ion-icon>
-                    <ion-label>Color</ion-label>
-                  </ion-item>
-                  <ion-item button (click)="addAttribute('size')" [disabled]="attributesAdded.includes('size')">
-                    <ion-icon name="resize-outline" slot="start"></ion-icon>
-                    <ion-label>Talla</ion-label>
-                  </ion-item>
-                </ion-list>
-              </ion-content>
-            </ng-template>
-          </ion-popover>
-
-          <div *ngIf="formAttributes.length === 0" class="text-center py-8 text-gray-500">
-            <ion-icon name="options-outline" size="large"></ion-icon>
-            <p class="mt-2">No hay atributos de variación configurados</p>
-            <p class="text-sm">Añade atributos como color o talla para crear variantes del producto</p>
-          </div>
-
-          <div *ngFor="let attribute of formAttributes.controls; let i = index" class="attribute-block">
-            <div class="attribute-header">
-              <h4 class="attribute-title">{{attribute.value.name}}</h4>
-              <ion-button fill="clear" color="danger" size="small" (click)="removeAttribute(i)">
-                <ion-icon name="trash-outline"></ion-icon>
-              </ion-button>
-            </div>
-
-            <div class="options-grid">
-              <div *ngFor="let option of getOptionsArray(attribute).controls; let j = index" class="option-item">
+          <ion-grid class="ion-no-padding">
+            <ion-row class="ion-gutter">
+              <ion-col size="12" size-md="4">
                 <ion-item>
-                  <ion-label position="stacked">Opción {{j + 1}}</ion-label>
-                  <ion-input [formControl]="getOptionFormControl(option, 'name')"
-                    placeholder="Nombre de la opción"></ion-input>
-                  <div slot="end" style="display: flex; gap: 0.5rem; align-items: center;">
-                    <input *ngIf="attribute.value.type === 'color'" type="color"
-                      [value]="getOptionFormControl(option, 'colorHex').value || '#000000'"
-                      (change)="getOptionFormControl(option, 'colorHex').setValue($event.target.value)"
-                      style="width: 2rem; height: 2rem; border-radius: 0.25rem; border: 1px solid var(--ion-color-light-shade);">
-                    <ion-button fill="clear" color="danger" size="small" *ngIf="getOptionsArray(attribute).length > 1"
-                      (click)="removeOption(asFormGroup(attribute), j)">
-                      <ion-icon name="close-outline"></ion-icon>
-                    </ion-button>
-                  </div>
+                  <ion-label position="stacked">Precio Base *</ion-label>
+                  <ion-input formControlName="price" type="number" placeholder="0.00">
+                    <div slot="start">€</div>
+                  </ion-input>
                 </ion-item>
-              </div>
-              <!-- <ion-button fill="outline" size="small" (click)="addOption(asFormGroup(attribute), attribute.value.type)">
-                <ion-icon name="add" slot="start"></ion-icon>
-                Añadir opción
-              </ion-button> -->
-            </div>
-          </div>
+              </ion-col>
+              <ion-col size="12" size-md="4">
+                <ion-item>
+                  <ion-label position="stacked">Stock Base *</ion-label>
+                  <ion-input formControlName="stock" type="number" placeholder="0"></ion-input>
+                </ion-item>
+              </ion-col>
+              <ion-col size="12" size-md="4">
+                <ion-item>
+                  <ion-label position="stacked">Estado</ion-label>
+                  <ion-select formControlName="status" interface="popover">
+                    <ion-select-option value="active">Activo</ion-select-option>
+                    <ion-select-option value="paused">Pausado</ion-select-option>
+                    <ion-select-option value="archived">Archivado</ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
         </ion-card-content>
       </ion-card>
 
-      <!-- Nueva UI para Variantes Anidadas -->
-      <ion-card *ngIf="attributesAdded.length > 0">
+      <!-- Gestión de Variantes -->
+      <ion-card>
         <ion-card-header>
           <ion-card-title class="flex items-center gap-2">
             <ion-icon name="layers-outline"></ion-icon>
@@ -200,39 +141,105 @@
           </ion-card-title>
         </ion-card-header>
         <ion-card-content class="p-0 m-0">
+          
+          <!-- Atributos de Variación -->
+          <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <ion-icon name="options-outline"></ion-icon>
+                <strong>Atributos de Variación</strong>
+              </div>
+              <ion-button id="add-attribute-btn" fill="outline" size="small" [disabled]="attributesAdded.length > 0">
+                <ion-icon name="add" slot="start"></ion-icon>
+                Añadir Atributo
+              </ion-button>
+            </div>
+            
+            <ion-popover trigger="add-attribute-btn" dismissOnSelect="true">
+              <ng-template>
+                <ion-content>
+                  <ion-list>
+                    <ion-item button (click)="addAttribute('color')" [disabled]="attributesAdded.includes('color')">
+                      <ion-icon name="color-palette-outline" slot="start"></ion-icon>
+                      <ion-label>Color</ion-label>
+                    </ion-item>
+                    <ion-item button (click)="addAttribute('size')" [disabled]="attributesAdded.includes('size')">
+                      <ion-icon name="resize-outline" slot="start"></ion-icon>
+                      <ion-label>Talla</ion-label>
+                    </ion-item>
+                  </ion-list>
+                </ion-content>
+              </ng-template>
+            </ion-popover>
 
-          <!-- Botón para añadir atributo principal -->
-          <div *ngIf="primaryAttribute && nestedVariants.length === 0" class="text-center py-4">
-            <ion-button fill="solid" (click)="showAddPrimaryModal = true">
-              <ion-icon name="add" slot="start"></ion-icon>
-              Añadir {{ primaryAttribute === 'color' ? 'Color' : primaryAttribute === 'size' ? 'Talla' : 'Material' }}
-            </ion-button>
+            <div *ngIf="formAttributes.length === 0" class="text-center py-8 text-gray-500">
+              <ion-icon name="options-outline" size="large"></ion-icon>
+              <p class="mt-2">No hay atributos de variación configurados</p>
+              <p class="text-sm">Añade atributos como color o talla para crear variantes del producto</p>
+            </div>
+
+            <div *ngFor="let attribute of formAttributes.controls; let i = index" class="attribute-block">
+              <div class="attribute-header">
+                <h4 class="attribute-title">{{attribute.value.name}}</h4>
+                <ion-button fill="clear" color="danger" size="small" (click)="removeAttribute(i)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </ion-button>
+              </div>
+
+              <ion-grid class="ion-no-padding">
+                <ion-row>
+                  <ion-col size="12" size-md="6" size-lg="4" *ngFor="let option of getOptionsArray(attribute).controls; let j = index">
+                    <ion-item>
+                      <ion-label position="stacked">Opción {{j + 1}}</ion-label>
+                      <ion-input [formControl]="getOptionFormControl(option, 'name')" placeholder="Nombre de la opción"></ion-input>
+                      <div slot="end" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input *ngIf="attribute.value.type === 'color'" type="color"
+                          [value]="getOptionFormControl(option, 'colorHex').value || '#000000'"
+                          (change)="getOptionFormControl(option, 'colorHex').setValue($event.target.value)"
+                          style="width: 2rem; height: 2rem; border-radius: 0.25rem; border: 1px solid var(--ion-color-light-shade);">
+                        <ion-button fill="clear" color="danger" size="small" *ngIf="getOptionsArray(attribute).length > 1"
+                          (click)="removeOption(asFormGroup(attribute), j)">
+                          <ion-icon name="close-outline"></ion-icon>
+                        </ion-button>
+                      </div>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </div>
+          </div>
+
+          <!-- Solo mostrar el mensaje si no hay atributos seleccionados -->
+          <div *ngIf="!primaryAttribute" class="text-center py-4">
+            <p class="text-gray-500">Selecciona un atributo de variación arriba para comenzar</p>
           </div>
 
           <!-- Lista de opciones del atributo principal -->
-          <div *ngFor="let primaryOption of nestedVariants; trackBy: trackByAttributeId" class="variant-block">
-              <div class="primary-option-header">
+          <div *ngIf="attributesAdded.length > 0" class="p-4">
+            <div *ngFor="let primaryOption of nestedVariants; trackBy: trackByAttributeId" class="variant-block">
+            <div class="primary-option-header">
               <div class="flex items-center gap-2">
                 <!-- Color square triggers native color picker directly -->
                 <ng-container *ngIf="primaryAttribute === 'color'">
-                  <input #colorPicker type="color" hidden
-                         [value]="primaryOption.colorHex || '#000000'"
-                         (input)="primaryOption.colorHex = $event.target.value" />
-                  <div
-                    [style.background-color]="primaryOption.colorHex || '#000000'"
-                    (click)="colorPicker.click()"
-                    style="width: 20px; height: 20px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer;"
-                    title="Cambiar color"></div>
+                  <div style="position: relative; display: inline-block; width: 20px; height: 20px;">
+                    <div [style.background-color]="primaryOption.colorHex || '#000000'"
+                      style="width: 20px; height: 20px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer;"
+                      title="Cambiar color"></div>
+                    <input type="color"
+                      [value]="primaryOption.colorHex || '#000000'"
+                      (input)="primaryOption.colorHex = $event.target.value"
+                      style="position: absolute; left: 0; top: 0; width: 20px; height: 20px; opacity: 0; cursor: pointer;" />
+                  </div>
                 </ng-container>
                 <!-- Inline IonInput for color name -->
-                <ion-input
-                  [(ngModel)]="primaryOption.name"
-                  [ngModelOptions]="{ standalone: true }"
+                <ion-input [(ngModel)]="primaryOption.name" [ngModelOptions]="{ standalone: true }"
                   placeholder="Nombre del color"
                   style="--padding-start: 6px; --padding-end: 6px; height: 28px; min-width: 140px; border: 1px solid #ddd; border-radius: 4px;">
                 </ion-input>
               </div>
-              <ion-button fill="clear" color="danger" size="small" (click)="removePrimaryOption(primaryOption.id)">
+              <ion-button fill="clear" color="danger" size="small" 
+                         *ngIf="canRemovePrimaryVariant()"
+                         (click)="removePrimaryOption(primaryOption.id)">
                 <ion-icon name="trash-outline"></ion-icon>
               </ion-button>
             </div>
@@ -240,26 +247,29 @@
             <!-- Productos asociados a este color/atributo -->
             <div class="products-for-attribute">
               <div *ngIf="primaryOption.products && primaryOption.products.length > 0" class="products-list">
-                <div *ngFor="let product of primaryOption.products; let i = index; trackBy: trackByProductId" class="product-item">
+                <div *ngFor="let product of primaryOption.products; trackBy: trackByProductId"
+                  class="product-item">
                   <div class="product-fields">
-                    <div style="display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div
+                      style="display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
                       <ion-item>
                         <ion-label position="stacked">SKU</ion-label>
-                        <ion-input [(ngModel)]="product.sku" placeholder="Ej: CAM-001-{{ primaryOption.name.charAt(0).toUpperCase() }}"></ion-input>
+                        <ion-input [(ngModel)]="product.sku" [ngModelOptions]="{ standalone: true }"
+                          placeholder="Ej: CAM-001-{{ primaryOption.name.charAt(0).toUpperCase() }}"></ion-input>
                       </ion-item>
                       <ion-item>
                         <ion-label position="stacked">Precio *</ion-label>
-                        <ion-input [(ngModel)]="product.price" type="number" placeholder="0.00">
+                        <ion-input [(ngModel)]="product.price" [ngModelOptions]="{ standalone: true }" type="number" placeholder="0.00">
                           <div slot="start">€</div>
                         </ion-input>
                       </ion-item>
                       <ion-item>
                         <ion-label position="stacked">Stock *</ion-label>
-                        <ion-input [(ngModel)]="product.stock" type="number" placeholder="0"></ion-input>
+                        <ion-input [(ngModel)]="product.stock" [ngModelOptions]="{ standalone: true }" type="number" placeholder="0"></ion-input>
                       </ion-item>
                       <ion-item>
                         <ion-label position="stacked">Estado</ion-label>
-                        <ion-select [(ngModel)]="product.status" interface="popover">
+                        <ion-select [(ngModel)]="product.status" [ngModelOptions]="{ standalone: true }" interface="popover">
                           <ion-select-option value="active">Activo</ion-select-option>
                           <ion-select-option value="paused">Pausado</ion-select-option>
                           <ion-select-option value="archived">Archivado</ion-select-option>
@@ -267,12 +277,9 @@
                       </ion-item>
                     </div>
                     <div class="flex justify-end mt-2">
-                      <ion-button 
-                        fill="clear" 
-                        color="danger" 
-                        size="small" 
+                      <ion-button fill="clear" color="danger" size="small"
                         [disabled]="!canRemoveProduct(primaryOption.id)"
-                        (click)="removeProductFromAttribute(primaryOption.id, i)">
+                        (click)="removeProductFromAttribute(primaryOption.id)">
                         <ion-icon name="trash-outline"></ion-icon>
                         Eliminar Producto
                       </ion-button>
@@ -281,23 +288,17 @@
                 </div>
               </div>
 
-              <!-- Botón para añadir producto a este atributo -->
-              <div class="text-center py-3">
-                <ion-button fill="solid" size="small" (click)="addProductToAttribute(primaryOption.id)">
-                  <ion-icon name="add" slot="start"></ion-icon>
-                  Añadir Producto a {{ primaryOption.name }}
-                </ion-button>
-              </div>
+              <!-- Eliminar botón para añadir producto a variante -->
             </div>
           </div>
 
           <!-- Botón para añadir más opciones del atributo principal -->
           <div *ngIf="nestedVariants.length > 0" class="text-center py-2">
-            <ion-button fill="outline" (click)="showAddPrimaryModal = true">
+            <ion-button fill="outline" (click)="addPrimaryVariantDirect()">
               <ion-icon name="add" slot="start"></ion-icon>
-              Añadir otro {{ primaryAttribute === 'color' ? 'Color' : primaryAttribute === 'size' ? 'Talla' : 'Material'
-              }}
+              <span>Añadir otro {{ primaryAttrLabel }}</span>
             </ion-button>
+          </div>
           </div>
 
         </ion-card-content>
@@ -314,7 +315,8 @@
   <ng-template>
     <ion-header>
       <ion-toolbar>
-        <ion-title>Añadir {{ primaryAttribute === 'color' ? 'Color' : primaryAttribute === 'size' ? 'Talla' : 'Material' }}</ion-title>
+        <ion-title>Añadir {{ primaryAttribute === 'color' ? 'Color' : primaryAttribute === 'size' ? 'Talla' : 'Material'
+          }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="closeAddPrimaryModal()">
             <ion-icon name="close"></ion-icon>
@@ -325,12 +327,12 @@
     <ion-content class="ion-padding">
       <ion-item>
         <ion-label position="stacked">Nombre</ion-label>
-        <ion-input [(ngModel)]="newPrimaryName" placeholder="Ej: Rojo, Azul, M, L..."></ion-input>
+  <ion-input [(ngModel)]="newPrimaryName" [ngModelOptions]="{ standalone: true }" placeholder="Ej: Rojo, Azul, M, L..."></ion-input>
       </ion-item>
 
       <ion-item *ngIf="primaryAttribute === 'color'">
         <ion-label position="stacked">Color (Hex)</ion-label>
-        <input type="color" [(ngModel)]="newPrimaryColor" value="#000000"
+  <input type="color" [(ngModel)]="newPrimaryColor" [ngModelOptions]="{ standalone: true }" value="#000000"
           style="width: 100%; height: 40px; border: none; border-radius: 4px;">
       </ion-item>
 
