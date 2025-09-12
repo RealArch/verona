@@ -4,26 +4,35 @@ import { doc, Firestore, setDoc, getDoc } from '@angular/fire/firestore';
 import { firstValueFrom, map, Observable, take } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { AdminUser } from '../interfaces/users';
 
-export interface AdminUser {
-  uid: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  isAdmin: boolean;
-}
+
 
 @Injectable({
   providedIn: 'root'
 })
 
 export class AuthService {
-  private auth = inject(Auth);
+    private auth = inject(Auth);
   private firestore = inject(Firestore);
   private http = inject(HttpClient);
 
+
+  /**
+   * Obtiene la data del AdminUser en Firestore usando el UID del usuario actualmente logueado.
+   * @returns Promise<AdminUser | null>
+   */
+  async getAdminUserData(): Promise<AdminUser | null> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) return null;
+    const userDoc = await getDoc(doc(this.firestore, `adminUsers/${currentUser.uid}`));
+    return userDoc.exists() ? userDoc.data() as AdminUser : null;
+  }
+
+
   user$ = user(this.auth);
   public authState$ = authState(this.auth);
+
   async login(email: string, password: string): Promise<void> {
     await signInWithEmailAndPassword(this.auth, email, password);
   }

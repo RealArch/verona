@@ -1,0 +1,330 @@
+<div class="min-h-screen bg-base-100">
+    <div class="container mx-auto px-4 py-4">
+        <div class="text-sm breadcrumbs">
+            <ul>
+                <li><a class="text-primary hover:text-primary-focus">Inicio</a></li>
+                <li><a class="text-primary hover:text-primary-focus">Categorías</a></li>
+                <li><a class="text-primary hover:text-primary-focus">Sofás</a></li>
+                <li class="text-base-content">Sofá Mediterráneo</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Product Section -->
+    <div class="container mx-auto px-4 pb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Product Images -->
+            <div class="space-y-4">
+                <!-- Main Image -->
+                <div class="relative bg-base-200 rounded-2xl overflow-hidden group">
+                    <div class="aspect-square">
+                        <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80" 
+                             alt="Sofá Mediterráneo Principal" 
+                             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                    </div>
+                    <!-- Zoom Icon -->
+                    <div class="absolute top-4 right-4 bg-white/80 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
+                        </svg>
+                    </div>
+                </div>
+                
+                <!-- Thumbnail Images -->
+                <div class="grid grid-cols-4 gap-3">
+                    <div class="aspect-square bg-base-200 rounded-lg overflow-hidden cursor-pointer ring-2 ring-primary">
+                        <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=200&q=80" 
+                             alt="Vista 1" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                    </div>
+                    <div class="aspect-square bg-base-200 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all">
+                        <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=200&q=80" 
+                             alt="Vista 2" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                    </div>
+                    <div class="aspect-square bg-base-200 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all">
+                        <img src="https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=200&q=80" 
+                             alt="Vista 3" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                    </div>
+                    <div class="aspect-square bg-base-200 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all">
+                        <img src="https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=200&q=80" 
+                             alt="Vista 4" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="space-y-6">
+                <!-- SKU -->
+                <div class="text-sm text-base-content/60">
+                    SKU: VER-SOF-001
+                </div>
+
+                <!-- Title & Brand -->
+                <div>
+                    <div class="text-sm text-primary font-medium mb-1">VERONA</div>
+                    <h1 class="text-3xl lg:text-4xl font-light text-base-content mb-2">Sofá Mediterráneo</h1>
+                    <div class="text-base-content/70">Sofá de 3 plazas tapizado en lino</div>
+                </div>
+
+                <!-- Price -->
+                <div class="space-y-2">
+                    <div class="flex items-baseline gap-3">
+                        <span class="text-3xl font-semibold text-primary">S/ 2,890.00</span>
+                        <span class="text-lg text-base-content/50 line-through">S/ 3,490.00</span>
+                        <span class="badge badge-secondary">-17%</span>
+                    </div>
+                    <div class="text-sm text-base-content/60">Precio por unidad</div>
+                </div>
+
+                <!-- Stock Status -->
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-success rounded-full"></div>
+                    <span class="text-success font-medium">En stock (5 unidades disponibles)</span>
+                </div>
+
+                <!-- Product Variants -->
+                <div class="space-y-4">
+                    <!-- Color Selection -->
+                    <div>
+                        <h3 class="text-sm font-medium text-base-content mb-3">Color: <span class="font-normal">Beige Natural</span></h3>
+                        <div class="flex gap-2">
+                            <div class="w-10 h-10 rounded-full border-2 border-primary cursor-pointer" style="background-color: #f5f5dc;" title="Beige Natural"></div>
+                            <div class="w-10 h-10 rounded-full border border-base-300 cursor-pointer hover:border-primary transition-colors" style="background-color: #8b7355;" title="Café Oscuro"></div>
+                            <div class="w-10 h-10 rounded-full border border-base-300 cursor-pointer hover:border-primary transition-colors" style="background-color: #2f4f4f;" title="Verde Oliva"></div>
+                        </div>
+                    </div>
+
+                    <!-- Size Selection -->
+                    <div>
+                        <h3 class="text-sm font-medium text-base-content mb-3">Tamaño: <span class="font-normal">3 Plazas</span></h3>
+                        <div class="flex gap-2">
+                            <button class="btn btn-outline btn-sm">2 Plazas</button>
+                            <button class="btn btn-primary btn-sm">3 Plazas</button>
+                            <button class="btn btn-outline btn-sm">4 Plazas</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quantity & Add to Cart -->
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-sm font-medium text-base-content mb-3">Cantidad</h3>
+                        <div class="flex items-center gap-4">
+                            <div class="join">
+                                <button class="btn join-item btn-outline">-</button>
+                                <input type="number" value="1" class="input join-item input-bordered w-16 text-center" min="1" max="5">
+                                <button class="btn join-item btn-outline">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button class="btn btn-primary btn-lg flex-1">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9m-9 0h9"></path>
+                            </svg>
+                            Agregar al Carrito
+                        </button>
+                        <button class="btn btn-outline btn-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Info Cards -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-base-200/50 backdrop-blur-sm rounded-lg p-4 text-center">
+                        <svg class="w-6 h-6 mx-auto mb-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        </svg>
+                        <div class="text-sm font-medium">Envío Gratis</div>
+                        <div class="text-xs text-base-content/60">Lima Metropolitana</div>
+                    </div>
+                    <div class="bg-base-200/50 backdrop-blur-sm rounded-lg p-4 text-center">
+                        <svg class="w-6 h-6 mx-auto mb-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div class="text-sm font-medium">Garantía</div>
+                        <div class="text-xs text-base-content/60">2 años</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Details Tabs -->
+        <div class="mt-12">
+            <div class="tabs tabs-boxed bg-transparent">
+                <a class="tab tab-active">Descripción</a>
+                <a class="tab">Especificaciones</a>
+                <a class="tab">Reseñas (3)</a>
+                <a class="tab">Consideraciones</a>
+            </div>
+
+            <div class="mt-6 bg-base-200/30 rounded-2xl p-6">
+                <!-- Description Tab Content -->
+                <div class="prose max-w-none">
+                    <h3 class="text-xl font-light mb-4 text-base-content">Descripción del Producto</h3>
+                    <p class="text-base-content/80 leading-relaxed mb-4">
+                        Transforma tu hogar con este elegante sofá mediterráneo que combina comodidad excepcional con un diseño atemporal. 
+                        Tapizado en lino de alta calidad y construido con materiales premium, este sofá de 3 plazas es perfecto para crear 
+                        un ambiente acogedor y sofisticado en tu sala de estar.
+                    </p>
+                    <p class="text-base-content/80 leading-relaxed mb-4">
+                        Su estructura de madera maciza garantiza durabilidad y estabilidad, mientras que los cojines de espuma de alta 
+                        densidad ofrecen el soporte perfecto para largas horas de relajación. El diseño mediterráneo aporta elegancia 
+                        y calidez, adaptándose perfectamente al estilo Verona.
+                    </p>
+                    <ul class="text-base-content/80 space-y-2">
+                        <li>• Tapizado en lino 100% natural</li>
+                        <li>• Estructura de madera de pino certificada</li>
+                        <li>• Cojines de espuma de alta densidad</li>
+                        <li>• Patas de madera maciza</li>
+                        <li>• Fácil mantenimiento y limpieza</li>
+                    </ul>
+                </div>
+
+                <!-- Specifications Table -->
+                <div class="hidden" id="specifications">
+                    <h3 class="text-xl font-light mb-4 text-base-content">Especificaciones Técnicas</h3>
+                    <div class="overflow-x-auto">
+                        <table class="table table-zebra w-full">
+                            <tbody>
+                                <tr>
+                                    <td class="font-medium">Material</td>
+                                    <td>Lino natural con estructura de madera</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-medium">Dimensiones</td>
+                                    <td>200cm (L) x 90cm (P) x 85cm (H)</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-medium">Peso</td>
+                                    <td>65 kg</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-medium">Capacidad</td>
+                                    <td>3 personas (máximo 250kg)</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-medium">Colores disponibles</td>
+                                    <td>Beige Natural, Café Oscuro, Verde Oliva</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-medium">Garantía</td>
+                                    <td>2 años por defectos de fabricación</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-medium">Origen</td>
+                                    <td>Fabricado en Perú</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    <div class="bg-base-200/30 py-12 mt-12">
+        <div class="container mx-auto px-4">
+            <h2 class="text-2xl md:text-3xl font-light text-center mb-8 text-base-content">Productos Relacionados</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Related Product Card -->
+                <div class="card bg-base-100 shadow-sm hover:shadow-lg transition-all duration-300 group">
+                    <figure class="relative aspect-square overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=400&q=80" 
+                             alt="Sillón Mediterráneo" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-2 right-2">
+                            <button class="btn btn-circle btn-ghost btn-sm bg-white/80 backdrop-blur-sm hover:bg-white">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </figure>
+                    <div class="card-body p-4">
+                        <h3 class="card-title text-base font-normal">Sillón Mediterráneo</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg font-semibold text-primary">S/ 1,290.00</span>
+                            <span class="text-sm text-base-content/50 line-through">S/ 1,490.00</span>
+                        </div>
+                        <button class="btn btn-primary btn-sm mt-2">Agregar al Carrito</button>
+                    </div>
+                </div>
+                
+                <!-- Repeat for more related products -->
+                <div class="card bg-base-100 shadow-sm hover:shadow-lg transition-all duration-300 group">
+                    <figure class="relative aspect-square overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=400&q=80" 
+                             alt="Mesa de Centro" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-2 right-2">
+                            <button class="btn btn-circle btn-ghost btn-sm bg-white/80 backdrop-blur-sm hover:bg-white">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </figure>
+                    <div class="card-body p-4">
+                        <h3 class="card-title text-base font-normal">Mesa de Centro Oslo</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg font-semibold text-primary">S/ 890.00</span>
+                        </div>
+                        <button class="btn btn-primary btn-sm mt-2">Agregar al Carrito</button>
+                    </div>
+                </div>
+
+                <div class="card bg-base-100 shadow-sm hover:shadow-lg transition-all duration-300 group">
+                    <figure class="relative aspect-square overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?auto=format&fit=crop&w=400&q=80" 
+                             alt="Cojín Decorativo" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-2 right-2">
+                            <button class="btn btn-circle btn-ghost btn-sm bg-white/80 backdrop-blur-sm hover:bg-white">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </figure>
+                    <div class="card-body p-4">
+                        <h3 class="card-title text-base font-normal">Cojín Mediterráneo</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg font-semibold text-primary">S/ 120.00</span>
+                            <span class="text-sm text-base-content/50 line-through">S/ 150.00</span>
+                        </div>
+                        <button class="btn btn-primary btn-sm mt-2">Agregar al Carrito</button>
+                    </div>
+                </div>
+
+                <div class="card bg-base-100 shadow-sm hover:shadow-lg transition-all duration-300 group">
+                    <figure class="relative aspect-square overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=400&q=80" 
+                             alt="Lámpara de Pie" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-2 right-2">
+                            <button class="btn btn-circle btn-ghost btn-sm bg-white/80 backdrop-blur-sm hover:bg-white">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </figure>
+                    <div class="card-body p-4">
+                        <h3 class="card-title text-base font-normal">Lámpara Mediterránea</h3>
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg font-semibold text-primary">S/ 450.00</span>
+                        </div>
+                        <button class="btn btn-primary btn-sm mt-2">Agregar al Carrito</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

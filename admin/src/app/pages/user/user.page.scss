@@ -1,0 +1,12 @@
+.active-menu-item {
+    ion-label {
+        color: var(--ion-color-primary);
+    }
+
+    --background: rgba(var(--ion-color-primary-rgb), 0.15);
+}
+
+ion-item {
+    --background: var(--ion-color-light);
+    color: var(--ion-color-medium);
+}

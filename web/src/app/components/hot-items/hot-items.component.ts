@@ -13,7 +13,7 @@ export class HotItemsComponent {
 
   navigateToProduct(productId: number): void {
     // Navegar a la página del producto
-    this.router.navigate(['/product', productId]);
+    this.router.navigate(['/product','slug-slug-slug', productId]);
   }
 
   toggleFavorite(productId: number): void {

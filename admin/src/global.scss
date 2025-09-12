@@ -29,6 +29,9 @@
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
 
+/* Quill editor styles */
+@import "quill/dist/quill.snow.css";
+
 /**
  * Ionic Dark Mode
  * -----------------------------------------------------
@@ -45,18 +48,27 @@
 ion-card {
   border-radius: 15px;
   // box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  margin: 0px;
-  @apply shadow-none;
-  background-color: var(--ion-color-light-shade);
+  // margin: 0px;
+  @apply shadow-lg;
+  // background-color: var(--ion-color-light-shade);
+}
+
+ion-modal {
+  --border-radius: 15px;
+
 }
 
 ion-item.input {
-  
-    --border-radius: 15px;
+
+  --border-radius: 15px;
 }
 
 .subtitle {
   font-size: 1.2rem;
   font-weight: 600;
   margin: 20px 0 10px 0;
+}
+
+.rounded {
+  border-radius: 12px;
 }

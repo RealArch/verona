@@ -5,20 +5,24 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent,
-  IonItem, IonLabel, IonInput, IonTextarea, IonSelect, IonSelectOption,
+  IonItem, IonLabel, IonInput, IonSelect, IonSelectOption,
   ToastController, IonSpinner, IonProgressBar, IonCard, IonCardHeader, IonCardContent, IonCardTitle,
-  ModalController, IonPopover, IonList, IonButton, IonIcon, IonRow, IonCol, IonGrid, IonModal } from '@ionic/angular/standalone';
+  ModalController, IonPopover, IonList, IonButton, IonIcon, IonRow, IonCol, IonGrid
+} from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { save, cloudUploadOutline, folderOpenOutline, cameraOutline, trashOutline, addCircleOutline, add, informationCircleOutline, folderOutline, optionsOutline, colorPaletteOutline, resizeOutline, closeOutline, layersOutline, close, cubeOutline } from 'ionicons/icons';
+import { save, cloudUploadOutline, folderOpenOutline, cameraOutline, trashOutline, addCircleOutline, add, informationCircleOutline, folderOutline, optionsOutline, colorPaletteOutline, resizeOutline, closeOutline, layersOutline, close, cubeOutline, documentTextOutline, warningOutline } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { QuillModule } from 'ngx-quill';
+import { firstValueFrom, Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 import { AuthService } from 'src/app/services/auth.service';
 import { ProductsService } from 'src/app/services/products.service';
 import { CategoriesService, Category } from 'src/app/services/categories.service';
-import { firstValueFrom } from 'rxjs';
-import { NewPhoto, ProductPhoto } from 'src/app/interfaces/product-photo';
+import { NewPhoto } from 'src/app/interfaces/product-photo';
 import { SelectCategoryModalComponent } from './select-category/select-category-modal.component';
 
+// Interfaces simplificadas
 interface ImageFile {
   file: File;
   previewUrl: string;
@@ -27,41 +31,22 @@ interface ImageFile {
   tempPath?: string;
 }
 
-// Domain models for variants
-interface VariantProduct {
-  id: string;
-  sku: string;
-  price: number | null;
-  stock: number | null;
-  status: 'active' | 'paused' | 'archived';
-}
-
-interface PrimaryOption {
-  id: string;
-  name: string;
-  colorHex: string | null;
-  products: VariantProduct[];
-  showColorPicker?: boolean;
-}
-
 @Component({
   selector: 'app-product-form',
   templateUrl: './products-form.page.html',
   styleUrls: ['./products-form.page.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonModal, IonGrid, IonRow, IonCol, IonIcon, IonButton, IonList, IonPopover, IonCardTitle, IonCardContent, IonCardHeader, IonCard,
-    CommonModule, ReactiveFormsModule, FormsModule,
+  imports: [
+    CommonModule, ReactiveFormsModule, FormsModule, QuillModule,
     IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent,
-    IonItem, IonLabel, IonInput, IonTextarea, IonSelect, IonSelectOption,
-    IonButton, IonIcon, IonSpinner, IonProgressBar
+    IonItem, IonLabel, IonInput, IonSelect, IonSelectOption,
+    IonButton, IonIcon, IonSpinner, IonProgressBar, IonCard, IonCardHeader,
+    IonCardContent, IonCardTitle, IonPopover, IonList, IonGrid, IonRow, IonCol
   ]
 })
 export class ProductFormPage implements OnInit {
-
-
-
-
+  // Inyección de dependencias
   private fb = inject(FormBuilder);
   private productsService = inject(ProductsService);
   private categoriesService = inject(CategoriesService);
@@ -70,25 +55,57 @@ export class ProductFormPage implements OnInit {
   private route = inject(ActivatedRoute);
   private toastCtrl = inject(ToastController);
   private cdr = inject(ChangeDetectorRef);
-  private ngZone = inject(NgZone);
+  private modalCtrl = inject(ModalController);
 
+  // Propiedades del componente
   productForm!: FormGroup;
   isEditMode = false;
   productId: string | null = null;
   categories: Category[] = [];
+  selectedCategoryPath: Category[] = [];
   imageFiles: ImageFile[] = [];
   isUploading = false;
+  private variantsSub: Subscription | undefined;
+
+  // Configuración de Quill
+  quillModules = {
+    toolbar: [
+      ['bold', 'italic', 'underline'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      ['link']
+    ]
+  };
 
   constructor() {
-    addIcons({save,cameraOutline,addCircleOutline,trashOutline,informationCircleOutline,folderOutline,optionsOutline,add,colorPaletteOutline,resizeOutline,closeOutline,layersOutline,close,cloudUploadOutline,folderOpenOutline,cubeOutline}); // Añadir aquí
+    addIcons({ save, cameraOutline, addCircleOutline, trashOutline, folderOutline, informationCircleOutline, documentTextOutline, layersOutline, optionsOutline, add, colorPaletteOutline, resizeOutline, closeOutline, close, cloudUploadOutline, folderOpenOutline, cubeOutline, warningOutline });
   }
 
+  // --- Ciclo de Vida ---
   ngOnInit() {
     this.initForm();
     this.loadCategories();
     this.checkEditMode();
   }
 
+  ngOnDestroy() {
+    this.variantsSub?.unsubscribe();
+  }
+
+  // --- Getters para el Formulario ---
+  get variants(): FormArray {
+    return this.productForm.get('variants') as FormArray;
+  }
+
+  get primaryAttributeType(): string | null {
+    const variants = this.variants.value;
+    return variants.length > 0 ? variants[0].type : null;
+  }
+
+  get hasVariants(): boolean {
+    return this.variants.length > 0;
+  }
+
+  // --- Inicialización ---
   private initForm() {
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
@@ -99,318 +116,122 @@ export class ProductFormPage implements OnInit {
       categoryId: [null, Validators.required],
       status: ['active', Validators.required],
       photos: this.fb.array([]),
-      attributes: this.fb.array([]),
       variants: this.fb.array([]),
+    });
+
+    // Suscripción para actualizar el stock total desde las variantes
+    this.variantsSub = this.variants.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+      if (this.hasVariants) {
+        const totalStock = this.variants.controls.reduce((sum, control) => {
+          return sum + (control.get('stock')?.value || 0);
+        }, 0);
+        this.productForm.get('stock')?.setValue(totalStock, { emitEvent: false });
+      }
     });
   }
 
-  //get product form attributes
-  get formAttributes(): FormArray {
-    return this.productForm.get('attributes') as FormArray;
-  }
-  get variants(): FormArray {
-  return this.productForm.get('variants') as FormArray;
-}
-  //VARIANTES
-  attributesAdded: string[] = [];
-  // Nueva estructura para variaciones anidadas
-  nestedVariants: PrimaryOption[] = [];
-  showAddPrimaryModal = false;
-  showAddSecondaryModalFlag = false;
-  currentPrimaryOptionId = '';
-  
-  // Variables para el modal
-  newPrimaryName = '';
-  newPrimaryColor = '#000000';
-  // Etiqueta del atributo principal precomputada para UI
-  primaryAttrLabel: 'Color' | 'Talla' | 'Material' | '' = '';
-  
-  // Obtener el primer atributo (principal)
-  get primaryAttribute() {
-    return this.attributesAdded.length > 0 ? this.attributesAdded[0] : null;
-  }
-  
-  // Obtener el segundo atributo (anidado)
-  get secondaryAttribute() {
-    return this.attributesAdded.length > 1 ? this.attributesAdded[1] : null;
-  }
-  
-  // Obtener el tercer atributo
-  get tertiaryAttribute() {
-    return this.attributesAdded.length > 2 ? this.attributesAdded[2] : null;
-  }
-  
-  // Helpers
-  private createVariantProduct(baseId?: string): VariantProduct {
-    return {
-      id: (baseId ? `${baseId}_product` : Date.now().toString()),
-      sku: '',
-      price: null,
-      stock: null,
-      status: 'active'
-    } as VariantProduct;
-  }
-  
-  private createPrimaryOption(name: string, colorHex?: string | null): PrimaryOption {
-    const id = Date.now().toString();
-    return {
-      id,
-      name,
-      colorHex: colorHex || null,
-      products: [this.createVariantProduct(id)],
-      showColorPicker: false
-    } as PrimaryOption;
-  }
-  
-  // Método para añadir un producto a un atributo específico
-  // Eliminada la función addProductToAttribute: cada variante solo puede tener un producto
-  
-  // Método para eliminar un producto de un atributo
-  removeProductFromAttribute(attributeId: string) {
-      this.ngZone.run(() => {
-        this.nestedVariants = this.nestedVariants.map(v => {
-          if (v.id !== attributeId) return v;
-          // Solo elimina el producto si hay más de una variante
-          return { ...v, products: [] } as PrimaryOption;
-        });
-        this.cdr.markForCheck();
+  private checkEditMode() {
+    this.productId = this.route.snapshot.paramMap.get('id');
+    if (this.productId) {
+      this.isEditMode = true;
+      this.productsService.getProduct(this.productId).subscribe(product => {
+        if (product) {
+          this.productForm.patchValue(product);
+          // Manejo de variantes y fotos existentes
+        }
       });
     }
-  
-  // Método para verificar si se puede eliminar un producto (debe haber al menos 2)
-  canRemoveProduct(attributeId: string): boolean {
-      // Solo permite eliminar el producto si hay más de una variante
-      return this.nestedVariants.length > 1;
+  }
+
+  // --- Gestión de Variantes ---
+  addVariant(type: 'color' | 'size' | 'material') {
+    if (this.hasVariants) return; // Solo permite un tipo de atributo
+
+    this.productForm.get('price')?.setValue(0, { emitEvent: false });
+    this.productForm.get('stock')?.setValue(0, { emitEvent: false });
+    this.productForm.get('sku')?.setValue('', { emitEvent: false });
+
+    this.addVariantOption(type);
+  }
+
+  addVariantOption(type: string) {
+    const newId = Date.now().toString();
+    const index = this.variants.length + 1;
+    let name = `Opción ${index}`;
+    let colorHex: string | null = null;
+
+    if (type === 'color') {
+      name = `Color ${index}`;
+      colorHex = '#000000';
+    } else if (type === 'size') {
+      name = `Talla ${index}`;
     }
-  
-  // Método para verificar si se puede eliminar una variante principal (debe haber al menos 2)
-  canRemovePrimaryVariant(): boolean {
-    return this.nestedVariants.length > 1;
-  }
-  
-  // Función trackBy para mejor performance en ngFor
-  trackByAttributeId(index: number, item: PrimaryOption): any {
-    return item.id;
-  }
-  
-  trackByProductId(index: number, item: VariantProduct): any {
-    return item.id;
-  }
-  
-  // Método para eliminar una opción principal
-  removePrimaryOption(optionId: string) {
-    this.ngZone.run(() => {
-      if (this.nestedVariants.length > 1) {
-  this.nestedVariants = this.nestedVariants.filter(v => v.id !== optionId);
-  this.cdr.markForCheck();
-      }
-    });
-  }
-  
-  // Crear una variante individual
-  createVariant(attributes: any[]) {
-    const variantName = attributes.map(attr => attr.name).join(' - ');
-    const variantGroup = this.fb.group({
-      name: [variantName],
-      attributes: [attributes.reduce((acc: any, attr) => {
-        acc[attr.type] = { name: attr.name, colorHex: attr.colorHex };
-        return acc;
-      }, {})],
-      sku: [null, [Validators.required]],
-      stock: [0, [Validators.required, Validators.min(0)]],
+
+    this.variants.push(this.fb.group({
+      id: [newId],
+      type: [type],
+      name: [name, Validators.required],
+      colorHex: [colorHex],
+      sku: ['', Validators.required],
       price: [null, [Validators.required, Validators.min(0)]],
-      photos: this.fb.array([]),
-      status: ['active']
-    });
-    this.variants.push(variantGroup);
-  }
-  
-  // Métodos para la UI de modales
-  showAddSecondaryModal(primaryOptionId: string) {
-    this.currentPrimaryOptionId = primaryOptionId;
-    this.showAddSecondaryModalFlag = true;
-  }
-  
-  confirmAddPrimary() {
-    if (this.newPrimaryName.trim()) {
-      const colorHex = this.primaryAttribute === 'color' ? this.newPrimaryColor : null;
-      const newOption = this.createPrimaryOption(this.newPrimaryName.trim(), colorHex);
-      this.nestedVariants = [...this.nestedVariants, newOption];
-      this.closeAddPrimaryModal();
-      this.cdr.markForCheck();
-    }
-  }
-  
-  // Método para cerrar el modal y detectar cambios
-  closeAddPrimaryModal() {
-    this.showAddPrimaryModal = false;
-    // Reset form
-    this.newPrimaryName = '';
-    this.newPrimaryColor = '#000000';
-    this.cdr.markForCheck();
-  }
-  
-  // Añadir variante principal directamente sin modal
-  addPrimaryVariantDirect() {
-    this.ngZone.run(() => {
-      const index = this.nestedVariants.length + 1;
-      let name = '';
-      let colorHex = null;
-      
-      if (this.primaryAttribute === 'color') {
-        name = `Color ${index}`;
-        colorHex = '#000000';
-      } else if (this.primaryAttribute === 'size') {
-        name = `Talla ${index}`;
-      } else {
-        name = `${this.primaryAttribute ? this.primaryAttribute.charAt(0).toUpperCase() + this.primaryAttribute.slice(1) : 'Variante'} ${index}`;
-      }
-      
-  const newOption = this.createPrimaryOption(name, colorHex);
-  this.nestedVariants = [...this.nestedVariants, newOption];
-  this.cdr.markForCheck();
-    });
-  }
-  addOption(attribute: FormGroup, type: string) {
-    const options = this.getOptions(attribute);
-    options.push(this.fb.group({ 
-      name: [`${type} ${options.length + 1}`], 
-      value: type === 'color' ? '#000000' : '',
-      colorHex: type === 'color' ? '#000000' : null
+      stock: [null, [Validators.required, Validators.min(0)]],
+      status: ['active', Validators.required]
     }));
   }
 
-  removeOption(attribute: FormGroup, index: number) {
-    const options = this.getOptions(attribute);
-    if (options.length > 1) {
-      options.removeAt(index);
-    }
-  }
-
   removeVariant(index: number) {
-    this.variants.removeAt(index);
-  }
-  addAttribute(type: string) {
-  if (this.attributesAdded.length === 0 && !this.attributesAdded.includes(type)) {
-      this.ngZone.run(() => {
-        this.attributesAdded.push(type);
-        // Actualizar etiqueta precomputada
-        this.primaryAttrLabel = type === 'color' ? 'Color' : type === 'size' ? 'Talla' : 'Material';
-        const attributes = this.productForm.get('attributes') as FormArray;
-        attributes.push(this.fb.group({
-          type: [type],
-          name: [type],
-          options: this.fb.array([])
-        }));
-        
-        // Limpiar variantes existentes y añadir la primera automáticamente
-        this.nestedVariants = [];
-        this.addPrimaryVariantDirect();
-      });
+    if (this.variants.length > 1) {
+      this.variants.removeAt(index);
     }
   }
-  addVariant() {
-  this.variants.push(
-    this.fb.group({
-      name: ['', Validators.required],
-      price: [null, Validators.required],
-      stock: [null, Validators.required],
-    })
-  );
-}
-  removeAttribute(index: number) {
-    const attributes = this.productForm.get('attributes') as FormArray;
-    const type = attributes.at(index).value.type;
-    attributes.removeAt(index);
-    const idx = this.attributesAdded.indexOf(type);
-    if (idx > -1) {
-      this.attributesAdded.splice(idx, 1);
-    }
-    
-    // Limpiar completamente la estructura anidada cuando se remueven atributos
-    this.nestedVariants = [];
-  this.variants.clear();
-  this.cdr.markForCheck();
-    // Actualizar etiqueta
-    this.primaryAttrLabel = this.attributesAdded.length > 0
-      ? (this.attributesAdded[0] === 'color' ? 'Color' : this.attributesAdded[0] === 'size' ? 'Talla' : 'Material')
-      : '';
-  }
-  
-  //`
 
+  removeAllVariants() {
+    this.variants.clear();
+    this.productForm.get('price')?.setValue(null);
+    this.productForm.get('stock')?.setValue(null);
+    this.productForm.get('sku')?.setValue('');
+  }
+
+  // --- Gestión de Categorías ---
   private loadCategories() {
     this.categoriesService.getCategories().subscribe(cats => {
       this.categories = this.flattenCategories(cats);
     });
   }
 
-  private flattenCategories(categories: Category[], level = 0, prefix = ''): Category[] {
-    let flatList: Category[] = [];
-    for (const category of categories) {
-      flatList.push({ ...category, name: `${prefix}${category.name}` });
+  private flattenCategories(categories: Category[], prefix = ''): Category[] {
+    return categories.reduce((acc, category) => {
+      const newCategory = { ...category, name: `${prefix}${category.name}` };
+      acc.push(newCategory);
       if (category.children) {
-        flatList = flatList.concat(this.flattenCategories(category.children, level + 1, `${prefix}- `));
+        acc.push(...this.flattenCategories(category.children, `${prefix}- `));
       }
-    }
-    return flatList;
+      return acc;
+    }, [] as Category[]);
   }
 
-  async modifySelectedCategory() {
+  async openCategorySelectionModal(isEditing: boolean = false) {
     const modal = await this.modalCtrl.create({
       component: SelectCategoryModalComponent,
-      componentProps: {
-        initialPath: this.selectedCategoryPath
-      }
+      componentProps: isEditing ? { initialPath: this.selectedCategoryPath } : undefined
     });
-    modal.present();
+    await modal.present();
+
     const { data, role } = await modal.onWillDismiss();
-    if (role === 'confirm' && data && Array.isArray(data) && data.length > 0) {
+    if (role === 'confirm' && data?.length) {
       this.selectedCategoryPath = data;
       this.productForm.get('categoryId')?.setValue(data[data.length - 1].id);
-    } else if (role === 'confirm' && (!data || data.length === 0)) {
+    } else if (role === 'confirm') {
       this.selectedCategoryPath = [];
       this.productForm.get('categoryId')?.setValue(null);
     }
-  }
-  selectedCategoryPath: Category[] = [];
-  modalCtrl = inject(ModalController);
-
-
-
-
-  removeSelectedCategory() {
-    this.selectedCategoryPath = [];
-    this.productForm.get('categoryId')?.setValue(null);
+    this.cdr.markForCheck();
   }
 
-  private checkEditMode() {
-    this.productId = this.route.snapshot.paramMap.get('id');
-    console.log(this.productId)
-    if (this.productId) {
-      this.isEditMode = true;
-      this.productsService.getProduct(this.productId).subscribe(product => {
-        if (product) {
-          this.productForm.patchValue(product);
-          // Here you would handle existing images if needed
-        }
-      });
-    }
-  }
-
-  async onFileSelected(event: any) {
-    const files = event.target.files;
-    if (files) {
-      this.handleFiles(Array.from(files));
-    }
-  }
-
-  onFileDrop(event: DragEvent) {
-    event.preventDefault();
-    const files = event.dataTransfer?.files;
-    if (files) {
-      this.handleFiles(Array.from(files));
-    }
+  // --- Gestión de Imágenes ---
+  async onFileSelected(event: Event) {
+    const files = (event.target as HTMLInputElement).files;
+    if (files) this.handleFiles(Array.from(files));
   }
 
   async takePicture() {
@@ -421,11 +242,9 @@ export class ProductFormPage implements OnInit {
         resultType: CameraResultType.Uri,
         source: CameraSource.Camera
       });
-
       if (image.webPath) {
-        const response = await fetch(image.webPath);
-        const blob = await response.blob();
-        const file = new File([blob], `photo_${new Date().getTime()}.jpeg`, { type: 'image/jpeg' });
+        const blob = await (await fetch(image.webPath)).blob();
+        const file = new File([blob], `photo_${Date.now()}.jpeg`, { type: 'image/jpeg' });
         this.handleFiles([file]);
       }
     } catch (error) {
@@ -435,7 +254,6 @@ export class ProductFormPage implements OnInit {
 
   private handleFiles(files: File[]) {
     if (this.isUploading) return;
-
     files.forEach(file => {
       const fileWrapper: ImageFile = {
         file,
@@ -451,39 +269,30 @@ export class ProductFormPage implements OnInit {
   private async uploadFile(fileWrapper: ImageFile) {
     this.isUploading = true;
     fileWrapper.uploading = true;
-
     try {
       const user = await firstValueFrom(this.authService.user$);
       if (!user) throw new Error('User not authenticated');
 
       const result = await this.productsService.uploadTempImage(
-        fileWrapper.file,
-        user.uid,
-        (progress) => {
-          fileWrapper.progress = progress;
-        }
+        fileWrapper.file, user.uid, (progress) => fileWrapper.progress = progress
       );
       fileWrapper.tempPath = result.path;
-      // Añadir el objeto ProductPhoto al FormArray 'photos'
+
       const photos = this.productForm.get('photos') as FormArray;
-      const productPhoto: NewPhoto = {
+      photos.push(this.fb.control({
         name: fileWrapper.file.name,
         path: result.path,
         url: result.url || '',
         type: fileWrapper.file.type,
         processing: true,
-      };
-      photos.push(this.fb.control(productPhoto));
+      } as NewPhoto));
     } catch (error) {
       console.error('Error uploading image:', error);
-      // this.presentToast('Error al subir la imagen', 'danger');
-      const index = this.imageFiles.indexOf(fileWrapper);
-      if (index > -1) {
-        this.imageFiles.splice(index, 1);
-      }
+      this.imageFiles = this.imageFiles.filter(fw => fw !== fileWrapper);
     } finally {
       fileWrapper.uploading = false;
       this.isUploading = this.imageFiles.some(f => f.uploading);
+      this.cdr.markForCheck();
     }
   }
 
@@ -492,19 +301,20 @@ export class ProductFormPage implements OnInit {
     if (fileWrapper.tempPath) {
       try {
         await this.productsService.deleteTempImage(fileWrapper.tempPath);
-        // Remover el objeto ProductPhoto del FormArray 'photos' comparando el path
         const photos = this.productForm.get('photos') as FormArray;
-        const photoIndex = photos.controls.findIndex(control => control.value && control.value.path === fileWrapper.tempPath);
-        if (photoIndex > -1) {
-          photos.removeAt(photoIndex);
-        }
+        const photoIndex = photos.controls.findIndex(c => c.value.path === fileWrapper.tempPath);
+        if (photoIndex > -1) photos.removeAt(photoIndex);
       } catch (error) {
         console.error('Error deleting temp image', error);
+      } finally {
+        this.cdr.markForCheck();
+
       }
     }
     this.imageFiles.splice(index, 1);
   }
 
+  // --- Guardado del Producto ---
   async saveProduct() {
     if (this.productForm.invalid || this.isUploading) {
       this.presentToast('Por favor, completa el formulario y espera a que terminen de subirse las imágenes.', 'warning');
@@ -512,19 +322,14 @@ export class ProductFormPage implements OnInit {
     }
 
     try {
+      const productData = this.productForm.value;
       if (this.isEditMode && this.productId) {
-        const productData = {
-          ...this.productForm.value,
-        };
         await this.productsService.updateProduct(this.productId, productData);
         this.presentToast('Producto actualizado con éxito', 'success');
       } else {
-        const newProductData = {
-          ...this.productForm.value,
-          processing: true,
-        };
-        await this.productsService.addProduct(newProductData);
+        await this.productsService.addProduct({ ...productData, processing: true });
         this.presentToast('Producto creado con éxito. Se está procesando.', 'success');
+        console.log(productData)
       }
       this.router.navigate(['/products']);
     } catch (error) {
@@ -533,54 +338,13 @@ export class ProductFormPage implements OnInit {
     }
   }
 
-
-
-  async openSelectCategoryModal() {
-    const modal = await this.modalCtrl.create({
-      component: SelectCategoryModalComponent,
-    });
-    modal.present();
-
-
-    const { data, role } = await modal.onWillDismiss();
-    if (role === 'confirm' && data && Array.isArray(data) && data.length > 0) {
-      this.selectedCategoryPath = data;
-      this.productForm.get('categoryId')?.setValue(data[data.length - 1].id);
-    }
-  }
-
-
-  // Utility functions for type safety
-  getOptions(attribute: FormGroup): FormArray {
-    return attribute.get('options') as FormArray;
-  }
-
-  getOptionsArray(attribute: AbstractControl): FormArray {
-    return this.getOptions(attribute as FormGroup);
-  }
-
-  getOptionFormControl(option: AbstractControl, controlName: string): FormControl {
-    return (option as FormGroup).get(controlName) as FormControl;
-  }
-
-  getVariantFormControl(variant: AbstractControl, controlName: string): FormControl {
-    return (variant as FormGroup).get(controlName) as FormControl;
-  }
-
-  // Utility function to cast AbstractControl to FormGroup
-  asFormGroup(control: AbstractControl): FormGroup {
-    return control as FormGroup;
+  // --- Utilidades ---
+  trackById(index: number, item: { value: { id: string } }): string {
+    return item.value.id;
   }
 
   async presentToast(message: string, color: 'success' | 'warning' | 'danger') {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 3000,
-      color,
-      position: 'top'
-    });
+    const toast = await this.toastCtrl.create({ message, duration: 3000, color, position: 'top' });
     toast.present();
   }
 }
-
-// ... (slugify, presentToast, etc.)

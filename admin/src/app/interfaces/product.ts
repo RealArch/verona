@@ -52,23 +52,23 @@ export interface VariationAttribute {
     // id: string;            // slug o id único: color, size
     name: string;          // Etiqueta visible: Color, Talla
     type?: 'color' | 'size' | 'material' | 'custom';
-    options: VariationOption[]; // Valores disponibles (Rojo, Azul, S, M, L)
+    // options: VariationOption[]; // Valores disponibles (Rojo, Azul, S, M, L)
 }
 
-export interface VariationOption {
-    id: string;            // slug del valor: rojo, azul, s, m, l
-    label: string;         // etiqueta visible
-    // Para tipos especiales (color, imagen, etc.)
-    colorHex?: string;     // si type === 'color'
-}
+// export interface VariationOption {
+//     id: string;            
+//     label: string;         
+//     colorHex?: string;
+// }
 
 // Una combinación concreta de atributos (p.ej., Color=Rojo + Talla=M)
 export interface ProductVariant {
-    id?: string; // id de variante (opcional si se genera al guardar)
-    attributes: { [attributeId: string]: string }; // { color: 'rojo', size: 'm' }
+    colorHex?: string;
+    id: string;
+    name: string;
+    price: Price;
     sku?: string;
+    status: 'active' | 'paused' | 'archived';
     stock: number;
-    price?: Price; // si no se define, usar el Price del producto
-    photos?: ProductPhoto[]; // imágenes específicas de la variante
-    status?: 'active' | 'paused' | 'archived';
+
 }

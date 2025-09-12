@@ -17,7 +17,7 @@
   --color-base-content: #212529; /* Gris oscuro para texto */
 
   /* Colores primarios - Verde oliva mediterráneo */
-  --color-primary: #4a7c59; /* Verde oliva principal */
+  --color-primary: #006633; /* Verde oliva principal */
   --color-primary-content: #ffffff; /* Blanco sobre verde */
 
   /* Colores secundarios - Azul mediterráneo */
@@ -25,7 +25,7 @@
   --color-secondary-content: #ffffff; /* Blanco sobre azul */
 
   /* Colores de acento - Dorado antiguo */
-  --color-accent: #d4af37; /* Dorado */
+  --color-accent: #99CC99; /* Dorado */
   --color-accent-content: #1a1a1a; /* Negro sobre dorado */
 
   /* Colores neutrales - Piedra y mármol */
@@ -54,3 +54,9 @@
   --depth: 0.5; /* Sombras sutiles */
   --noise: 0; /* Sin ruido */
 }
+
+@theme {
+    --color-primary-alt: #00592a; /* Verde oliva alternativo */
+    --color-accent-alt: #99CC99
+}
+
