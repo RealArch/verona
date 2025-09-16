@@ -1,18 +1,18 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { map, take, tap } from 'rxjs/operators';
+import { filter, map, tap, take } from 'rxjs/operators';
 
 export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
   return authService.user$.pipe(
-    take(1),
-    map(user => !!user), // Comprueba si el usuario existe
+    filter(user => user !== undefined), // Espera a que Firebase Auth se inicialice
+    take(1), // Toma solo el primer valor después de la inicialización
+    map(user => !!user),
     tap(isAuthenticated => {
       if (!isAuthenticated) {
-        // Si no está autenticado, redirige a la página de login
         router.navigate(['/auth/login']);
       }
     })

@@ -1,66 +1,76 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>login</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content [fullscreen]="true">
+  <div class="flex items-center justify-center min-h-full bg-gray-50 p-4">
+    <div class="w-full max-w-md">
+      
+      <!-- Logo and Title -->
+      <div class="text-center mb-8">
+        <img src="assets/icon/favicon.png" alt="Verona" class="mx-auto h-16 w-auto mb-4">
+        <h1 class="text-2xl font-bold text-gray-800">Panel Administrativo</h1>
+        <p class="text-gray-500 mt-1">Inicia sesión para continuar</p>
+      </div>
 
-<ion-content [fullscreen]="true" class="ion-padding">
-  <div class="login-container">
-    <ion-grid>
-      <ion-row class="ion-justify-content-center">
-        <ion-col size="12" size-md="6" size-lg="4">
-          <div class="login-card">
-            <ion-card>
-              <ion-card-header>
-                <ion-card-title class="ion-text-center">
-                  <ion-icon name="lock-closed" size="large"></ion-icon>
-                  <h2>Panel Administrativo</h2>
-                </ion-card-title>
-                <ion-card-subtitle class="ion-text-center">
-                  Inicia sesión para continuar
-                </ion-card-subtitle>
-              </ion-card-header>
-
-              <ion-card-content>
-                <form [formGroup]="loginForm" (ngSubmit)="login()">
-                  <ion-item>
-                    <ion-label position="stacked">Email</ion-label>
-                    <ion-input 
-                      type="email" 
-                      formControlName="email"
-                      placeholder="tu@email.com">
-                    </ion-input>
-                  </ion-item>
-
-                  <ion-item>
-                    <ion-label position="stacked">Contraseña</ion-label>
-                    <ion-input 
-                      type="password" 
-                      formControlName="password"
-                      placeholder="••••••••">
-                    </ion-input>
-                  </ion-item>
-
-                  <ion-button 
-                    type="submit" 
-                    expand="block" 
-                    class="ion-margin-top"
-                    [disabled]="loginForm.invalid">
-                    Iniciar Sesión
-                  </ion-button>
-                </form>
-
-                <div *ngIf="errorMessage" class="error-message ion-text-center ion-margin-top">
-                  <ion-text color="danger">
-                    <ion-icon name="warning"></ion-icon>
-                    {{ errorMessage }}
-                  </ion-text>
-                </div>
-              </ion-card-content>
-            </ion-card>
+      <!-- Form Card -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200/80 p-6 sm:p-8">
+        <form [formGroup]="loginForm" (ngSubmit)="login()">
+          
+          <!-- Email Input -->
+          <div class="mb-4">
+            <ion-label class="block text-sm font-medium text-gray-600 mb-1">Email</ion-label>
+            <ion-input
+              class="custom"
+              type="email"
+              formControlName="email"
+              placeholder="tu@email.com">
+            </ion-input>
+            <!-- Validation Message -->
+            @if(loginForm.get('email')?.invalid && loginForm.get('email')?.touched){
+              <div class="text-red-500 text-xs mt-1">
+                Por favor, introduce un email válido.
+              </div>
+            }
           </div>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
+
+          <!-- Password Input -->
+          <div class="mb-6">
+            <ion-label class="block text-sm font-medium text-gray-600 mb-1">Contraseña</ion-label>
+            <ion-input
+              class="custom"
+              type="password"
+              formControlName="password"
+              placeholder="••••••••">
+            </ion-input>
+          </div>
+
+          <!-- Error Message -->
+          @if(errorMessage){
+            <div class="flex items-center bg-red-50 text-red-600 rounded-lg p-3 text-sm mb-6">
+              <ion-icon name="warning-outline" class="mr-2"></ion-icon>
+              <span>{{ errorMessage }}</span>
+            </div>
+          }
+
+          <!-- Submit Button -->
+          <ion-button
+            type="submit"
+            expand="block"
+            shape="round"
+            [disabled]="loginForm.invalid || isLoading">
+            @if(isLoading){
+              <ion-spinner name="crescent"></ion-spinner>
+            } @else {
+              Iniciar Sesión
+            }
+          </ion-button>
+        </form>
+      </div>
+
+      <!-- Footer Link -->
+      <div class="text-center mt-8">
+        <a href="#" class="text-sm text-gray-500 hover:text-primary transition-colors">
+          ¿Olvidaste tu contraseña?
+        </a>
+      </div>
+
+    </div>
   </div>
 </ion-content>

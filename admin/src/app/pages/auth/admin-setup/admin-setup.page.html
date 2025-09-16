@@ -1,68 +1,60 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>Admin Setup</ion-title>
-  </ion-toolbar>
-</ion-header>
 
-<ion-content class="bg-gray-50 dark:bg-gray-900">
-  <div class="min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <div>
-        <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100 dark:bg-gray-700">
-          <ion-icon name="person-add" class="h-6 w-6 text-blue-600 dark:text-blue-400"></ion-icon>
+<ion-content [fullscreen]="true">
+  <div class="flex items-center justify-center min-h-full bg-gray-50 p-4">
+    <div class="w-full max-w-md">
+
+      <!-- Logo and Title -->
+      <div class="text-center mb-8">
+        <div class="mx-auto h-14 w-14 flex items-center justify-center rounded-full bg-primary-100 text-primary">
+          <ion-icon name="person-add-outline" class="text-3xl"></ion-icon>
         </div>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-          Configuración Inicial
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-          Crea el primer usuario administrador
-        </p>
+        <h1 class="text-2xl font-bold text-gray-800 mt-4">Configuración Inicial</h1>
+        <p class="text-gray-500 mt-1">Crea el primer usuario administrador</p>
       </div>
-      
-      <form class="mt-8 space-y-6" [formGroup]="adminSetupForm" (ngSubmit)="createAdmin()">
-        <div class="space-y-4">
 
-          <ion-item lines="none" class="rounded-lg bg-gray-100 dark:bg-gray-800">
-            <ion-label position="stacked" class="text-gray-600 dark:text-gray-400">Nombre</ion-label>
-            <ion-input type="text" placeholder="Tu nombre" formControlName="firstName" class="dark:text-white"></ion-input>
-          </ion-item>
+      <!-- Form Card -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200/80 p-6 sm:p-8">
+        <form [formGroup]="adminSetupForm" (ngSubmit)="createAdmin()">
           
-          <ion-item lines="none" class="rounded-lg bg-gray-100 dark:bg-gray-800">
-            <ion-label position="stacked" class="text-gray-600 dark:text-gray-400">Apellido</ion-label>
-            <ion-input type="text" placeholder="Tu apellido" formControlName="lastName" class="dark:text-white"></ion-input>
-          </ion-item>
-          
-          <ion-item lines="none" class="rounded-lg bg-gray-100 dark:bg-gray-800">
-            <ion-label position="stacked" class="text-gray-600 dark:text-gray-400">Email</ion-label>
-            <ion-input type="email" placeholder="tu@email.com" autocomplete="email" formControlName="email" class="dark:text-white"></ion-input>
-          </ion-item>
-          
-          <ion-item lines="none" class="rounded-lg bg-gray-100 dark:bg-gray-800">
-            <ion-label position="stacked" class="text-gray-600 dark:text-gray-400">Contraseña</ion-label>
-            <ion-input type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" formControlName="password" class="dark:text-white"></ion-input>
-          </ion-item>
-
-        </div>
-
-        <div class="pt-4">
-          <ion-button type="submit"
-                      [disabled]="adminSetupForm.invalid"
-                      expand="block">
-            Crear Usuario Administrador
-          </ion-button>
-        </div>
-
-        <div *ngIf="errorMessage" class="rounded-md bg-red-50 p-4 dark:bg-red-900/20">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <ion-icon name="warning" class="h-5 w-5 text-red-400"></ion-icon>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <!-- First Name Input -->
+            <div>
+              <ion-label class="block text-sm font-medium text-gray-600 mb-1">Nombre</ion-label>
+              <ion-input class="custom" type="text" formControlName="firstName" placeholder="Tu nombre"></ion-input>
             </div>
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-red-800 dark:text-red-300">{{ errorMessage }}</h3>
+            <!-- Last Name Input -->
+            <div>
+              <ion-label class="block text-sm font-medium text-gray-600 mb-1">Apellido</ion-label>
+              <ion-input class="custom" type="text" formControlName="lastName" placeholder="Tu apellido"></ion-input>
             </div>
           </div>
-        </div>
-      </form>
+
+          <!-- Email Input -->
+          <div class="mb-4">
+            <ion-label class="block text-sm font-medium text-gray-600 mb-1">Email</ion-label>
+            <ion-input class="custom" type="email" formControlName="email" placeholder="tu@email.com"></ion-input>
+          </div>
+
+          <!-- Password Input -->
+          <div class="mb-6">
+            <ion-label class="block text-sm font-medium text-gray-600 mb-1">Contraseña</ion-label>
+            <ion-input class="custom" type="password" formControlName="password" placeholder="Mínimo 6 caracteres"></ion-input>
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="errorMessage" class="flex items-center bg-red-50 text-red-600 rounded-lg p-3 text-sm mb-6">
+            <ion-icon name="warning-outline" class="mr-2"></ion-icon>
+            <span>{{ errorMessage }}</span>
+          </div>
+
+          <!-- Submit Button -->
+          <ion-button type="submit" expand="block" shape="round" [disabled]="adminSetupForm.invalid || isLoading">
+            <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+            <span *ngIf="!isLoading">Crear Usuario Administrador</span>
+          </ion-button>
+        </form>
+      </div>
+
     </div>
   </div>
 </ion-content>

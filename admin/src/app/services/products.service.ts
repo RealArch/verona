@@ -1,4 +1,4 @@
-import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
+import { Injectable, inject, Injector, runInInjectionContext, NgZone } from '@angular/core';
 import {
   Firestore,
   collection,
@@ -28,8 +28,8 @@ export class ProductsService {
   private firestore: Firestore = inject(Firestore);
   private storage: Storage = inject(Storage);
   private http: HttpClient = inject(HttpClient);
-  private injector = inject(Injector);
-
+  private injector: Injector = inject(Injector);
+  private zone: NgZone = inject(NgZone);
   private productsCollection = collection(this.firestore, 'products');
   private readonly API_URL = environment.useEmulators ? 'http://localhost:5001/verona-ffbcd/us-central1/api' : '/api';
 
@@ -76,27 +76,34 @@ export class ProductsService {
     userId: string,
     onProgress: (progress: number) => void
   ): Promise<{ path: string, url: string }> {
-    console.log('Uploading temp image');
-    const tempPath = `temp/${userId}/${Date.now()}_${file.name}`;
-    const storageRef = ref(this.storage, tempPath);
+    return runInInjectionContext(this.injector, () => {
+      const tempPath = `temp/${userId}/${Date.now()}_${file.name}`;
+      const storageRef = ref(this.storage, tempPath);
 
-    return new Promise((resolve, reject) => {
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      return new Promise<{ path: string, url: string }>((resolve, reject) => {
+        const uploadTask = uploadBytesResumable(storageRef, file);
 
-      uploadTask.on('state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          onProgress(progress);
-        },
-        (error) => {
-          console.error("Upload failed", error);
-          reject(error);
-        },
-        async () => {
-          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-          resolve({ path: tempPath, url: downloadUrl });
-        }
-      );
+        uploadTask.on('state_changed',
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            onProgress(progress);
+          },
+          (error) => {
+            console.error("Upload failed", error);
+            reject(error);
+          },
+          async () => {
+            try {
+              return runInInjectionContext(this.injector, async () => {
+                const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                resolve({ path: tempPath, url: downloadUrl });
+              });
+            } catch (error) {
+              reject(error);
+            }
+          }
+        );
+      });
     });
   }
   //funcion para actualizar el status de un producto. puede ser active, paused
@@ -106,7 +113,9 @@ export class ProductsService {
   }
 
   async deleteTempImage(path: string): Promise<void> {
-    const storageRef = ref(this.storage, path);
-    await deleteObject(storageRef);
+    return runInInjectionContext(this.injector, async () => {
+      const storageRef = ref(this.storage, path);
+      await deleteObject(storageRef);
+    });
   }
 }

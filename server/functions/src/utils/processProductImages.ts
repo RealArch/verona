@@ -80,7 +80,7 @@ export async function processProductImages(productId: string, photos: ProductPho
             // Borrar imagen de temp
             await tempFile.delete();
             processedPhotos.push({
-                ...photo,
+                // ...photo,
                 ...photoVersions,
                 processing: false
             });

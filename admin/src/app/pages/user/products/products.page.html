@@ -32,7 +32,7 @@
   <ion-list>
     @for (product of products; track product.id) {
     <ion-item-sliding disabled>
-      <ion-item color="light" class="rounded mb-2" lines="none" [routerLink]="['/product-form', product.id]">
+      <ion-item color="light" class="rounded mb-2" lines="none" [routerLink]="['/products', product.id,'edit']">
         <ion-thumbnail slot="start">
           @if (product.processing === false) {
           <ion-img [src]="product.photos[0]?.thumbnail?.url" (error)="onImgError($event)" />

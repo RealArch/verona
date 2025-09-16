@@ -14,7 +14,7 @@ import { onRequest } from "firebase-functions/v2/https";
 //IMPORT RUTAS
 import adminRouter from "./routes/admin.router";
 import categoriesRouter from "./routes/categories.router";
-import productsRouter, { onProductCreated, onProductDeleted } from "./routes/products.router";
+import productsRouter, { onProductCreated, onProductDeleted, onProductUpdated } from "./routes/products.router";
 //importamos la app de firebase
 import "./firebase-init";
 
@@ -32,8 +32,7 @@ app.use('/products', productsRouter);
 
 export const api = onRequest(app)
 //PRODUCTS TRIGGERS
-export { onProductCreated };
-export { onProductDeleted };
+export { onProductCreated, onProductUpdated, onProductDeleted };
 // import {onRequest} from "firebase-functions/https";
 // import * as logger from "firebase-functions/logger";
 

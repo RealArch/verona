@@ -36,7 +36,7 @@ export class CategoryManagerPage implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    this.categoriesSub = this.categoriesService.getCategoriesRealtime().subscribe(categories => {
+    this.categoriesSub = this.categoriesService.getCategories().subscribe(categories => {
       this.categories = categories;
       this.categoryTree = this.categoriesService.buildCategoryTree(this.categories);
     });

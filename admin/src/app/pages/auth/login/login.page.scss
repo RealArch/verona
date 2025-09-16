@@ -1,0 +1,25 @@
+ion-input.custom {
+  --border-color: #d1d5db; // gray-300
+  --border-radius: 0.5rem; // rounded-lg
+  --border-width: 1px;
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --placeholder-color: #9ca3af; // gray-400
+  --placeholder-opacity: 1;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  height: 44px;
+  
+  &.ion-focused {
+    --border-color: #4f46e5; // primary color
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+  }
+}
+
+// Remove inner bottom border from ion-input
+ion-input.custom::part(native) {
+  border-bottom: none !important;
+  box-shadow: none !important;
+}

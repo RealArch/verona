@@ -134,7 +134,8 @@ export class ProductFormPage implements OnInit {
     this.productId = this.route.snapshot.paramMap.get('id');
     if (this.productId) {
       this.isEditMode = true;
-      this.productsService.getProduct(this.productId).subscribe(product => {
+      this.productsService.getProduct(this.productId)
+      .subscribe(product => {
         if (product) {
           this.productForm.patchValue(product);
           // Manejo de variantes y fotos existentes

@@ -1,7 +1,7 @@
 import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import { Auth, authState, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, user, User } from '@angular/fire/auth';
 import { doc, Firestore, setDoc, getDoc } from '@angular/fire/firestore';
-import { firstValueFrom, map, Observable, take } from 'rxjs';
+import { firstValueFrom, map, Observable, take, filter } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { Router } from '@angular/router';
@@ -21,13 +21,13 @@ export class AuthService {
   private injector = inject(Injector);
   private router = inject(Router);
 
-
-  user$ = new BehaviorSubject<User | null>(null);
+  private _user$ = new BehaviorSubject<User | null | undefined>(undefined); // undefined = no inicializado
+  user$ = this._user$.asObservable();
 
   constructor() {
     // Subscribe to the authState to keep the user$ BehaviorSubject updated
     authState(this.auth).subscribe(user => {
-      this.user$.next(user);
+      this._user$.next(user); // user puede ser null (sin autenticar) o User (autenticado)
     });
   }
 
@@ -37,7 +37,7 @@ export class AuthService {
    */
   getAdminUserData(): Promise<AdminUser | null> {
     return runInInjectionContext(this.injector, async () => {
-      const user = this.user$.value;
+      const user = this._user$.value;
       if (user) {
         const userDocRef = doc(this.firestore, `adminUsers/${user.uid}`);
         const userDocSnap = await getDoc(userDocRef);
@@ -93,7 +93,8 @@ export class AuthService {
   }
   isAuthenticated(): Observable<boolean> {
     return this.user$.pipe(
-      take(1), // Toma el primer valor emitido para evitar que el guardia se quede escuchando
+      filter(user => user !== undefined), // Espera a que se inicialice
+      take(1), // Toma el primer valor válido
       map(user => !!user) // Convierte el objeto de usuario (o null) en un booleano
     );
   }
