@@ -1,53 +1,120 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar color="primary">
-    <ion-title>Gestor de Categorías</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/user"></ion-back-button>
+    </ion-buttons>
+    <ion-title class="font-bold">Gestor de Categorías</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="addCategory()">
+        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <div class="category-list-container">
-    <ion-list>
-      <ng-container *ngTemplateOutlet="categoryTreeTemplate; context: { categories: categoryTree, level: 0 }"></ng-container>
-    </ion-list>
-  </div>
+<ion-content>
+  <div class="max-w-5xl mx-auto">
+    @if(categoryTree.length > 0){
+      <ion-grid fixed>
+        <ion-row>
+          @for(category of categoryTree; track category.id){
+            <ion-col size="12" >
+              <ion-card>
+                <ion-card-header color="light" class="mb-0 py-1">
+                  <ion-item lines="none" color="transparent" style="border: none;" >
+                    <ion-icon name="folder-open-outline" slot="start" class="text-primary"></ion-icon>
+                    <ion-label>
+                      <h2 class="font-semibold">{{ category.name }}</h2>
+                      @if(category.description){
+                        <p class="text-sm">{{ category.description }}</p>
+                      }
+                    </ion-label>
+                    <div slot="end" class="flex items-center">
+                      <ion-button (click)="addCategory(category.id)" fill="clear" color="dark" size="small">
+                        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+                      </ion-button>
+                      <ion-button (click)="editCategory(category)" fill="clear" color="dark" size="small">
+                        <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+                      </ion-button>
+                      <ion-button (click)="deleteCategory(category.id!)" fill="clear" color="danger" size="small">
+                        <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                      </ion-button>
+                    </div>
+                  </ion-item>
+                </ion-card-header>
 
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button (click)="addCategory()">
-      <ion-icon name="add"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
+                <ion-card-content>
+                  @if(category.children && category.children.length > 0){
+                    <div class="pt-2">
+                      <ng-container *ngTemplateOutlet="categoryTreeTemplate; context: { categories: category.children, level: 1 }"></ng-container>
+                    </div>
+                  } @else {
+                    <div class="py-4 text-center text-sm text-gray-400">No tiene subcategorías.</div>
+                  }
+                </ion-card-content>
+              </ion-card>
+            </ion-col>
+          }
+        </ion-row>
+      </ion-grid>
+    } @else {
+      <div class="mt-16 text-center text-gray-500">
+        <ion-icon name="file-tray-outline" class="text-5xl mb-2"></ion-icon>
+        <h3 class="font-semibold text-lg">No hay categorías</h3>
+        <p class="text-sm">Empieza por crear la primera categoría principal.</p>
+        <ion-button (click)="addCategory()" fill="clear" class="mt-4">
+          <ion-icon slot="start" name="add"></ion-icon>
+          Crear Categoría
+        </ion-button>
+      </div>
+    }
+  </div>
 </ion-content>
 
+<!-- Recursive Template for Children -->
 <ng-template #categoryTreeTemplate let-categories="categories" let-level="level">
-    @for(category of categories; track category){
-      <ng-container >
-      <ion-item-sliding>
-        <ion-item [style.padding-left.px]="level * 20">
-          <ion-reorder slot="start"></ion-reorder>
-          <ion-label>
-            <h2>{{ category.name }}</h2>
-            <p>{{ category.description || 'Sin descripción' }}</p>
-          </ion-label>
-          <ion-buttons slot="end">
-            <ion-button (click)="addCategory(category.id)" fill="clear" color="success">
-              <ion-icon slot="icon-only" name="add-circle"></ion-icon>
-            </ion-button>
-          </ion-buttons>
-        </ion-item>
-        <ion-item-options side="end">
-          <ion-item-option (click)="editCategory(category)" color="primary">
-            <ion-icon slot="icon-only" name="create"></ion-icon>
-          </ion-item-option>
-          <ion-item-option (click)="deleteCategory(category.id!)" color="danger">
-            <ion-icon slot="icon-only" name="trash"></ion-icon>
-          </ion-item-option>
-        </ion-item-options>
-      </ion-item-sliding>
+  @for(category of categories; track category.id; let i = $index){
+    <div class="flex flex-col">
+      <div class="flex items-center group hover:bg-gray-100/60 rounded-md transition-colors duration-150 py-1">
+        <!-- Indentation -->
+        <div class="flex-shrink-0 flex items-center justify-end" [style.width.px]="level * 24">
+          <div class="w-4 h-full relative">
+            <span class="absolute top-0 left-1/2 -translate-x-1/2 w-px h-full bg-gray-300"></span>
+            <span class="absolute top-1/2 left-1/2 w-full h-px bg-gray-300"></span>
+            @if(i === categories.length - 1){
+              <span class="absolute top-1/2 left-1/2 -translate-x-1/2 w-px h-1/2 bg-white"></span>
+            }
+          </div>
+        </div>
 
-      <ng-container *ngIf="category.children && category.children.length > 0">
-        <ng-container *ngTemplateOutlet="categoryTreeTemplate; context: { categories: category.children, level: level + 1 }"></ng-container>
-      </ng-container>
-    </ng-container>
-    }
-    
+        <!-- Info -->
+        <div class="flex-grow flex items-center py-1 pl-2">
+          <ion-icon name="folder-outline" class="text-gray-500 text-base mr-2"></ion-icon>
+          <span class="text-gray-700 text-sm">{{ category.name }}</span>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex-shrink-0 pr-2">
+          <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <ion-button (click)="addCategory(category.id)" fill="clear" color="dark" size="small">
+              <ion-icon slot="icon-only" name="add-circle-outline" class="text-sm"></ion-icon>
+            </ion-button>
+            <ion-button (click)="editCategory(category)" fill="clear" color="dark" size="small">
+              <ion-icon slot="icon-only" name="create-outline" class="text-sm"></ion-icon>
+            </ion-button>
+            <ion-button (click)="deleteCategory(category.id!)" fill="clear" color="danger" size="small">
+              <ion-icon slot="icon-only" name="trash-outline" class="text-sm"></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Children of this node -->
+      @if(category.children && category.children.length > 0){
+        <div>
+          <ng-container *ngTemplateOutlet="categoryTreeTemplate; context: { categories: category.children, level: level + 1 }"></ng-container>
+        </div>
+      }
+    </div>
+  }
 </ng-template>

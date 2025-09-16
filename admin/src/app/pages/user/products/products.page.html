@@ -21,52 +21,111 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <div *ngIf="products.length !== undefined; else loadingOrError">
-  <div *ngIf="products.length === 0" class="empty-state">
-      <ion-icon name="cube-outline"></ion-icon>
-      <p>No hay productos para mostrar.</p>
-      <p>¡Añade tu primer producto!</p>
-    </div>
-
-    <ion-list *ngIf="products.length > 0">
-      <ng-container *ngFor="let product of products; trackBy: trackProduct">
-        <ion-item-sliding>
-          <ion-item button [routerLink]="['/product-form', product.id]">
-            <ion-thumbnail slot="start">
-              <ng-container *ngIf="product.processing === false; else loading">
-                <img [src]="product.photos[0]?.thumbnail?.url" (error)="onImgError($event)" />
-              </ng-container>
-              <ng-template #loading>
-                <ion-spinner></ion-spinner>
-              </ng-template>
-            </ion-thumbnail>
-
-            <ion-label>
-              <h2>{{ product.name }}</h2>
-              <p>SKU: {{ product.sku }} | Stock: {{ product.stock }}</p>
-              <p>{{ product.price | currency:'USD' }}</p>
-            </ion-label>
-            <ion-note slot="end" [color]="product.status === 'active' ? 'success' : 'warning'">
-              {{ product.status }}
-            </ion-note>
-          </ion-item>
-          <ion-item-options side="end">
-            <ion-item-option (click)="deleteProduct(product.id!)" color="danger" expandable>
-              <ion-icon slot="icon-only" name="trash"></ion-icon>
-            </ion-item-option>
-          </ion-item-options>
-        </ion-item-sliding>
-      </ng-container>
-    </ion-list>
+  @if (products.length !== undefined) {
+  @if (products.length === 0) {
+  <div class="empty-state">
+    <ion-icon name="cube-outline"></ion-icon>
+    <p>No hay productos para mostrar.</p>
+    <p>¡Añade tu primer producto!</p>
   </div>
+  } @else {
+  <ion-list>
+    @for (product of products; track product.id) {
+    <ion-item-sliding disabled>
+      <ion-item color="light" class="rounded mb-2" lines="none" [routerLink]="['/product-form', product.id]">
+        <ion-thumbnail slot="start">
+          @if (product.processing === false) {
+          <ion-img [src]="product.photos[0]?.thumbnail?.url" (error)="onImgError($event)" />
+          } @else {
+          <ion-spinner></ion-spinner>
+          }
+        </ion-thumbnail>
 
-  <ng-template #loadingOrError>
-    <!-- Puedes añadir un spinner de carga o un mensaje de error aquí -->
-    <div class="loading-state">
-      <ion-spinner name="crescent"></ion-spinner>
-      <p>Cargando productos...</p>
-    </div>
-  </ng-template>
+        <ion-label>
+          <ion-row class="ion-align-items-center">
+            <ion-col>
+              <ion-row>
+                <ion-col size="12">
+                  <h2 style="line-height: 13PX;">{{ product.name }}</h2>
+
+                </ion-col>
+                <ion-col class="py-0">
+                  <p style="line-height: 12px;">SKU: {{ product.sku || "N/A"}} | Total stock: {{ product.stock }}</p>
+                  @if(product.variants?.length == 0) {
+                  <p>{{ product.price | currency:'USD' }}</p>
+                  } @else {
+                  @for(variant of product.variants; track variant.id) {
+                  <div class="inline-flex align-items-center color-container">
+                    <div class="colorBox" [style.background]="variant.colorHex"></div>
+                    <div class="ps-1 text-xs">{{ variant.price| currency:'USD' }} / {{ variant.stock }}</div>
+
+                  </div>
+                  }
+                  }
+                </ion-col>
+                <ion-col class="py-0">
+                  <div class="title text-xs font-medium" style="line-height: 12px;">Status</div>
+                  <div class="info">
+                    <ion-text [color]="product.status === 'active' ? 'success' : 'warning'" class="text-sm">
+                      {{ product.status | titlecase}}
+                    </ion-text>
+                  </div>
+                </ion-col>
+              </ion-row>
+            </ion-col>
+
+            <ion-col size="auto" class="py-0 ml-auto ">
+
+              <ion-buttons class="ml-auto" >
+                <ion-button (click)="deleteProduct(product.id!);stopPropagation($event)">
+                  <ion-icon slot="icon-only" color="danger" size="small" name="trash"></ion-icon>
+                </ion-button>
+                <ion-button [id]="'menu-trigger'+product.id" (click)="stopPropagation($event)">
+                  <ion-icon slot="icon-only" size="small" name="ellipsis-vertical"></ion-icon>
+                </ion-button>
+                <ion-popover [trigger]="'menu-trigger'+product.id" 
+                triggerAction="click" showBackdrop="false">
+                  <ng-template>
+                    <ion-content class="">
+                      <ion-item button lines="none" (click)="changeStatus(product.id!)">
+                        @if(product.status === 'active') {
+                        <ion-label>Pausar</ion-label>
+                        } @else {
+                        <ion-label>Activar</ion-label>
+                        }
+                      </ion-item>
+
+                    </ion-content>
+                  </ng-template>
+                </ion-popover>
+              </ion-buttons>
+
+
+
+            </ion-col>
+
+          </ion-row>
+
+
+        </ion-label>
+
+      </ion-item>
+      <ion-item-options side="end">
+        <ion-item-option (click)="deleteProduct(product.id!)" color="danger" expandable>
+          <ion-icon slot="icon-only" name="trash"></ion-icon>
+        </ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
+    }
+  </ion-list>
+  }
+  } @else {
+  <!-- Puedes añadir un spinner de carga o un mensaje de error aquí -->
+  <div class="loading-state">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Cargando productos...</p>
+  </div>
+  }
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button [routerLink]="['/products/add']">

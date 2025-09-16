@@ -1,13 +1,13 @@
-import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonIcon,
-  IonFab, IonFabButton, ModalController, IonList, IonItem, IonLabel,
-  IonItemSliding, IonButton, IonItemOption, IonItemOptions, IonReorderGroup, IonReorder
+  ModalController, IonButton, IonBackButton, IonGrid, IonRow, IonCol, IonCard,
+  IonCardHeader, IonCardContent, IonItem, IonLabel
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { create, folderOpen, trash, add, addCircle, reorderThree } from 'ionicons/icons';
+import { create, trash, add, addCircleOutline, folderOpenOutline, createOutline, trashOutline, fileTrayOutline, folderOutline } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
 import { Category, CategoriesService } from '../../../services/categories.service';
 import { CategoryModalComponent } from './category-modal/category-modal.component';
@@ -19,22 +19,20 @@ import { CategoryModalComponent } from './category-modal/category-modal.componen
   styleUrls: ['./category-manager.page.scss'],
   standalone: true,
   imports: [
-    IonReorder, IonReorderGroup, IonItemOptions, IonItemOption, IonButton,
-    IonItemSliding, IonLabel, IonItem, IonList, IonFabButton, IonFab, IonIcon,
-    IonButtons, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule,
-    FormsModule
+    IonCard, IonCardHeader, IonCardContent, IonItem, IonLabel,
+    IonGrid, IonRow, IonCol, IonButton, IonIcon, IonButtons, IonContent,
+    IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule, IonBackButton
   ]
 })
 export class CategoryManagerPage implements OnInit, OnDestroy {
   private categoriesService = inject(CategoriesService);
   private modalController = inject(ModalController);
-  private cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
   categories: Category[] = [];
   categoryTree: Category[] = [];
   private categoriesSub!: Subscription;
 
   constructor() {
-    addIcons({ folderOpen, addCircle, create, trash, add, reorderThree });
+    addIcons({ addCircleOutline, folderOpenOutline, createOutline, trashOutline, fileTrayOutline, add, folderOutline, create, trash });
   }
 
   ngOnInit() {

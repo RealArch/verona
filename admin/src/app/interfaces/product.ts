@@ -14,6 +14,7 @@ export interface Product {
     // Atributos de variación (p.ej., Color, Talla) y combinaciones (variants)
     variationAttributes?: VariationAttribute[];
     variants?: ProductVariant[]; // combinaciones generadas de atributos
+    pausedVariantsCount: number; // Número de variantes en estado 'paused'
 }
 
 
@@ -29,23 +30,24 @@ export interface newProduct {
     processing: boolean;
     slug: string;
     tags?: string[];
-    price: Price;
+    price: number;
     variationAttributes?: VariationAttribute[];
     variants?: ProductVariant[];
-
+    pausedVariantsCount: number;
+    
 
 }
 
-export interface Price {
-    regular_price: number;
-    sale_price?: number;
-    sale_price_dates?: {
-        start: Date;
-        end: Date;
-    };
-    tax_status: string;
-    tax_class: string;
-}
+// export interface Price {
+//     regular_price: number;
+//     sale_price?: number;
+//     sale_price_dates?: {
+//         start: Date;
+//         end: Date;
+//     };
+//     tax_status: string;
+//     tax_class: string;
+// }
 
 // Atributo de variación (ej. Color, Talla)
 export interface VariationAttribute {
@@ -66,9 +68,11 @@ export interface ProductVariant {
     colorHex?: string;
     id: string;
     name: string;
-    price: Price;
+    price: number;
     sku?: string;
     status: 'active' | 'paused' | 'archived';
     stock: number;
 
 }
+
+export type ProductStatus = 'active' | 'paused' | 'archived';

@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
   Firestore,
   collection,
@@ -15,10 +15,10 @@ import {
   orderBy
 } from '@angular/fire/firestore';
 import { Storage, ref, uploadBytes, getDownloadURL, deleteObject, uploadBytesResumable } from '@angular/fire/storage';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
-import { Product } from 'src/app/interfaces/product';
+import { Product, ProductStatus } from 'src/app/interfaces/product';
 
 
 @Injectable({
@@ -28,26 +28,28 @@ export class ProductsService {
   private firestore: Firestore = inject(Firestore);
   private storage: Storage = inject(Storage);
   private http: HttpClient = inject(HttpClient);
+  private injector = inject(Injector);
 
   private productsCollection = collection(this.firestore, 'products');
   private readonly API_URL = environment.useEmulators ? 'http://localhost:5001/verona-ffbcd/us-central1/api' : '/api';
 
-
   getProductsByStatus(status: 'all' | 'active' | 'paused'): Observable<Product[]> {
-    let q;
-    if (status === 'all') {
-      q = query(this.productsCollection);
-    } else {
-      q = query(this.productsCollection, where('status', '==', status));
-    }
-    return collectionData(q, { idField: 'id' }) as Observable<Product[]>;
+    return runInInjectionContext(this.injector, () => {
+      let q;
+      if (status === 'all') {
+        q = query(this.productsCollection);
+      } else {
+        q = query(this.productsCollection, where('status', '==', status));
+      }
+      return collectionData(q, { idField: 'id' }) as Observable<Product[]>;
+    });
   }
 
   getProduct(id: string): Observable<Product> {
     const productDoc = doc(this.firestore, `products/${id}`);
     return docData(productDoc, { idField: 'id' }) as Observable<Product>;
   }
-  
+
   async addProduct(productData: Partial<Product>): Promise<any> {
     // addDoc se encarga de añadir el documento a la colección especificada.
     return addDoc(this.productsCollection, productData);
@@ -70,14 +72,14 @@ export class ProductsService {
 
   // Uploads image to a temporary path and returns the full path
   async uploadTempImage(
-    file: File, 
-    userId: string, 
+    file: File,
+    userId: string,
     onProgress: (progress: number) => void
   ): Promise<{ path: string, url: string }> {
     console.log('Uploading temp image');
     const tempPath = `temp/${userId}/${Date.now()}_${file.name}`;
     const storageRef = ref(this.storage, tempPath);
-    
+
     return new Promise((resolve, reject) => {
       const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -96,6 +98,11 @@ export class ProductsService {
         }
       );
     });
+  }
+  //funcion para actualizar el status de un producto. puede ser active, paused
+  updateStatus(productId: string, status: ProductStatus): Promise<void> {
+    const productDoc = doc(this.firestore, `products/${productId}`);
+    return updateDoc(productDoc, { status, updatedAt: serverTimestamp() });
   }
 
   async deleteTempImage(path: string): Promise<void> {

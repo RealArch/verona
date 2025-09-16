@@ -323,6 +323,16 @@ export class ProductFormPage implements OnInit {
 
     try {
       const productData = this.productForm.value;
+
+      // Contar variantes pausadas
+      if (productData.variants && productData.variants.length > 0) {
+        productData.pausedVariantsCount = productData.variants.filter(
+          (variant: { status: string }) => variant.status === 'paused'
+        ).length;
+      } else {
+        productData.pausedVariantsCount = 0;
+      }
+
       if (this.isEditMode && this.productId) {
         await this.productsService.updateProduct(this.productId, productData);
         this.presentToast('Producto actualizado con éxito', 'success');
