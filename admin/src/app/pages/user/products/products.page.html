@@ -33,9 +33,13 @@
     @for (product of products; track product.id) {
     <ion-item-sliding disabled>
       <ion-item color="light" class="rounded mb-2" lines="none" [routerLink]="['/products', product.id,'edit']">
-        <ion-thumbnail slot="start">
+        <ion-thumbnail slot="start" class="product-thumbnail">
           @if (product.processing === false) {
-          <ion-img [src]="product.photos[0]?.thumbnail?.url" (error)="onImgError($event)" />
+            @if(product.photos.length > 0) {
+              <ion-img [src]="product.photos[0]?.thumbnail?.url || 'assets/icon/no-image.svg'" />
+            } @else {
+              <ion-img class="no-img" src="assets/icon/no-image.svg" />
+            }
           } @else {
           <ion-spinner></ion-spinner>
           }
@@ -76,15 +80,14 @@
 
             <ion-col size="auto" class="py-0 ml-auto ">
 
-              <ion-buttons class="ml-auto" >
+              <ion-buttons class="ml-auto">
                 <ion-button (click)="deleteProduct(product.id!);stopPropagation($event)">
                   <ion-icon slot="icon-only" color="danger" size="small" name="trash"></ion-icon>
                 </ion-button>
                 <ion-button [id]="'menu-trigger'+product.id" (click)="stopPropagation($event)">
                   <ion-icon slot="icon-only" size="small" name="ellipsis-vertical"></ion-icon>
                 </ion-button>
-                <ion-popover [trigger]="'menu-trigger'+product.id" 
-                triggerAction="click" showBackdrop="false">
+                <ion-popover [trigger]="'menu-trigger'+product.id" triggerAction="click" showBackdrop="false">
                   <ng-template>
                     <ion-content class="">
                       <ion-item button lines="none" (click)="changeStatus(product.id!)">

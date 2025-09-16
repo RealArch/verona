@@ -12,7 +12,7 @@ import {
 import { addIcons } from 'ionicons';
 import { cubeOutline, add, trash, ellipsisVertical } from 'ionicons/icons';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { take, takeUntil } from 'rxjs/operators';
 import { ProductsService } from '../../../services/products.service';
 import { Popups } from '../../../services/popups';
 import { Product } from 'src/app/interfaces/product';
@@ -111,7 +111,4 @@ export class ProductsPage implements OnInit {
     await alert.present();
   }
 
-  onImgError(event: any) {
-    event.target.src = 'assets/placeholder.png';
-  }
 }

@@ -54,15 +54,31 @@ export const onProductCreated = onDocumentCreated("products/{productId}", async 
 export const onProductUpdated = onDocumentUpdated("products/{productId}", async (event) => {
     const before = event.data?.before.data();
     const after = event.data?.after.data();
+    const batch = db.batch();
+    const countersRef = db.collection("metadata").doc("counters");
+    const productsRef = db.collection("products").doc(event.params.productId);
 
     if (!before || !after) {
         console.log("No data associated with the event");
         return;
     }
+    if (after.processing == false) {
+        return;
+    }
+
+    const processedPhotos = await processProductImages(event.params.productId, after.photos as ProductPhoto[]);
+    batch.update(productsRef, { photos: processedPhotos });
+
+
+    if (after.imagesToDelete.length > 0) {
+        removePhotoArrayImages(after.imagesToDelete);
+        await db.collection("products").doc(event.params.productId).update({
+            imagesToDelete: []
+        })
+    }
 
     if (before.status !== after.status) {
-        const batch = db.batch();
-        const countersRef = db.collection("metadata").doc("counters");
+
 
         // Decrement old status counter
         if (before.status === "active") {
@@ -78,8 +94,11 @@ export const onProductUpdated = onDocumentUpdated("products/{productId}", async 
             batch.set(countersRef, { products_paused: FieldValue.increment(1) }, { merge: true });
         }
 
-        await batch.commit();
     }
+    batch.update(productsRef, { processing: false });
+
+    await batch.commit();
+
 })
 export const onProductDeleted = onDocumentDeleted("products/{productId}", async (event) => {
     const data = event.data?.data();

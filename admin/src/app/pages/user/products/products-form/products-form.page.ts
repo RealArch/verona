@@ -10,16 +10,16 @@ import {
   ModalController, IonPopover, IonList, IonButton, IonIcon, IonRow, IonCol, IonGrid
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { save, cloudUploadOutline, folderOpenOutline, cameraOutline, trashOutline, addCircleOutline, add, informationCircleOutline, folderOutline, optionsOutline, colorPaletteOutline, resizeOutline, closeOutline, layersOutline, close, cubeOutline, documentTextOutline, warningOutline } from 'ionicons/icons';
+import { save, cloudUploadOutline, folderOpenOutline, cameraOutline, trashOutline, addCircleOutline, add, informationCircleOutline, folderOutline, optionsOutline, colorPaletteOutline, resizeOutline, closeOutline, layersOutline, close, cubeOutline, documentTextOutline, warningOutline, checkmarkOutline } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { QuillModule } from 'ngx-quill';
 import { firstValueFrom, Subscription } from 'rxjs';
-import { debounceTime } from 'rxjs/operators';
+import { debounceTime, take } from 'rxjs/operators';
 
 import { AuthService } from 'src/app/services/auth.service';
 import { ProductsService } from 'src/app/services/products.service';
 import { CategoriesService, Category } from 'src/app/services/categories.service';
-import { NewPhoto } from 'src/app/interfaces/product-photo';
+import { NewPhoto, ProductPhoto } from 'src/app/interfaces/product-photo';
 import { SelectCategoryModalComponent } from './select-category/select-category-modal.component';
 
 // Interfaces simplificadas
@@ -29,6 +29,12 @@ interface ImageFile {
   uploading: boolean;
   progress: number;
   tempPath?: string;
+}
+
+interface ExistingImage {
+  photo: ProductPhoto;
+  index: number;
+  previewUrl: string;
 }
 
 @Component({
@@ -64,6 +70,8 @@ export class ProductFormPage implements OnInit {
   categories: Category[] = [];
   selectedCategoryPath: Category[] = [];
   imageFiles: ImageFile[] = [];
+  existingImages: ExistingImage[] = [];
+  imagesToDelete: ProductPhoto[] = []; // Objetos completos de imágenes a eliminar
   isUploading = false;
   private variantsSub: Subscription | undefined;
 
@@ -77,7 +85,7 @@ export class ProductFormPage implements OnInit {
   };
 
   constructor() {
-    addIcons({ save, cameraOutline, addCircleOutline, trashOutline, folderOutline, informationCircleOutline, documentTextOutline, layersOutline, optionsOutline, add, colorPaletteOutline, resizeOutline, closeOutline, close, cloudUploadOutline, folderOpenOutline, cubeOutline, warningOutline });
+    addIcons({ save, cameraOutline, addCircleOutline, trashOutline, folderOutline, informationCircleOutline, documentTextOutline, layersOutline, optionsOutline, add, colorPaletteOutline, resizeOutline, closeOutline, close, cloudUploadOutline, folderOpenOutline, cubeOutline, warningOutline, checkmarkOutline });
   }
 
   // --- Ciclo de Vida ---
@@ -135,13 +143,83 @@ export class ProductFormPage implements OnInit {
     if (this.productId) {
       this.isEditMode = true;
       this.productsService.getProduct(this.productId)
-      .subscribe(product => {
-        if (product) {
-          this.productForm.patchValue(product);
-          // Manejo de variantes y fotos existentes
-        }
-      });
+        .pipe(take(1))
+        .subscribe(product => {
+          if (product) {
+            this.productForm.patchValue(product);
+
+            // Cargar imágenes existentes
+            if (product.photos && product.photos.length > 0) {
+              this.existingImages = product.photos.map((photo, index) => ({
+                photo,
+                index,
+                previewUrl: photo.medium?.url || photo.large?.url || photo.small?.url || ''
+              }));
+            }
+
+            // Cargar categoría seleccionada
+            if (product.categoryId) {
+              this.loadCategoryPath(product.categoryId);
+            }
+
+            // Cargar variantes existentes si las hay
+            if (product.variants && product.variants.length > 0) {
+              const variantsArray = this.productForm.get('variants') as FormArray;
+              variantsArray.clear();
+
+              product.variants.forEach(variant => {
+                variantsArray.push(this.fb.group({
+                  id: [variant.id],
+                  type: [this.getVariantType(variant)],
+                  name: [variant.name, Validators.required],
+                  colorHex: [variant.colorHex || null],
+                  sku: [variant.sku || '', Validators.required],
+                  price: [variant.price, [Validators.required, Validators.min(0)]],
+                  stock: [variant.stock, [Validators.required, Validators.min(0)]],
+                  status: [variant.status || 'active', Validators.required]
+                }));
+              });
+            }
+
+            this.cdr.markForCheck();
+          }
+        });
     }
+  }
+
+  private getVariantType(variant: any): string {
+    // Lógica para determinar el tipo de variante basado en los datos
+    if (variant.colorHex) return 'color';
+    if (variant.name && (variant.name.toLowerCase().includes('talla') || variant.name.toLowerCase().includes('size'))) return 'size';
+    return 'material'; // por defecto
+  }
+
+  private loadCategoryPath(categoryId: string) {
+    // Buscar la categoría y construir el path
+    this.categoriesService.getCategories().subscribe(categories => {
+      const flatCategories = this.flattenCategories(categories);
+      const category = flatCategories.find(cat => cat.id === categoryId);
+      if (category) {
+        this.selectedCategoryPath = this.buildCategoryPath(category, flatCategories);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private buildCategoryPath(category: Category, allCategories: Category[]): Category[] {
+    const path: Category[] = [];
+    let current: Category | null = category;
+
+    while (current) {
+      path.unshift(current);
+      if (current.parentId) {
+        current = allCategories.find(cat => cat.id === current?.parentId) || null;
+      } else {
+        break;
+      }
+    }
+
+    return path;
   }
 
   // --- Gestión de Variantes ---
@@ -315,6 +393,18 @@ export class ProductFormPage implements OnInit {
     this.imageFiles.splice(index, 1);
   }
 
+  removeExistingImage(index: number) {
+    const existingImage = this.existingImages[index];
+    if (existingImage) {
+      // Agregar el objeto completo de la imagen a la lista de eliminación
+      this.imagesToDelete.push(existingImage.photo);
+
+      // Eliminar la imagen del array visualmente
+      this.existingImages.splice(index, 1);
+      this.cdr.markForCheck();
+    }
+  }
+
   // --- Guardado del Producto ---
   async saveProduct() {
     if (this.productForm.invalid || this.isUploading) {
@@ -323,24 +413,16 @@ export class ProductFormPage implements OnInit {
     }
 
     try {
-      const productData = this.productForm.value;
-
-      // Contar variantes pausadas
-      if (productData.variants && productData.variants.length > 0) {
-        productData.pausedVariantsCount = productData.variants.filter(
-          (variant: { status: string }) => variant.status === 'paused'
-        ).length;
-      } else {
-        productData.pausedVariantsCount = 0;
-      }
+      // Obtener solo los campos que existen en el formulario
+      const formData = this.getFormData();
 
       if (this.isEditMode && this.productId) {
-        await this.productsService.updateProduct(this.productId, productData);
+        await this.productsService.updateProduct(this.productId, formData);
         this.presentToast('Producto actualizado con éxito', 'success');
       } else {
-        await this.productsService.addProduct({ ...productData, processing: true });
+        await this.productsService.addProduct({ ...formData, processing: true });
         this.presentToast('Producto creado con éxito. Se está procesando.', 'success');
-        console.log(productData)
+        console.log(formData)
       }
       this.router.navigate(['/products']);
     } catch (error) {
@@ -349,9 +431,59 @@ export class ProductFormPage implements OnInit {
     }
   }
 
+  private getFormData() {
+    // Obtener solo los valores de los campos del formulario
+    const formFields = {
+      name: this.productForm.get('name')?.value,
+      description: this.productForm.get('description')?.value,
+      price: this.productForm.get('price')?.value,
+      stock: this.productForm.get('stock')?.value,
+      sku: this.productForm.get('sku')?.value,
+      categoryId: this.productForm.get('categoryId')?.value,
+      status: this.productForm.get('status')?.value,
+    };
+
+    // Manejar fotos
+    let photos = this.productForm.get('photos')?.value || [];
+    if (this.isEditMode) {
+      // Para modo edición, combinar imágenes existentes restantes con nuevas fotos
+      const remainingPhotos = this.existingImages.map(img => img.photo);
+      photos = [...remainingPhotos, ...photos];
+    }
+
+    // Manejar variantes
+    const variants = this.productForm.get('variants')?.value || [];
+
+    // Construir el objeto final con campos adicionales calculados
+    const productData: any = {
+      ...formFields,
+      photos,
+      variants,
+      // Contar variantes pausadas
+      pausedVariantsCount: variants.length > 0 ?
+        variants.filter((variant: { status: string }) => variant.status === 'paused').length : 0
+    };
+
+    // Agregar imagesToDelete solo si hay imágenes para eliminar (modo edición)
+    if (this.isEditMode && this.imagesToDelete.length > 0) {
+      productData.imagesToDelete = [...this.imagesToDelete];
+    }
+
+    return productData;
+  }
+
   // --- Utilidades ---
   trackById(index: number, item: { value: { id: string } }): string {
     return item.value.id;
+  }
+
+  getActiveImages(): ExistingImage[] {
+    return this.existingImages; // Ya no hay imágenes marcadas, solo las que quedan en el array
+  }
+
+  getMarkedForDeletionCount(): number {
+    // El conteo se basa directamente en la longitud del array de objetos
+    return this.imagesToDelete.length;
   }
 
   async presentToast(message: string, color: 'success' | 'warning' | 'danger') {

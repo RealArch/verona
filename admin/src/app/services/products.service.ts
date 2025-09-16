@@ -19,6 +19,7 @@ import { Observable, map } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { Product, ProductStatus } from 'src/app/interfaces/product';
+import { ProductPhoto } from 'src/app/interfaces/product-photo';
 
 
 @Injectable({
@@ -46,28 +47,37 @@ export class ProductsService {
   }
 
   getProduct(id: string): Observable<Product> {
-    const productDoc = doc(this.firestore, `products/${id}`);
-    return docData(productDoc, { idField: 'id' }) as Observable<Product>;
+    return runInInjectionContext(this.injector, () => {
+      const productDoc = doc(this.firestore, `products/${id}`);
+      return docData(productDoc, { idField: 'id' }) as Observable<Product>;
+    });
   }
 
   async addProduct(productData: Partial<Product>): Promise<any> {
-    // addDoc se encarga de añadir el documento a la colección especificada.
-    return addDoc(this.productsCollection, productData);
+    return runInInjectionContext(this.injector, () => {
+      return addDoc(this.productsCollection, productData);
+    });
   }
 
-  async updateProduct(id: string, productData: Partial<Product>): Promise<void> {
-    const productDoc = doc(this.firestore, `products/${id}`);
-    return updateDoc(productDoc, {
-      ...productData,
-      updatedAt: serverTimestamp()
+  async updateProduct(id: string, productData: Partial<Product & { imagesToDelete?: ProductPhoto[] }>): Promise<void> {
+    return runInInjectionContext(this.injector, async () => {
+      const productDoc = doc(this.firestore, `products/${id}`);
+      console.log('Updating product with data:', productData);
+      return updateDoc(productDoc, {
+        ...productData,
+        updatedAt: serverTimestamp(),
+        processing: true // Asegura que processing se establezca en false al actualizar
+      });
     });
   }
 
 
   async deleteProduct(id: string): Promise<void> {
-    const productDoc = doc(this.firestore, `products/${id}`);
-    await deleteDoc(productDoc);
-    // Note: Deleting images from storage should be handled by a cloud function for security and reliability.
+    return runInInjectionContext(this.injector, () => {
+      const productDoc = doc(this.firestore, `products/${id}`);
+      return deleteDoc(productDoc);
+      // Note: Deleting images from storage should be handled by a cloud function for security and reliability.
+    });
   }
 
   // Uploads image to a temporary path and returns the full path
@@ -94,10 +104,8 @@ export class ProductsService {
           },
           async () => {
             try {
-              return runInInjectionContext(this.injector, async () => {
-                const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-                resolve({ path: tempPath, url: downloadUrl });
-              });
+              const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+              resolve({ path: tempPath, url: downloadUrl });
             } catch (error) {
               reject(error);
             }
@@ -108,14 +116,29 @@ export class ProductsService {
   }
   //funcion para actualizar el status de un producto. puede ser active, paused
   updateStatus(productId: string, status: ProductStatus): Promise<void> {
-    const productDoc = doc(this.firestore, `products/${productId}`);
-    return updateDoc(productDoc, { status, updatedAt: serverTimestamp() });
+    return runInInjectionContext(this.injector, () => {
+      const productDoc = doc(this.firestore, `products/${productId}`);
+      return updateDoc(productDoc, { status, updatedAt: serverTimestamp() });
+    });
   }
 
   async deleteTempImage(path: string): Promise<void> {
     return runInInjectionContext(this.injector, async () => {
       const storageRef = ref(this.storage, path);
       await deleteObject(storageRef);
+    });
+  }
+
+  async deleteImages(imagePaths: string[]): Promise<void[]> {
+    return runInInjectionContext(this.injector, () => {
+      const deletePromises = imagePaths.map(path => {
+        const storageRef = ref(this.storage, path);
+        return deleteObject(storageRef).catch(error => {
+          console.warn(`Failed to delete image at path ${path}:`, error);
+        });
+      });
+
+      return Promise.all(deletePromises);
     });
   }
 }

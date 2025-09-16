@@ -52,3 +52,9 @@ ion-item h2 {
   align-items: center;
   margin-right: 8px;
 }
+
+.no-img {
+  background-color: var(--ion-color-light-tint);
+  border: 2px solid var(--ion-color-light-shade);
+  padding: 15px;
+}
