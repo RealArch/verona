@@ -15,12 +15,37 @@
       <ion-input formControlName="description" type="text"></ion-input>
     </ion-item>
 
+    <!-- Image Upload for Main Categories -->
+    <div *ngIf="!parentId" class="ion-margin-top">
+      <ion-label>Imagen de la Categoría</ion-label>
+      <div class="image-upload-container" (click)="fileInput.click()">
+        <ng-container *ngIf="!imageUpload; else showImage">
+          <div class="placeholder">
+            <ion-icon name="camera-outline" size="large"></ion-icon>
+            <span>Subir Imagen</span>
+          </div>
+        </ng-container>
+        <ng-template #showImage>
+          <ion-img [src]="imageUpload!.previewUrl" class="preview-image"></ion-img>
+          <div *ngIf="imageUpload!.uploading" class="upload-overlay">
+            <ion-spinner></ion-spinner>
+            <span class="progress-text">{{ imageUpload!.progress.toFixed(0) }}%</span>
+          </div>
+          <ion-button *ngIf="!imageUpload!.uploading" color="danger" size="small" class="remove-btn" (click)="removeImage()">
+            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ng-template>
+      </div>
+      <input type="file" hidden #fileInput (change)="onFileSelected($event)" accept="image/*" />
+    </div>
+
     <div class="ion-margin-top">
       <ion-button type="submit" expand="block" [disabled]="categoryForm.invalid">Guardar</ion-button>
       <ion-button type="button" expand="block" color="light" (click)="cancel()">Cancelar</ion-button>
     </div>
   </form>
 </ion-content>
+
 
 <!-- anade al admin un botn en el manu debajo de categorias que se llame productos. alli dentro tendremos el sistema de
 productos. necesito:

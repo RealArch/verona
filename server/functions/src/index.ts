@@ -11,14 +11,31 @@ import { setGlobalOptions } from "firebase-functions";
 // import { onProductCreated } from "./productImageTrigger";
 import express from "express";
 import { onRequest } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
 //IMPORT RUTAS
 import adminRouter from "./routes/admin.router";
-import categoriesRouter from "./routes/categories.router";
+import categoriesRouter, { onCategoryCreated, onCategoryDeleted, onCategoryUpdated } from "./routes/categories.router";
 import productsRouter, { onProductCreated, onProductDeleted, onProductUpdated } from "./routes/products.router";
 //importamos la app de firebase
 import "./firebase-init";
 
+// Define los secrets
+const algoliaAdminKey = defineSecret("ALGOLIA_ADMIN_KEY");
+const algoliaAppId = defineSecret("ALGOLIA_APP_ID");
+
 const app = express();
+
+// Middleware para hacer los secrets disponibles en req
+app.use((req: any, res, next) => {
+    req.secrets = {
+        algoliaAdminKey: algoliaAdminKey.value(),
+        algoliaAppId: algoliaAppId.value()
+        //de esta forma en una ruta
+        // const algoliaAdminKey = req.secrets?.algoliaAdminKey;
+        // const algoliaAppId = req.secrets?.algoliaAppId;
+    };
+    next();
+});
 
 app.get("/", (req, res) => {
 
@@ -30,9 +47,15 @@ app.use("/admin", adminRouter)
 app.use('/categories', categoriesRouter);
 app.use('/products', productsRouter);
 
-export const api = onRequest(app)
+export const api = onRequest(
+    { secrets: [algoliaAdminKey, algoliaAppId] },
+    app
+)
 //PRODUCTS TRIGGERS
 export { onProductCreated, onProductUpdated, onProductDeleted };
+//CATEGORIES TRIGGERS
+export { onCategoryCreated, onCategoryDeleted, onCategoryUpdated };
+
 // import {onRequest} from "firebase-functions/https";
 // import * as logger from "firebase-functions/logger";
 

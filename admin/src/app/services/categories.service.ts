@@ -13,20 +13,11 @@ import {
   writeBatch
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
+import { Category } from '../interfaces/category';
 
-export interface Category {
-  id?: string;
-  name: string;
-  slug: string; // Para URLs amigables
-  description?: string; // Descripción para SEO y para el usuario
-  image?: string; // URL de la imagen de la categoría
-  parentId?: string | null;
-  path?: string[];
-  order: number;
-  createdAt: Date;
-  updatedAt: Date;
-  children?: Category[]; // Para anidar las subcategorías
-}
+
+
+
 
 @Injectable({
   providedIn: 'root'

@@ -4,13 +4,13 @@ import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonIcon,
   ModalController, IonButton, IonBackButton, IonGrid, IonRow, IonCol, IonCard,
-  IonCardHeader, IonCardContent, IonItem, IonLabel
-} from '@ionic/angular/standalone';
+  IonCardHeader, IonCardContent, IonItem, IonLabel, IonImg, IonAvatar } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { create, trash, add, addCircleOutline, folderOpenOutline, createOutline, trashOutline, fileTrayOutline, folderOutline } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
-import { Category, CategoriesService } from '../../../services/categories.service';
+import { CategoriesService } from '../../../services/categories.service';
 import { CategoryModalComponent } from './category-modal/category-modal.component';
+import { Category } from 'src/app/interfaces/category';
 
 
 @Component({
@@ -18,7 +18,7 @@ import { CategoryModalComponent } from './category-modal/category-modal.componen
   templateUrl: './category-manager.page.html',
   styleUrls: ['./category-manager.page.scss'],
   standalone: true,
-  imports: [
+  imports: [IonAvatar, IonImg, 
     IonCard, IonCardHeader, IonCardContent, IonItem, IonLabel,
     IonGrid, IonRow, IonCol, IonButton, IonIcon, IonButtons, IonContent,
     IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule, IonBackButton

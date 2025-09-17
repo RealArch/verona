@@ -1,7 +1,8 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { ModalController, IonList, IonItem, IonButton, IonLabel, IonHeader, IonToolbar, IonTitle, IonButtons, IonContent } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
-import { CategoriesService, Category } from 'src/app/services/categories.service';
+import { CategoriesService } from 'src/app/services/categories.service';
+import { Category } from 'src/app/interfaces/category';
 
 
 @Component({

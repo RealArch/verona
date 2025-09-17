@@ -1,8 +1,22 @@
-import { Component, inject, Input, OnInit } from '@angular/core';
+import { Component, inject, Input, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonLabel, IonInput, ModalController } from '@ionic/angular/standalone';
-import { Category, CategoriesService } from '../../../../services/categories.service';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonLabel, IonInput, ModalController, IonSpinner, IonIcon, IonImg } from '@ionic/angular/standalone';
+import { CategoriesService } from '../../../../services/categories.service';
+import { ProductsService } from 'src/app/services/products.service';
+import { AuthService } from 'src/app/services/auth.service';
+import { addIcons } from 'ionicons';
+import { cameraOutline, trashOutline } from 'ionicons/icons';
+import { firstValueFrom, filter, take } from 'rxjs';
+import { Category, CategoryImage } from 'src/app/interfaces/category';
+
+interface ImageUpload {
+  file: File;
+  previewUrl: string;
+  uploading: boolean;
+  progress: number;
+  tempPath?: string;
+}
 
 @Component({
   selector: 'app-category-modal',
@@ -10,7 +24,7 @@ import { Category, CategoriesService } from '../../../../services/categories.ser
   standalone: true,
   imports: [
     IonInput, IonLabel, IonItem, IonButton, IonContent, IonHeader, IonTitle,
-    IonToolbar, CommonModule, FormsModule, ReactiveFormsModule
+    IonToolbar, CommonModule, FormsModule, ReactiveFormsModule, IonSpinner, IonIcon, IonImg
   ]
 })
 export class CategoryModalComponent implements OnInit {
@@ -18,16 +32,104 @@ export class CategoryModalComponent implements OnInit {
   @Input() parentId?: string;
 
   private categoriesService = inject(CategoriesService);
+  private productsService = inject(ProductsService);
+  private authService = inject(AuthService);
   private modalController = inject(ModalController);
   private fb = inject(FormBuilder);
+  private cdr = inject(ChangeDetectorRef);
 
   categoryForm!: FormGroup;
+  imageUpload: ImageUpload | null = null;
+  private originalImagePath?: string; // Para detectar si la imagen cambió
+
+  constructor() {
+    addIcons({ cameraOutline, trashOutline });
+  }
 
   ngOnInit() {
     this.categoryForm = this.fb.group({
       name: [this.category?.name || '', Validators.required],
-      description: [this.category?.description || '']
+      description: [this.category?.description || ''],
+      image: [this.category?.image || null]
     });
+
+    // Si es modo edición y tiene imagen, crear la estructura para mostrar
+    if (this.category?.image) {
+      this.originalImagePath = this.category.image.path; // Guardar la imagen original
+      this.imageUpload = {
+        file: null as any, // No tenemos el archivo original
+        previewUrl: this.category.image.url,
+        uploading: false,
+        progress: 100,
+        tempPath: this.category.image.path
+      };
+    }
+  }
+
+  async onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    this.imageUpload = {
+      file,
+      previewUrl: URL.createObjectURL(file),
+      uploading: true,
+      progress: 0
+    };
+    this.cdr.markForCheck();
+
+    try {
+      const user = await firstValueFrom(this.authService.user$.pipe(filter(u => u !== undefined), take(1)));
+      if (!user) throw new Error('User not authenticated');
+
+      const { path, url } = await this.productsService.uploadTempImage(
+        file,
+        user.uid,
+        (progress) => {
+          if (this.imageUpload) {
+            this.imageUpload.progress = progress;
+            this.cdr.markForCheck();
+          }
+        }
+      );
+
+      if (this.imageUpload) {
+        this.imageUpload.uploading = false;
+        this.imageUpload.tempPath = path;
+        
+        // Crear el objeto CategoryImage completo
+        // Determinar processing: true solo si es categoría principal y es nueva imagen
+        const isMainCategory = !this.parentId;
+        const processing = isMainCategory;
+        
+        const categoryImage: CategoryImage = {
+          path: path,
+          url: url,
+          type: file.type,
+          processing: processing
+        };
+        
+        this.categoryForm.patchValue({ image: categoryImage });
+        this.cdr.markForCheck();
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      this.imageUpload = null;
+      this.cdr.markForCheck();
+    }
+  }
+
+  removeImage() {
+    // Solo eliminar del storage si es una imagen temporal nueva (no de categoría existente)
+    if (this.imageUpload?.tempPath && !this.category) {
+      // Solo eliminar si es una nueva categoría, no si es edición
+      this.productsService.deleteTempImage(this.imageUpload.tempPath);
+    }
+    
+    // Resetear la imagen visualmente y en el formulario
+    this.imageUpload = null;
+    this.categoryForm.patchValue({ image: null });
+    this.cdr.markForCheck();
   }
 
   async save() {
@@ -36,6 +138,34 @@ export class CategoryModalComponent implements OnInit {
     }
 
     const formData = this.categoryForm.value;
+    
+    // Detectar si la imagen cambió en una categoría principal
+    const isMainCategory = !this.parentId;
+    let imageChanged = false;
+    
+    if (isMainCategory) {
+      const currentImagePath = formData.image?.path;
+      const originalPath = this.originalImagePath;
+      
+      // La imagen cambió si:
+      // 1. Antes no había imagen y ahora sí
+      // 2. Antes había imagen y ahora no
+      // 3. La ruta de la imagen cambió
+      imageChanged = (
+        (!originalPath && currentImagePath) || 
+        (originalPath && !currentImagePath) || 
+        (originalPath !== currentImagePath)
+      );
+      
+      // Si hay imagen y cambió, asegurar que processing sea true
+      if (formData.image && imageChanged) {
+        formData.image.processing = true;
+      } else if (formData.image && !imageChanged) {
+        // Si no cambió, mantener processing en false
+        formData.image.processing = false;
+      }
+    }
+
     if (this.category) {
       await this.categoriesService.updateCategory(this.category.id!, formData);
     } else {
@@ -43,7 +173,8 @@ export class CategoryModalComponent implements OnInit {
         name: formData.name,
         description: formData.description,
         parentId: this.parentId || null,
-        order: 0 // Deberías implementar una lógica para el orden
+        order: 0, // Deberías implementar una lógica para el orden
+        image: formData.image
       };
       await this.categoriesService.addCategory(newCategory);
     }

@@ -18,9 +18,10 @@ import { debounceTime, take } from 'rxjs/operators';
 
 import { AuthService } from 'src/app/services/auth.service';
 import { ProductsService } from 'src/app/services/products.service';
-import { CategoriesService, Category } from 'src/app/services/categories.service';
+import { CategoriesService } from 'src/app/services/categories.service';
 import { NewPhoto, ProductPhoto } from 'src/app/interfaces/product-photo';
 import { SelectCategoryModalComponent } from './select-category/select-category-modal.component';
+import { Category } from 'src/app/interfaces/category';
 
 // Interfaces simplificadas
 interface ImageFile {

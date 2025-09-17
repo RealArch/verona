@@ -22,7 +22,13 @@
               <ion-card>
                 <ion-card-header color="light" class="mb-0 py-1">
                   <ion-item lines="none" color="transparent" style="border: none;" >
-                    <ion-icon name="folder-open-outline" slot="start" class="text-primary"></ion-icon>
+                    @if(category.image){
+                      <ion-avatar slot="start">
+                        <ion-img [src]="category.image.url"></ion-img>
+                      </ion-avatar>
+                    } @else {
+                      <ion-icon name="folder-open-outline" slot="start" class="text-primary"></ion-icon>
+                    }
                     <ion-label>
                       <h2 class="font-semibold">{{ category.name }}</h2>
                       @if(category.description){

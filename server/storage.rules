@@ -11,6 +11,11 @@ service firebase.storage {
       // Puedes ajustar la escritura según tus necesidades
       allow write: if request.auth != null && request.auth.token.admin == true;
     }
+    match /img/categories/{categoryId}/{fileName} {
+      allow read: if true;
+      // Puedes ajustar la escritura según tus necesidades
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
     // Otras reglas existentes
     match /{allPaths=**} {
       allow read, write: if request.auth != null && request.auth.token.admin == true;
