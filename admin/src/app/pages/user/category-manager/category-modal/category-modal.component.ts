@@ -132,6 +132,11 @@ export class CategoryModalComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  removeImageWithStopPropagation(event: Event) {
+    event.stopPropagation();
+    this.removeImage();
+  }
+
   async save() {
     if (this.categoryForm.invalid) {
       return;
@@ -167,12 +172,16 @@ export class CategoryModalComponent implements OnInit {
     }
 
     if (this.category) {
+      // Para actualización, asegurar que parentId sea "root" si es categoría principal
+      if (!this.parentId) {
+        formData.parentId = "root";
+      }
       await this.categoriesService.updateCategory(this.category.id!, formData);
     } else {
       const newCategory: Partial<Category> = {
         name: formData.name,
         description: formData.description,
-        parentId: this.parentId || null,
+        parentId: this.parentId || "root", // Usar "root" en lugar de null
         order: 0, // Deberías implementar una lógica para el orden
         image: formData.image
       };

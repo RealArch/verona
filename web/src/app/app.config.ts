@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
-import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
+import { initializeApp, provideFirebaseApp, getApp } from '@angular/fire/app';
 import { environment } from '../environments/environment';
 import { getAuth, provideAuth, connectAuthEmulator } from '@angular/fire/auth';
 import { getAnalytics, provideAnalytics, ScreenTrackingService, UserTrackingService } from '@angular/fire/analytics';
@@ -19,7 +19,7 @@ export const appConfig: ApplicationConfig = {
     provideFirebaseApp(() => initializeApp(environment.firebase)),
 
     provideAuth(() => {
-      const auth = getAuth();
+      const auth = getAuth(getApp());
       if (environment.useEmulators) {
         console.log("using auth emulator");
         connectAuthEmulator(auth, 'http://localhost:9099');
@@ -28,7 +28,7 @@ export const appConfig: ApplicationConfig = {
     }),
 
     provideFirestore(() => {
-      const firestore = getFirestore();
+      const firestore = getFirestore(getApp());
       if (environment.useEmulators) {
         console.log("using firestore emulator");
         connectFirestoreEmulator(firestore, 'localhost', 8080);
@@ -37,7 +37,7 @@ export const appConfig: ApplicationConfig = {
     }),
 
     provideStorage(() => {
-      const storage = getStorage();
+      const storage = getStorage(getApp());
       if (environment.useEmulators) {
         console.log("using storage emulator");
         connectStorageEmulator(storage, 'localhost', 9199);

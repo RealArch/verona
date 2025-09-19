@@ -9,5 +9,13 @@ export const environment = {
         authDomain: "verona-ffbcd.firebaseapp.com",
         messagingSenderId: "239775263543",
         measurementId: "G-V2H4JHJMXJ"
+    },
+    algolia: {
+        appId: "WG205GJU2V",
+        apiKey: "00f922c2b509c3ccb44dc0ac7bf56d26",
+        indexes: {
+            products: 'products_dev',
+            categories: 'categories_dev'
+        }
     }
 };

@@ -90,11 +90,14 @@ export const onProductUpdated = onDocumentUpdated({ document: "products/{product
             return;
         }
 
-        const processedPhotos = await processProductImages(event.params.productId, after.photos as ProductPhoto[]);
-        batch.update(productsRef, { photos: processedPhotos });
+        // Only process photos if it's a non-empty array
+        if (Array.isArray(after.photos) && after.photos.length > 0) {
+            const processedPhotos = await processProductImages(event.params.productId, after.photos as ProductPhoto[]);
+            batch.update(productsRef, { photos: processedPhotos });
+        }
 
-
-        if (after.imagesToDelete.length > 0) {
+        // Safely handle imagesToDelete if present and non-empty
+        if (Array.isArray(after.imagesToDelete) && after.imagesToDelete.length > 0) {
             removePhotoArrayImages(after.imagesToDelete);
             batch.update(productsRef, {
                 imagesToDelete: []
@@ -137,7 +140,7 @@ export const onProductDeleted = onDocumentDeleted({ document: "products/{product
         //Sync with algolia
         removeDocumentAlgolia(PRODUCTS_ALGOLIA_INDEX, event.params.productId, adminKey, appId);
 
-        if (Array.isArray(data.photos) || data.photos.length > 0) {
+        if (Array.isArray(data.photos) && data.photos.length > 0) {
             removePhotoArrayImages(data.photos);
         }
 

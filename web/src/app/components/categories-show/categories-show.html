@@ -1,76 +1,55 @@
 <div class="w-full my-15">
     <div class="container mx-auto">
         <div class="mb-6 text-center">
-            <h2 class="text-2xl md:text-3xl font-light text-primary mb-2">Categorías Principales</h2>
+            <h2 class="text-2xl md:text-3xl font-light text-primary mb-2">Categorías</h2>
         </div>
-        <!-- Grid Categorías -->
+        
+        <!-- Loading State -->
+        @if (loading()) {
+        <div class="flex justify-center items-center min-h-40">
+            <div class="loading loading-spinner loading-lg"></div>
+        </div>
+        }
+        
+        <!-- Error State -->
+        @if (error() && !loading()) {
+        <div class="alert alert-error mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{{ error() }}</span>
+            <button class="btn btn-sm btn-outline" (click)="refreshCategories()">Reintentar</button>
+        </div>
+        }
+        
+        <!-- Categories Content -->
+        @if (mainCategories().length > 0 && !loading()) {
         <div class="relative">
-            <!-- Grid Categorías -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-6">
-                <div class="categories-box flex flex-col items-center justify-center aspect-square cursor-pointer transition-all duration-300 hover:scale-105" >
-                    <div class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg">
-                        <img src="https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=300&q=80"
-                            alt="Sofás" class="w-full h-full object-cover rounded-full transition-all duration-500 group-hover:scale-125 group-hover:shadow-xl group-hover:shadow-black/20" />
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9 gap-6">
+                @for( category of mainCategories(); track category.objectID){
+                <div
+                    class="categories-box flex flex-col items-center justify-center aspect-square cursor-pointer transition-all duration-300 hover:scale-105">
+                    <div
+                        class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg">
+                        <img [src]="category.image?.url"
+                            alt="{{ category.name }}"
+                            class="w-full h-full object-cover rounded-full transition-all duration-500 group-hover:scale-125 group-hover:shadow-xl group-hover:shadow-black/20" />
                         <span
                             class="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 text-base sm:text-md font-medium text-white bg-black/20 backdrop-blur-sm rounded-full shadow border border-white/30 transition-all duration-300 group-hover:bg-black/30 group-hover:shadow-lg group-hover:scale-105"
-                            style="max-width:85%">Sofás</span>
-                    </div>
+                            style="max-width:85%">{{ category.name }}</span>
+                    </div> 
                 </div>
-                <div class="categories-box flex flex-col items-center justify-center aspect-square cursor-pointer transition-all duration-300 hover:scale-105">
-                    <div class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg">
-                        <img src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=300&q=80"
-                            alt="Sofás" class="w-full h-full object-cover rounded-full transition-all duration-500 group-hover:scale-125 group-hover:shadow-2xl group-hover:shadow-black/50" />
-                        <span
-                            class="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 text-base sm:text-md font-medium text-white bg-black/20 backdrop-blur-sm rounded-full shadow border border-white/30 transition-all duration-300 group-hover:bg-black/30 group-hover:shadow-lg group-hover:scale-105"
-                            style="max-width:85%">Sofás</span>
-                    </div>
-                </div>
-                <div class="categories-box flex flex-col items-center justify-center aspect-square cursor-pointer transition-all duration-300 hover:scale-105">
-                    <div class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg">
-                        <img src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=300&q=80"
-                            alt="Mesas" class="w-full h-full object-cover rounded-full transition-all duration-500 group-hover:scale-125 group-hover:shadow-2xl group-hover:shadow-black/50" />
-                        <span
-                            class="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 text-base sm:text-md font-medium text-white bg-black/20 backdrop-blur-sm rounded-full shadow border border-white/30 transition-all duration-300 group-hover:bg-black/30 group-hover:shadow-lg group-hover:scale-105"
-                            style="max-width:85%">Mesas</span>
-                    </div>
-                </div>
-                <div class="categories-box flex flex-col items-center justify-center aspect-square cursor-pointer transition-all duration-300 hover:scale-105">
-                    <div class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg">
-                        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=300&q=80"
-                            alt="Sillas" class="w-full h-full object-cover rounded-full transition-all duration-500 group-hover:scale-125 group-hover:shadow-2xl group-hover:shadow-black/50" />
-                        <span
-                            class="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 text-base sm:text-md font-medium text-white bg-black/20 backdrop-blur-sm rounded-full shadow border border-white/30 transition-all duration-300 group-hover:bg-black/30 group-hover:shadow-lg group-hover:scale-105"
-                            style="max-width:85%">Sillas</span>
-                    </div>
-                </div>
-                <div class="categories-box flex flex-col items-center justify-center aspect-square cursor-pointer transition-all duration-300 hover:scale-105">
-                    <div class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg">
-                        <img src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=300&q=80"
-                            alt="Camas" class="w-full h-full object-cover rounded-full transition-all duration-500 group-hover:scale-125 group-hover:shadow-2xl group-hover:shadow-black/50" />
-                        <span
-                            class="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 text-base sm:text-md font-medium text-white bg-black/20 backdrop-blur-sm rounded-full shadow border border-white/30 transition-all duration-300 group-hover:bg-black/30 group-hover:shadow-lg group-hover:scale-105"
-                            style="max-width:85%">Camas</span>
-                    </div>
-                </div>
-                <div class="categories-box flex flex-col items-center justify-center aspect-square cursor-pointer transition-all duration-300 hover:scale-105">
-                    <div class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg">
-                        <img src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=300&q=80"
-                            alt="Almacenaje" class="w-full h-full object-cover rounded-full transition-all duration-500 group-hover:scale-125 group-hover:shadow-2xl group-hover:shadow-black/50" />
-                        <span
-                            class="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 text-base sm:text-md font-medium text-white bg-black/20 backdrop-blur-sm rounded-full shadow border border-white/30 transition-all duration-300 group-hover:bg-black/30 group-hover:shadow-lg group-hover:scale-105"
-                            style="max-width:85%">Almacenaje</span>
-                    </div>
-                </div>
-                <div class="categories-box flex flex-col items-center justify-center aspect-square cursor-pointer transition-all duration-300 hover:scale-105">
-                    <div class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg">
-                        <img src="https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=300&q=80"
-                            alt="Exterior" class="w-full h-full object-cover rounded-full transition-all duration-500 group-hover:scale-125 group-hover:shadow-2xl group-hover:shadow-black/50" />
-                        <span
-                            class="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 text-base sm:text-md font-medium text-white bg-black/20 backdrop-blur-sm rounded-full shadow border border-white/30 transition-all duration-300 group-hover:bg-black/30 group-hover:shadow-lg group-hover:scale-105"
-                            style="max-width:85%">Exterior</span>
-                    </div>
-                </div>
+                }
             </div>
         </div>
+        }
+        
+        <!-- Empty State -->
+        @if (mainCategories().length === 0 && !loading() && !error()) {
+        <div class="text-center py-12">
+            <div class="text-base-content/60 mb-4">No se encontraron categorías</div>
+            <button class="btn btn-primary" (click)="refreshCategories()">Cargar Categorías</button>
+        </div>
+        }
     </div>
 </div>

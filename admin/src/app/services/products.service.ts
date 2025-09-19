@@ -55,12 +55,21 @@ export class ProductsService {
 
   async addProduct(productData: Partial<Product>): Promise<any> {
     return runInInjectionContext(this.injector, () => {
+      // Generate slug if name is provided
+      if (productData.name && !productData.slug) {
+        productData.slug = this.generateSlug(productData.name);
+      }
       return addDoc(this.productsCollection, productData);
     });
   }
 
   async updateProduct(id: string, productData: Partial<Product & { imagesToDelete?: ProductPhoto[] }>): Promise<void> {
     return runInInjectionContext(this.injector, async () => {
+      // Update slug if name has changed
+      if (productData.name) {
+        productData.slug = this.generateSlug(productData.name);
+      }
+      
       const productDoc = doc(this.firestore, `products/${id}`);
       console.log('Updating product with data:', productData);
       return updateDoc(productDoc, {
@@ -140,5 +149,15 @@ export class ProductsService {
 
       return Promise.all(deletePromises);
     });
+  }
+
+  // Generate URL-friendly slug from text
+  private generateSlug(text: string): string {
+    return text.toString().toLowerCase()
+      .replace(/\s+/g, '-')           // Replace spaces with -
+      .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+      .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+      .replace(/^-+/, '')             // Trim - from start of text
+      .replace(/-+$/, '');            // Trim - from end of text
   }
 }

@@ -31,7 +31,7 @@
             <ion-spinner></ion-spinner>
             <span class="progress-text">{{ imageUpload!.progress.toFixed(0) }}%</span>
           </div>
-          <ion-button *ngIf="!imageUpload!.uploading" color="danger" size="small" class="remove-btn" (click)="removeImage()">
+          <ion-button *ngIf="!imageUpload!.uploading" color="danger" size="small" class="remove-btn" (click)="removeImageWithStopPropagation($event)">
             <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
           </ion-button>
         </ng-template>

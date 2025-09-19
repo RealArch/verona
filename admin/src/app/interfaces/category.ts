@@ -11,8 +11,8 @@ export interface Category {
   slug: string; // Para URLs amigables
   description?: string; // Descripción para SEO y para el usuario
   image?: CategoryImage; // Objeto completo de la imagen de la categoría
-  parentId?: string | null;
-  path?: string[];
+  parentId: string; // "root" para categorías principales, o ID de la categoría padre
+  path: string[];
   order: number;
   createdAt: Date;
   updatedAt: Date;

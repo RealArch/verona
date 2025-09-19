@@ -118,6 +118,7 @@ export class ProductFormPage implements OnInit {
   private initForm() {
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
+      slug: ['', [Validators.required]], // Auto-generated from name
       description: [''],
       price: [null, [Validators.required, Validators.min(0)]],
       stock: [null, [Validators.required, Validators.min(0)]],
@@ -126,6 +127,14 @@ export class ProductFormPage implements OnInit {
       status: ['active', Validators.required],
       photos: this.fb.array([]),
       variants: this.fb.array([]),
+    });
+
+    // Suscripción para generar slug automáticamente cuando cambia el nombre
+    this.productForm.get('name')?.valueChanges.pipe(debounceTime(300)).subscribe(name => {
+      if (name && name.trim()) {
+        const slug = this.generateSlug(name);
+        this.productForm.get('slug')?.setValue(slug, { emitEvent: false });
+      }
     });
 
     // Suscripción para actualizar el stock total desde las variantes
@@ -147,6 +156,11 @@ export class ProductFormPage implements OnInit {
         .pipe(take(1))
         .subscribe(product => {
           if (product) {
+            // Si el producto no tiene slug, generarlo desde el nombre
+            if (!product.slug && product.name) {
+              product.slug = this.generateSlug(product.name);
+            }
+            
             this.productForm.patchValue(product);
 
             // Cargar imágenes existentes
@@ -255,7 +269,8 @@ export class ProductFormPage implements OnInit {
       sku: ['', Validators.required],
       price: [null, [Validators.required, Validators.min(0)]],
       stock: [null, [Validators.required, Validators.min(0)]],
-      status: ['active', Validators.required]
+      status: ['active', Validators.required],
+      totalSales:[0]
     }));
   }
 
@@ -421,6 +436,7 @@ export class ProductFormPage implements OnInit {
         await this.productsService.updateProduct(this.productId, formData);
         this.presentToast('Producto actualizado con éxito', 'success');
       } else {
+        formData.totalSales = 0
         await this.productsService.addProduct({ ...formData, processing: true });
         this.presentToast('Producto creado con éxito. Se está procesando.', 'success');
         console.log(formData)
@@ -436,6 +452,7 @@ export class ProductFormPage implements OnInit {
     // Obtener solo los valores de los campos del formulario
     const formFields = {
       name: this.productForm.get('name')?.value,
+      slug: this.productForm.get('slug')?.value,
       description: this.productForm.get('description')?.value,
       price: this.productForm.get('price')?.value,
       stock: this.productForm.get('stock')?.value,
@@ -490,5 +507,15 @@ export class ProductFormPage implements OnInit {
   async presentToast(message: string, color: 'success' | 'warning' | 'danger') {
     const toast = await this.toastCtrl.create({ message, duration: 3000, color, position: 'top' });
     toast.present();
+  }
+
+  // Generate URL-friendly slug from text
+  private generateSlug(text: string): string {
+    return text.toString().toLowerCase()
+      .replace(/\s+/g, '-')           // Replace spaces with -
+      .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+      .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+      .replace(/^-+/, '')             // Trim - from start of text
+      .replace(/-+$/, '');            // Trim - from end of text
   }
 }

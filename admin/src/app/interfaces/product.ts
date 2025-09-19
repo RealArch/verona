@@ -3,6 +3,7 @@ import { ProductPhoto } from './product-photo';
 export interface Product {
     id?: string;
     name: string;
+    slug: string; // URL-friendly version of the name
     description?: string;
     price: number;
     stock: number;
@@ -38,18 +39,8 @@ export interface newProduct {
 
 }
 
-// export interface Price {
-//     regular_price: number;
-//     sale_price?: number;
-//     sale_price_dates?: {
-//         start: Date;
-//         end: Date;
-//     };
-//     tax_status: string;
-//     tax_class: string;
-// }
 
-// Atributo de variación (ej. Color, Talla)
+
 export interface VariationAttribute {
     // id: string;            // slug o id único: color, size
     name: string;          // Etiqueta visible: Color, Talla
@@ -57,13 +48,7 @@ export interface VariationAttribute {
     // options: VariationOption[]; // Valores disponibles (Rojo, Azul, S, M, L)
 }
 
-// export interface VariationOption {
-//     id: string;            
-//     label: string;         
-//     colorHex?: string;
-// }
 
-// Una combinación concreta de atributos (p.ej., Color=Rojo + Talla=M)
 export interface ProductVariant {
     colorHex?: string;
     id: string;

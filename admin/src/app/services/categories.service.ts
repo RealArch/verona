@@ -43,8 +43,8 @@ export class CategoriesService {
   async addCategory(category: Partial<Category>): Promise<string> {
     const now = new Date();
     let path: string[] = [];
-    // Si tiene parentId, obtener el path del padre
-    if (category.parentId) {
+    // Si tiene parentId y no es "root", obtener el path del padre
+    if (category.parentId && category.parentId !== "root") {
       const parentRef = doc(this.firestore, `categories/${category.parentId}`);
       const parentSnap = await (await import('@angular/fire/firestore')).getDoc(parentRef);
       const parentData = parentSnap.exists() ? parentSnap.data() as Category : null;
@@ -73,7 +73,7 @@ export class CategoriesService {
     let newPath: string[] | undefined;
     if (updates.parentId !== undefined) {
       // Si cambia el parentId, recalcular el path
-      if (updates.parentId) {
+      if (updates.parentId && updates.parentId !== "root") {
         const parentRef = doc(this.firestore, `categories/${updates.parentId}`);
         const parentSnap = await (await import('@angular/fire/firestore')).getDoc(parentRef);
         const parentData = parentSnap.exists() ? parentSnap.data() as Category : null;
@@ -121,8 +121,11 @@ export class CategoriesService {
 
   buildCategoryTree(categories: Category[], parentId: string | null = null): Category[] {
     const tree: Category[] = [];
+    // Si parentId es null, buscar categorías principales (parentId === "root")
+    const targetParentId = parentId === null ? "root" : parentId;
+    
     categories.forEach(category => {
-      if (category.parentId === parentId) {
+      if (category.parentId === targetParentId) {
         const children = this.buildCategoryTree(categories, category.id);
         if (children.length) {
           category.children = children;

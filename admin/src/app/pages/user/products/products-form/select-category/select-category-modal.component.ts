@@ -35,7 +35,10 @@ export class SelectCategoryModalComponent {
   async loadCategories(parentId: string | null = null) {
     this.loading = true;
     this.categoriesService.getCategories().subscribe(cats => {
-      this.categories = cats.filter(cat => cat.parentId === parentId);
+      // Si parentId es null, buscar categorías principales (parentId === "root")
+      // Si parentId es un string, buscar categorías hijas con ese parentId
+      const targetParentId = parentId === null ? "root" : parentId;
+      this.categories = cats.filter(cat => cat.parentId === targetParentId);
       this.loading = false;
     });
   }
