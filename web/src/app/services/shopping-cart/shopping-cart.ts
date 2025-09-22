@@ -66,6 +66,13 @@ export class ShoppingCartService {
   }
 
   /**
+   * Verifica si estamos ejecutando en el navegador (no en SSR)
+   */
+  private isBrowser(): boolean {
+    return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+  }
+
+  /**
    * Obtiene la clave para el localStorage (usuarios no autenticados)
    */
   private getLocalStorageKey(): string {
@@ -124,9 +131,24 @@ export class ShoppingCartService {
    * Carga el carrito local desde localStorage
    */
   private loadLocalCart(): void {
+    if (!this.isBrowser()) {
+      // En SSR, crear carrito vacío temporal sin persistir
+      const emptyCart = this.createEmptyCart();
+      this._cart.set(emptyCart);
+      return;
+    }
+
     const localCart = localStorage.getItem(this.getLocalStorageKey());
     if (localCart) {
-      this._cart.set(JSON.parse(localCart));
+      try {
+        this._cart.set(JSON.parse(localCart));
+      } catch (error) {
+        console.error('Error parsing local cart:', error);
+        // Si hay error, crear carrito vacío
+        const emptyCart = this.createEmptyCart();
+        this.saveLocalCart(emptyCart);
+        this._cart.set(emptyCart);
+      }
     } else {
       // Crear carrito vacío local
       const emptyCart = this.createEmptyCart();
@@ -139,7 +161,13 @@ export class ShoppingCartService {
    * Guarda el carrito en localStorage
    */
   private saveLocalCart(cart: IShoppingCart): void {
-    localStorage.setItem(this.getLocalStorageKey(), JSON.stringify(cart));
+    if (!this.isBrowser()) return; // Evita error en SSR
+    
+    try {
+      localStorage.setItem(this.getLocalStorageKey(), JSON.stringify(cart));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
   }
 
   /**

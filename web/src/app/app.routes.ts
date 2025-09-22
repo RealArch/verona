@@ -15,6 +15,10 @@ export const routes: Routes = [
                 loadComponent: () => import('./pages/public/home/home').then(m => m.Home)
             },
             {
+                path: 'shopping-cart',
+                loadComponent: () => import('./pages/public/shopping-cart/shopping-cart').then(m => m.ShoppingCart)
+            },
+            {
                 path: 'product/:slug/:id',
                 loadComponent: () => import('./pages/public/product/product').then(m => m.ProductComponent)
             },
@@ -34,7 +38,7 @@ export const routes: Routes = [
         path: 'auth/login',
         loadComponent: () => import('./pages/auth/login/login').then(m => m.Login)
     },
-        {
+    {
         path: 'auth/register',
         loadComponent: () => import('./pages/auth/register/register').then(m => m.Register)
     }

@@ -7,6 +7,7 @@ import { takeUntil, take } from 'rxjs/operators';
 import { CurrencyPipe } from '@angular/common';
 import { CategoriesService } from '../../../services/categories/categories.service';
 import { ProductItemComponent } from '../../../components/product-item/product-item.component';
+import { ShoppingCartService } from '../../../services/shopping-cart/shopping-cart';
 
 @Component({
   selector: 'app-product',
@@ -20,6 +21,8 @@ export class ProductComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly productsService = inject(ProductsService);
   private readonly categoriesService = inject(CategoriesService);
+  private readonly cartService = inject(ShoppingCartService);
+  
   // Signals para el estado del componente
   currentProduct = signal<ProductInterface | null>(null);
   relatedProducts = signal<ProductInterface[]>([]);
@@ -29,6 +32,7 @@ export class ProductComponent implements OnInit, OnDestroy {
   selectedQuantity = signal<number>(1);
   activeTab = signal<string>('description');
   currentImageIndex = signal<number>(0);
+  addingToCart = signal<boolean>(false);
 
   // Computed signals para valores derivados
   mainImage = computed(() => {
@@ -53,6 +57,31 @@ export class ProductComponent implements OnInit, OnDestroy {
   });
 
   isInStock = computed(() => this.currentStock() > 0);
+
+  // Computed para verificar si el producto actual está en el carrito
+  isInCart = computed(() => {
+    const cart = this.cartService.cart();
+    const product = this.currentProduct();
+    const variant = this.selectedVariant();
+    
+    if (!cart || !product) return false;
+    
+    const productId = product.id || product.objectID;
+    const variantId = variant?.id;
+    
+    return cart.items.some(item => 
+      item.productId === productId && 
+      (variantId ? item.variantId === variantId : !item.variantId)
+    );
+  });
+
+  // Computed para el texto del botón de agregar al carrito
+  addToCartButtonText = computed(() => {
+    if (this.addingToCart()) return 'Agregando...';
+    if (this.isInCart()) return 'En el Carrito';
+    if (!this.isInStock()) return 'Agotado';
+    return 'Agregar al Carrito';
+  });
 
   ngOnInit(): void {
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
@@ -146,13 +175,44 @@ export class ProductComponent implements OnInit, OnDestroy {
     }
   }
 
-  addToCart(): void {
-    console.log('Agregando al carrito:', {
-      product: this.currentProduct(),
-      variant: this.selectedVariant(),
-      quantity: this.selectedQuantity()
-    });
-    // Aquí iría la lógica para agregar al carrito
+  async addToCart(): Promise<void> {
+    const product = this.currentProduct();
+    const variant = this.selectedVariant();
+    const quantity = this.selectedQuantity();
+
+    if (!product || this.addingToCart() || !this.isInStock()) {
+      return;
+    }
+
+    // Si ya está en el carrito, no hacer nada (o podrías mostrar un mensaje)
+    if (this.isInCart()) {
+      console.log('Producto ya está en el carrito');
+      return;
+    }
+
+    try {
+      this.addingToCart.set(true);
+      
+      await this.cartService.addToCart(product, variant || undefined, quantity);
+      
+      console.log('Producto agregado al carrito exitosamente:', {
+        product: product.name,
+        variant: variant?.name,
+        quantity
+      });
+
+    } catch (error) {
+      console.error('Error agregando al carrito:', error);
+      this.error.set('Error al agregar al carrito. Inténtalo de nuevo.');
+      
+      // Limpiar el error después de 3 segundos
+      setTimeout(() => {
+        this.error.set(null);
+      }, 3000);
+      
+    } finally {
+      this.addingToCart.set(false);
+    }
   }
 
   addToWishlist(): void {
