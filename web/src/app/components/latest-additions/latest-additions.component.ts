@@ -6,13 +6,13 @@ import { Router } from '@angular/router';
 import { ProductItemComponent } from '../product-item/product-item.component';
 
 @Component({
-  selector: 'app-hot-items',
-  templateUrl: './hot-items.component.html',
-  styleUrl: './hot-items.component.scss',
-  imports: [ ProductItemComponent],
+  selector: 'app-latest-additions',
+  imports: [ProductItemComponent],
+  templateUrl: './latest-additions.component.html',
+  styleUrl: './latest-additions.component.scss'
 })
-export class HotItemsComponent implements OnInit, OnDestroy {
-// INJECTIONS
+export class LatestAdditionsComponent implements OnInit, OnDestroy {
+  // INJECTIONS
   private router = inject(Router);
   private productsService = inject(ProductsService);
   
@@ -31,12 +31,13 @@ export class HotItemsComponent implements OnInit, OnDestroy {
    */
   loadLatestAdditions(limitCount: number): void {
     this.loading.set(true);
-    this.productsService.getBestSellers(limitCount)
+    this.productsService.getLatestAdditions(limitCount)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (products) => {
           this.products.set(products);
           this.loading.set(false);
+          console.log(this.products());
         }, 
         error: (err) => {
           console.error('Error loading latest additions:', err);

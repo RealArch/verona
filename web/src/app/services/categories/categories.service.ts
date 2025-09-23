@@ -21,7 +21,6 @@ export class CategoriesService {
   loadCategories() {
     this.getAllCategories().then(categories => {
       this.categories.set(categories);
-      console.log('Categories loaded:', categories);
     });
   }
   /**

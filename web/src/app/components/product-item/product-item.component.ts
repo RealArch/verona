@@ -2,10 +2,11 @@ import { Component, inject, Input } from '@angular/core';
 import { Product, ProductVariant } from '../../interfaces/products';
 import { Router } from '@angular/router';
 import { CurrencyPipe } from '@angular/common';
+import { FormsModule } from "@angular/forms";
 
 @Component({
   selector: 'app-product-item',
-  imports: [CurrencyPipe],
+  imports: [CurrencyPipe, FormsModule],
   templateUrl: './product-item.component.html',
   styleUrl: './product-item.component.scss'
 })
@@ -15,6 +16,10 @@ export class ProductItemComponent {
   //Injections
   router = inject(Router);
 
+  ngOnInit(): void {
+  console.log(this.product);
+
+  }
   navigateToProduct(product: Product): void {
     this.router.navigate(['/product', product.slug, product.id]);
   }

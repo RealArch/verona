@@ -3,12 +3,13 @@ import { MainHeroComponent } from '../../../components/main-hero.component/main-
 import { HotItemsComponent } from '../../../components/hot-items/hot-items.component';
 import { MainFooterComponent } from '../../../components/main-footer/main-footer.component';
 import { CategoriesShow } from '../../../components/categories-show/categories-show';
+import { LatestAdditionsComponent } from '../../../components/latest-additions/latest-additions.component';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.html',
   styleUrl: './home.scss',
-  imports: [MainHeroComponent, HotItemsComponent, MainFooterComponent, CategoriesShow],
+  imports: [MainHeroComponent, HotItemsComponent, MainFooterComponent, CategoriesShow, LatestAdditionsComponent],
 
 })
 export class Home {

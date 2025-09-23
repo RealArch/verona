@@ -31,6 +31,5 @@ export class App {
     // El servicio ya se inicializa automáticamente en su constructor,
     // pero al inyectarlo aquí nos aseguramos de que esté disponible
     // desde el primer render de la aplicación
-    console.log('Shopping cart service initialized');
   }
 }

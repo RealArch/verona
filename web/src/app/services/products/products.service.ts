@@ -1,7 +1,8 @@
 import { Injectable, Injector, inject, runInInjectionContext } from '@angular/core';
 import { Firestore, collection, query, orderBy, limit, collectionData, doc, docData } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
-
+import { algoliasearch, SearchClient } from 'algoliasearch';
+import { environment } from '../../../environments/environment.development';
 import { Product } from '../../interfaces/products';
 
 @Injectable({
@@ -11,6 +12,16 @@ export class ProductsService {
   private injector = inject(Injector);
   private firestore = inject(Firestore);
   readonly productsRef = collection(this.firestore, 'products');
+  private client: SearchClient;
+  private readonly indexName = environment.algolia.indexes.products;
+
+
+  constructor() {
+    this.client = algoliasearch(
+      environment.algolia.appId,
+      environment.algolia.apiKey
+    );
+  }
   /**
    * Get best sellers products in real-time from Firestore`
    * @param limitCount Number of products to retrieve
@@ -28,10 +39,9 @@ export class ProductsService {
   getBestSellers(limitCount: number): Observable<Product[]> {
     return runInInjectionContext(this.injector, () => {
       const firestore = inject(Firestore);
-      const productsRef = collection(firestore, 'products');
 
       const bestSellersQuery = query(
-        productsRef,
+        this.productsRef,
         orderBy('totalSales', 'desc'),
         limit(limitCount)
       );
@@ -40,6 +50,101 @@ export class ProductsService {
         idField: 'id'
       }) as Observable<Product[]>;
     });
+  }
+
+  getLatestAdditions(limitCount: number): Observable<Product[]> {
+    return runInInjectionContext(this.injector, () => {
+      const firestore = inject(Firestore);
+
+      const latestQuery = query(
+        this.productsRef,
+        orderBy('createdAt', 'desc'),
+        limit(limitCount)
+      );
+
+      return collectionData(latestQuery, {
+        idField: 'id'
+      }) as Observable<Product[]>;
+    });
+  }
+  /**
+   * Search products in Algolia with filters
+   * @param searchQuery String to search for in product names and descriptions
+   * @param minPrice Minimum price filter (optional)
+   * @param maxPrice Maximum price filter (optional)
+   * @param hitsPerPage Number of results per page (default: 20)
+   * @param page Page number for pagination (default: 0)
+   * @returns Promise with search results
+   */
+  async search(
+    searchQuery: string = '',
+    minPrice?: number,
+    maxPrice?: number,
+    hitsPerPage: number = 20,
+    page: number = 0
+  ): Promise<{ hits: Product[]; nbHits: number; page: number; nbPages: number }> {
+    try {
+      // Build filters array
+      const filters: string[] = [];
+
+      // Add price range filters if provided
+      if (minPrice !== undefined && maxPrice !== undefined) {
+        filters.push(`price:${minPrice} TO ${maxPrice}`);
+      } else if (minPrice !== undefined) {
+        filters.push(`price >= ${minPrice}`);
+      } else if (maxPrice !== undefined) {
+        filters.push(`price <= ${maxPrice}`);
+      }
+
+      // Add status filter to only show active products
+      filters.push('status:active');
+      console.log('Filters applied:', filters);
+      const index = this.client.searchSingleIndex({
+        indexName: this.indexName,
+        searchParams: {
+          query: searchQuery,
+          hitsPerPage: hitsPerPage,
+          page: page,
+          filters: filters.length > 0 ? filters.join(' AND ') : undefined,
+          // attributesToRetrieve: [
+          //   'objectID',
+          //   'name',
+          //   'description',
+          //   'price',
+          //   'images',
+          //   'category',
+          //   'categoryId',
+          //   'status',
+          //   'stock',
+          //   'sku',
+          //   'variants',
+          //   'slug',
+          //   'totalSales'
+          // ],
+          // // Configure search settings
+          // typoTolerance: true,
+          // ignorePlurals: true,
+          // removeStopWords: true,
+          // // Highlight matching terms
+          // attributesToHighlight: ['name', 'description'],
+          // highlightPreTag: '<mark>',
+          // highlightPostTag: '</mark>'
+        }
+      });
+
+      const response = await index;
+
+      return {
+        hits: response.hits as Product[],
+        nbHits: response.nbHits ?? 0,
+        page: response.page ?? 0,
+        nbPages: response.nbPages ?? 0
+      };
+
+    } catch (error) {
+      console.error('Error searching products:', error);
+      throw error;
+    }
   }
 }
 

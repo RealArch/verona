@@ -1,0 +1,209 @@
+<div class="min-h-screen bg-base-100 pt-20">
+  <div class="container mx-auto px-4 py-8">
+    
+    <!-- Header with Search Query -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl lg:text-4xl font-light text-base-content mb-2">
+        @if (getCurrentSearchQuery()) {
+          Resultados para "{{ getCurrentSearchQuery() }}"
+        } @else {
+          Explorar Productos
+        }
+      </h1>
+      <p class="text-base-content/60">
+        @if (totalResults() > 0) {
+          {{ totalResults() }} productos encontrados
+        } @else if (!loading()) {
+          Descubre nuestra colección completa
+        }
+      </p>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      
+      <!-- Left Sidebar - Filters -->
+      <div class="lg:col-span-1">
+        <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 sticky top-28">
+          <h2 class="text-xl font-semibold text-base-content mb-6 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+            </svg>
+            Filtros
+          </h2>
+
+          <!-- Price Range Filter -->
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-base-content mb-3">Rango de Precios</label>
+              
+              <div class="space-y-4">
+                <!-- Min Price -->
+                <div>
+                  <label for="minPrice" class="block text-xs text-base-content/70 mb-1">Precio Mínimo</label>
+                  <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-base-content/60">S/</span>
+                    <input 
+                      id="minPrice"
+                      type="number" 
+                      class="input input-bordered w-full pl-8"
+                      [(ngModel)]="tempMinPrice"
+                      [value]="tempMinPrice()"
+                      (input)="tempMinPrice.set(+$any($event.target).value)"
+                      min="0"
+                      step="10"
+                      placeholder="0">
+                  </div>
+                </div>
+
+                <!-- Max Price -->
+                <div>
+                  <label for="maxPrice" class="block text-xs text-base-content/70 mb-1">Precio Máximo</label>
+                  <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-base-content/60">S/</span>
+                    <input 
+                      id="maxPrice"
+                      type="number" 
+                      class="input input-bordered w-full pl-8"
+                      [(ngModel)]="tempMaxPrice"
+                      [value]="tempMaxPrice()"
+                      (input)="tempMaxPrice.set(+$any($event.target).value)"
+                      min="0"
+                      step="10"
+                      placeholder="10000">
+                  </div>
+                </div>
+
+                <!-- Price Range Display -->
+                <div class="text-center p-3 bg-base-200/30 rounded-lg">
+                  <span class="text-sm text-base-content/80">
+                    {{ tempMinPrice() | currency }} - {{ tempMaxPrice() | currency }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filter Actions -->
+            <div class="flex gap-2 pt-4">
+              <button 
+                class="btn btn-primary flex-1"
+                (click)="applyPriceFilter()"
+                [disabled]="loading()">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                </svg>
+                Aplicar
+              </button>
+              
+              <button 
+                class="btn btn-ghost"
+                (click)="resetFilters()"
+                [disabled]="loading()">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Content - Products Grid -->
+      <div class="lg:col-span-3">
+        
+        <!-- Loading State -->
+        @if (loading()) {
+          <div class="flex justify-center items-center min-h-96">
+            <div class="flex flex-col items-center gap-4">
+              <div class="loading loading-spinner loading-lg text-primary"></div>
+              <p class="text-base-content/70">Buscando productos...</p>
+            </div>
+          </div>
+        }
+
+        <!-- Error State -->
+        @else if (error()) {
+          <div class="text-center py-16">
+            <div class="bg-error/10 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
+              <svg class="w-12 h-12 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+            <h2 class="text-2xl font-light text-base-content mb-4">Error en la búsqueda</h2>
+            <p class="text-base-content/60 mb-8">{{ error() }}</p>
+            <button class="btn btn-primary" (click)="resetFilters()">
+              Intentar de nuevo
+            </button>
+          </div>
+        }
+
+        <!-- Empty State -->
+        @else if (allProducts().length === 0) {
+          <div class="text-center py-16">
+            <div class="bg-base-200/50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
+              <svg class="w-12 h-12 text-base-content/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+            <h2 class="text-2xl font-light text-base-content mb-4">
+              @if (getCurrentSearchQuery()) {
+                No se encontraron productos
+              } @else {
+                Comienza tu búsqueda
+              }
+            </h2>
+            <p class="text-base-content/60 mb-8">
+              @if (getCurrentSearchQuery()) {
+                Intenta con otros términos o ajusta tus filtros
+              } @else {
+                Usa la barra de búsqueda para encontrar productos increíbles
+              }
+            </p>
+            @if (getCurrentSearchQuery()) {
+              <button class="btn btn-primary" (click)="resetFilters()">
+                Limpiar Filtros
+              </button>
+            }
+          </div>
+        }
+
+        <!-- Products Grid -->
+        @else {
+          <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 xl:gap-6">
+            @for (product of allProducts(); track product.objectID || product.id || $index) {
+              <app-product-item [product]="product"></app-product-item>
+            }
+          </div>
+
+          <!-- Load More Indicator -->
+          @if (loadingMore()) {
+            <div class="flex justify-center items-center py-12">
+              <div class="flex flex-col items-center gap-4">
+                <div class="loading loading-spinner loading-lg text-primary"></div>
+                <p class="text-base-content/70">Cargando más productos...</p>
+              </div>
+            </div>
+          }
+
+          <!-- No More Results -->
+          @else if (!hasMoreResults() && allProducts().length > 0) {
+            <div class="text-center py-12">
+              <div class="bg-base-200/30 rounded-xl p-6">
+                <div class="bg-success/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <svg class="w-8 h-8 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-base-content mb-2">¡Has visto todos los resultados!</h3>
+                <p class="text-base-content/60">
+                  Se mostraron {{ totalResults() }} productos en total.
+                </p>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  </div>
+</div>

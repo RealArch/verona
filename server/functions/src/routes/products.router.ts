@@ -12,6 +12,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { removePhotoArrayImages } from '../utils/removePhotoArray';
 import { defineSecret } from 'firebase-functions/params';
 import { removeDocumentAlgolia, syncDocumentAlgolia } from '../utils/syncWithAlgolia';
+import { getMinMaxPrice } from '../utils/getMinMaxPrice';
 
 // Define los secrets
 const algoliaAdminKey = defineSecret("ALGOLIA_ADMIN_KEY");
@@ -29,103 +30,197 @@ productsRouter.get('/', async (req: Request, res: Response) => {
 });
 
 
-export const onProductCreated = onDocumentCreated({ document: "products/{productId}", secrets: [algoliaAdminKey, algoliaAppId] },
+export const onProductCreated = onDocumentCreated(
+    { document: "products/{productId}", secrets: [algoliaAdminKey, algoliaAppId] },
     async (event) => {
         const data = event.data?.data();
         if (!data) {
             console.log("No data associated with the event");
             return;
         }
-        const batch = db.batch()
+
+        const productId = event.params.productId;
         const adminKey = algoliaAdminKey.value();
         const appId = algoliaAppId.value();
-        const productId = event.params.productId;
+
+        console.log(`Processing product creation: ${productId}`);
+
+        // Calcular precios
+        const { minPrice, maxPrice } = getMinMaxPrice(data);
+        console.log(`Calculated prices: minPrice=${minPrice}, maxPrice=${maxPrice}`);
+
+        // Preparar referencias
+        const batch = db.batch();
         const countersRef = db.collection("metadata").doc("counters");
         const productsRef = db.collection("products").doc(productId);
-        //Sync with algolia
+
+        // Sincronizar con Algolia (sin await - ejecutar en paralelo)
         syncDocumentAlgolia(PRODUCTS_ALGOLIA_INDEX, productId, data, adminKey, appId);
 
-        // Procesar imágenes si corresponde
-        console.log("Processing images for product:", productId);
-        if (Array.isArray(data.photos) && data.photos.some((f: ProductPhoto) => f.processing === true)) {
+        // Preparar actualizaciones del producto
+        const updatedAt = FieldValue.serverTimestamp();
+        const productUpdates: any = {
+            minPrice,
+            maxPrice,
+            createdAt: updatedAt,
+            updatedAt: updatedAt
+        };
+        console.log(`Product updates prepared:`, JSON.stringify(productUpdates));
+
+        // Procesar imágenes si es necesario
+        const hasPhotosToProcess = Array.isArray(data.photos) &&
+            data.photos.some((photo: ProductPhoto) => photo.processing === true);
+
+        if (hasPhotosToProcess) {
+            console.log("Processing images for product:", productId);
             const processedPhotos = await processProductImages(productId, data.photos as ProductPhoto[]);
-            batch.update(productsRef, {
-                photos: processedPhotos,
-                processing: false
-            });
-
+            productUpdates.photos = processedPhotos;
+            productUpdates.processing = false;
         }
-        // Actualizar contadores en metadata/counters
 
-        batch.update(countersRef, { products: FieldValue.increment(1) })
-        // const updates: any = { products: admin.firestore.FieldValue.increment(1) };
-        console.log("Product status:", data.status);
+        console.log(`Final product updates:`, JSON.stringify(productUpdates, null, 2));
+
+        // Actualizar producto
+        batch.update(productsRef, productUpdates);
+
+        // Actualizar contadores
+        const counterUpdates: any = { products: FieldValue.increment(1) };
         if (data.status === "active") {
-            batch.set(countersRef, { products_active: FieldValue.increment(1) }, { merge: true })
+            counterUpdates.products_active = FieldValue.increment(1);
         } else if (data.status === "paused") {
-            batch.set(countersRef, { products_paused: FieldValue.increment(1) }, { merge: true })
+            counterUpdates.products_paused = FieldValue.increment(1);
         }
-        // await countersRef.set(updates, { merge: true });
-        batch.commit()
-    });
 
-export const onProductUpdated = onDocumentUpdated({ document: "products/{productId}", secrets: [algoliaAdminKey, algoliaAppId] },
+        batch.update(countersRef, counterUpdates);
+
+        await batch.commit();
+        console.log(`Product ${productId} created successfully with minPrice: ${minPrice}, maxPrice: ${maxPrice}`);
+    }
+);
+
+export const onProductUpdated = onDocumentUpdated(
+    { document: "products/{productId}", secrets: [algoliaAdminKey, algoliaAppId] },
     async (event) => {
         const before = event.data?.before.data();
         const after = event.data?.after.data();
-        const batch = db.batch();
-        const countersRef = db.collection("metadata").doc("counters");
-        const productsRef = db.collection("products").doc(event.params.productId);
-        const adminKey = algoliaAdminKey.value();
-        const appId = algoliaAppId.value();
-
-        //Sync with algolia
-        syncDocumentAlgolia(PRODUCTS_ALGOLIA_INDEX, event.params.productId, after, adminKey, appId);
 
         if (!before || !after) {
             console.log("No data associated with the event");
             return;
         }
-        if (after.processing == false) {
+
+        const productId = event.params.productId;
+        const adminKey = algoliaAdminKey.value();
+        const appId = algoliaAppId.value();
+
+        console.log(`Processing product update: ${productId}`);
+
+        // Preparar referencias
+        const batch = db.batch();
+        const countersRef = db.collection("metadata").doc("counters");
+        const productsRef = db.collection("products").doc(productId);
+
+        // Sincronizar con Algolia (sin await - ejecutar en paralelo)
+        syncDocumentAlgolia(PRODUCTS_ALGOLIA_INDEX, productId, after, adminKey, appId);
+
+        // Calcular precios actualizados
+        const { minPrice, maxPrice } = getMinMaxPrice(after);
+        console.log(`Updated prices: minPrice=${minPrice}, maxPrice=${maxPrice}`);
+
+        // Verificar si realmente necesitamos actualizar los precios
+        const pricesChanged = before.minPrice !== minPrice || before.maxPrice !== maxPrice;
+        const needsImageProcessing = after.processing === true;
+        const hasImagesToDelete = Array.isArray(after.imagesToDelete) && after.imagesToDelete.length > 0;
+        const statusChanged = before.status !== after.status;
+
+        // Si no hay cambios significativos, salir
+        if (!pricesChanged && !needsImageProcessing && !hasImagesToDelete && !statusChanged) {
+            console.log(`No significant changes for product ${productId}, skipping update`);
             return;
         }
 
-        // Only process photos if it's a non-empty array
-        if (Array.isArray(after.photos) && after.photos.length > 0) {
-            const processedPhotos = await processProductImages(event.params.productId, after.photos as ProductPhoto[]);
-            batch.update(productsRef, { photos: processedPhotos });
+        console.log(`Changes detected - prices: ${pricesChanged}, processing: ${needsImageProcessing}, images to delete: ${hasImagesToDelete}, status: ${statusChanged}`);
+
+        // Preparar actualizaciones del producto solo si hay cambios
+        const productUpdates: any = {};
+
+        if (pricesChanged) {
+            productUpdates.minPrice = minPrice;
+            productUpdates.maxPrice = maxPrice;
         }
 
-        // Safely handle imagesToDelete if present and non-empty
-        if (Array.isArray(after.imagesToDelete) && after.imagesToDelete.length > 0) {
+        console.log(`Product updates prepared:`, JSON.stringify(productUpdates));
+
+        // Procesar según el estado de procesamiento
+        if (needsImageProcessing) {
+            // Procesar imágenes si es necesario
+            const hasPhotosToProcess = Array.isArray(after.photos) && after.photos.length > 0;
+
+            if (hasPhotosToProcess) {
+                console.log("Processing images for updated product:", productId);
+                const processedPhotos = await processProductImages(productId, after.photos as ProductPhoto[]);
+                productUpdates.photos = processedPhotos;
+            }
+
+            productUpdates.processing = false;
+        }
+
+        // Manejar eliminación de imágenes
+        if (hasImagesToDelete) {
+            console.log(`Deleting ${after.imagesToDelete.length} images for product ${productId}`);
             removePhotoArrayImages(after.imagesToDelete);
-            batch.update(productsRef, {
-                imagesToDelete: []
-            });
+            productUpdates.imagesToDelete = [];
         }
 
-        if (before.status !== after.status) {
+        console.log(`Final product updates:`, JSON.stringify(productUpdates, null, 2));
 
-            // Decrement old status counter
-            if (before.status === "active") {
-                batch.set(countersRef, { products_active: FieldValue.increment(-1) }, { merge: true });
-            } else if (before.status === "paused") {
-                batch.set(countersRef, { products_paused: FieldValue.increment(-1) }, { merge: true });
-            }
-
-            // Increment new status counter
-            if (after.status === "active") {
-                batch.set(countersRef, { products_active: FieldValue.increment(1) }, { merge: true });
-            } else if (after.status === "paused") {
-                batch.set(countersRef, { products_paused: FieldValue.increment(1) }, { merge: true });
-            }
-
+        // Solo actualizar si hay cambios
+        if (Object.keys(productUpdates).length > 0) {
+            batch.update(productsRef, productUpdates);
         }
-        batch.update(productsRef, { processing: false });
 
-        await batch.commit();
+        // Manejar cambios de estado para contadores
+        if (statusChanged) {
+            console.log(`Status changed from ${before.status} to ${after.status} for product ${productId}`);
 
-    })
+            const statusToField: { [key: string]: string } = {
+                active: 'products_active',
+                paused: 'products_paused'
+            };
+
+            const statusUpdates: { [key: string]: admin.firestore.FieldValue } = {};
+
+            // Decrementar contador del estado anterior
+            const oldStatusField = statusToField[before.status];
+            if (oldStatusField) {
+                statusUpdates[oldStatusField] = FieldValue.increment(-1);
+            }
+
+            // Incrementar contador del nuevo estado
+            const newStatusField = statusToField[after.status];
+            if (newStatusField && newStatusField !== oldStatusField) {
+                statusUpdates[newStatusField] = FieldValue.increment(1);
+            }
+
+            // Aplicar cambios de estado
+            if (Object.keys(statusUpdates).length > 0) {
+                batch.update(countersRef, statusUpdates);
+            }
+        }
+
+        // Solo hacer commit si hay cambios que aplicar
+        const hasBatchOperations = Object.keys(productUpdates).length > 0 || statusChanged;
+
+        if (hasBatchOperations) {
+            await batch.commit();
+            console.log(`Product ${productId} updated successfully`);
+        } else {
+            console.log(`No changes to commit for product ${productId}`);
+        }
+
+        // Remover la verificación de timeout para evitar más triggers
+    }
+);
 export const onProductDeleted = onDocumentDeleted({ document: "products/{productId}", secrets: [algoliaAdminKey, algoliaAppId] },
     async (event) => {
         const data = event.data?.data();

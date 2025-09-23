@@ -30,25 +30,34 @@
 
         <!-- Centro - Búsqueda -->
         <div class="navbar-center hidden lg:flex">
-            <div class="form-control">
+            <form class="form-control" (submit)="onSearchSubmit($event)">
                 <div class="input-group">
-                    <input type="text" placeholder="Buscar articulo"
-                        class="input w-80 focus:input-primary input-primary bg-primary-alt/50 text-white mr-2" />
-                    <button class="btn btn-circle btn-ghost h-full py-1.5">
+                    <input 
+                        type="text" 
+                        placeholder="Buscar productos..."
+                        class="input w-80 focus:input-primary input-primary bg-primary-alt/50 text-white mr-2"
+                        [value]="searchQuery()"
+                        (input)="onSearchInput($event)"
+                        (keypress)="onSearchKeyPress($event)" />
+                    <button 
+                        type="submit"
+                        class="btn btn-circle btn-ghost h-full py-1.5">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </button>
                 </div>
-            </div>
+            </form>
         </div>
 
         <!-- Derecha - Carrito y usuario -->
         <div class="navbar-end flex items-center gap-2">
 
             <!-- Búsqueda móvil -->
-            <button class="btn btn-ghost btn-circle lg:hidden">
+            <button 
+                class="btn btn-ghost btn-circle lg:hidden"
+                (click)="navigateToSearch()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -77,8 +86,16 @@
                         <span class="font-bold text-lg text-base-content">{{cartItemsCount().itemCount}} Items</span>
                         <span class="text-info text-sm">Subtotal: ${{cartItemsCount().subtotal}}</span>
                         <div class="card-actions">
-                            <button routerLink="/shopping-cart" class="btn btn-primary btn-block">Ver Carrito</button>
-                            <button class="btn btn-secondary btn-block">Checkout</button>
+                            <button 
+                                class="btn btn-primary btn-block"
+                                (click)="closeDropdownAndNavigate('/shopping-cart')">
+                                Ver Carrito
+                            </button>
+                            <button 
+                                class="btn btn-secondary btn-block"
+                                (click)="closeDropdownAndAction()">
+                                Checkout
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -95,18 +112,44 @@
                 <ul tabindex="0"
                     class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52 border border-base-300">
                     <li>
-                        <a routerLink="/user/profile" class="justify-between text-base-content hover:bg-primary/10">
+                        <a 
+                            class="justify-between text-base-content hover:bg-primary/10"
+                            (click)="closeDropdownAndNavigate('/user/profile')">
                             Mi Perfil
                             <span class="badge badge-accent badge-sm">Nuevo</span>
                         </a>
                     </li>
-                    <li><a routerLink="/orders" class="text-base-content hover:bg-primary/10">Mis Pedidos</a></li>
-                    <li><a class="text-base-content hover:bg-primary/10">Lista de Deseos</a></li>
-                    <li><a class="text-base-content hover:bg-primary/10">Configuración</a></li>
+                    <li>
+                        <a 
+                            class="text-base-content hover:bg-primary/10"
+                            (click)="closeDropdownAndNavigate('/orders')">
+                            Mis Pedidos
+                        </a>
+                    </li>
+                    <li>
+                        <a 
+                            class="text-base-content hover:bg-primary/10"
+                            (click)="closeDropdownAndAction()">
+                            Lista de Deseos
+                        </a>
+                    </li>
+                    <li>
+                        <a 
+                            class="text-base-content hover:bg-primary/10"
+                            (click)="closeDropdownAndAction()">
+                            Configuración
+                        </a>
+                    </li>
                     <li>
                         <hr class="border-base-300">
                     </li>
-                    <li><a class="text-error hover:bg-error/10">Cerrar Sesión</a></li>
+                    <li>
+                        <a 
+                            class="text-error hover:bg-error/10"
+                            (click)="closeDropdownAndAction()">
+                            Cerrar Sesión
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

@@ -73,7 +73,11 @@
 body, html {
   font-family: 'Montserrat', system-ui, sans-serif;
 }
-
+.no-img {
+  background-color: var(--ion-color-light-tint);
+  border: 2px solid var(--ion-color-light-shade);
+  padding: 15px;
+}
 /* Estilos para listas en descripciones de productos */
 // .prose ul {
 //   list-style-type: disc !important;
