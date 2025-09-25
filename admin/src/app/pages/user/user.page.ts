@@ -1,4 +1,3 @@
-
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,7 +7,7 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 import { Subscription } from 'rxjs';
 import { addIcons } from 'ionicons';
-import { cube, layers, logOut, speedometer } from 'ionicons/icons';
+import { cube, layers, logOut, speedometer, card } from 'ionicons/icons';
 
 @Component({
   selector: 'app-user',
@@ -26,7 +25,7 @@ export class UserPage implements OnInit {
   subscription?: Subscription;
 
   constructor(private router: Router) {
-    addIcons({ speedometer, layers, logOut, cube });
+    addIcons({speedometer,cube,layers,card,logOut});
   }
 
 

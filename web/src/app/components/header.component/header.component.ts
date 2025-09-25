@@ -1,18 +1,26 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import { ShoppingCartService } from '../../services/shopping-cart/shopping-cart';
+import { Auth } from '../../services/auth/auth.services';
 
 @Component({
   selector: 'app-header-component',
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, CommonModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss'
 })
 export class HeaderComponent {
   private readonly router = inject(Router);
+  private readonly authService = inject(Auth);
   shoppingCartService = inject(ShoppingCartService);
   cartItemsCount = this.shoppingCartService.cartSummary;
+
+  // Auth signals - accessible throughout the component
+  isAuthenticated = this.authService.isAuthenticated;
+  currentUser = this.authService.user;
+  userProfile = this.authService.userProfile
 
   // Search functionality
   searchQuery = signal<string>('');
@@ -111,5 +119,41 @@ export class HeaderComponent {
     if (action) {
       action();
     }
+  }
+
+  /**
+   * Handle user logout
+   */
+  async logout(): Promise<void> {
+    try {
+      
+      await this.authService.logout();
+      this.closeDropdownAndAction()
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  }
+
+  /**
+   * Navigate to login page
+   */
+  navigateToLogin(): void {
+    this.router.navigate(['/auth/login']);
+  }
+
+  /**
+   * Navigate to register page
+   */
+  navigateToRegister(): void {
+    this.router.navigate(['/auth/register']);
+  }
+
+  /**
+   * Get user display name or email
+   */
+  getUserDisplayName(): string {
+    const user = this.currentUser();
+    if (!user) return '';
+    return user.displayName || user.email || 'Usuario';
   }
 }

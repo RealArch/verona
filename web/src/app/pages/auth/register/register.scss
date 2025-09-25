@@ -1,0 +1,42 @@
+/* Ocultar los botones nativos de mostrar contraseña del navegador */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-reveal,
+input[type="password"]::-webkit-clear-button,
+input[type="password"]::-webkit-inner-spin-button,
+input[type="password"]::-webkit-outer-spin-button {
+  display: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Asegurar que los botones de mostrar contraseña siempre estén activos */
+.relative button {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+  z-index: 10;
+}
+
+/* Prevenir que el input desactive el botón cuando está en focus */
+input:focus ~ button,
+input:focus + button {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+}
+
+/* Prevenir zoom en iOS para inputs */
+input[type="password"],
+input[type="text"],
+input[type="email"] {
+  font-size: 16px;
+}
+
+@media screen and (max-width: 768px) {
+  input[type="password"],
+  input[type="text"],
+  input[type="email"] {
+    font-size: 16px; /* Previene zoom en iOS */
+  }
+}

@@ -52,6 +52,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/user/products/products-form/products-form.page').then(m => m.ProductFormPage)
       },
       {
+        path: 'payment-methods',
+        loadComponent: () => import('./pages/user/payment-methods/payment-methods.page').then(m => m.PaymentMethodsPage)
+      },
+      {
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'
@@ -59,6 +63,8 @@ export const routes: Routes = [
     ]
 
   },
+
+
   // {
   //   path: '**',
   //   redirectTo: 'dashboard'

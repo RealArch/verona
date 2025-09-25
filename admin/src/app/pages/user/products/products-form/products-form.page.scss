@@ -246,3 +246,45 @@
   // min-height: 200px;
   // pointer-events: none;
 }
+
+/* Estilos para ion-input como color picker rectangular */
+ion-input.color-input {
+  --background: transparent;
+  --color: transparent;
+  --placeholder-color: transparent;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  
+  // Penetrar en el Shadow DOM de ion-input
+  ::ng-deep input[type="color"] {
+    width: 100% !important;
+    // height: 40px !important;
+    border-radius: 15px !important;
+    border: 2px solid var(--ion-color-light-shade) !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    background: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+
+    // Estilos específicos para webkit (Chrome, Safari)
+    &::-webkit-color-swatch-wrapper {
+      padding: 0 !important;
+      border-radius: 13px !important;
+      border: none !important;
+    }
+    
+    &::-webkit-color-swatch {
+      border: none !important;
+      border-radius: 13px !important;
+    }
+    
+    // Estilos específicos para Firefox
+    &::-moz-color-swatch {
+      border: none !important;
+      border-radius: 13px !important;
+    }
+  }
+}

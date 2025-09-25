@@ -1,0 +1,74 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/user"></ion-back-button>
+    </ion-buttons>
+    <ion-title class="font-bold">Métodos de Pago</ion-title>
+
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-grid fixed>
+    <ion-title class="text-sm pt-5 pb-3">Gestionar métodos de pago</ion-title>
+    <ion-card class="mb-5">
+      <ion-item class=" mb-" lines="none" color="light">
+        <ion-icon name="logo-paypal" slot="start"></ion-icon>
+        <ion-checkbox>PayPal (Paypal + Tarjeta de Crédito Internacional)</ion-checkbox>
+      </ion-item>
+      <ion-card-content>
+        @if(true) {
+        <div class="text-center text-sm text-gray-400">Paypal no configurado</div>
+        }
+        <div class="w-full flex justify-center">
+          <ion-button fill="solid" color="primary" size="small" class="rounded my-5">
+            <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+            Configurar PayPal
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="mb-5">
+      <ion-item class=" mb-2" lines="none" color="light">
+        <ion-icon name="business" slot="start"></ion-icon>
+        <ion-checkbox>Transferencia Bancaria</ion-checkbox>
+      </ion-item>
+      <ion-card-content>
+        <!-- boton add method -->
+        @if(true) {
+        <div class="text-center text-sm text-gray-400">No tienes ninguna cuenta bancaria añadida.</div>
+        }
+        <div class="w-full flex justify-center">
+          <ion-button fill="solid" color="primary" size="small" class="rounded my-5">
+            <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+            Añadir cuenta bancaria
+          </ion-button>
+        </div>
+
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="mb-5">
+      <ion-item class=" mb-2" lines="none" color="light">
+        <ion-icon name="cash" slot="start"></ion-icon>
+        <ion-checkbox>Pago Móvil</ion-checkbox>
+      </ion-item>
+      <ion-card-content>
+        <!-- boton add method -->
+        @if(true) {
+        <div class="text-center text-sm text-gray-400">No tienes ningún método de pago móvil añadido.</div>
+        }
+        <div class="w-full flex justify-center">
+          <ion-button fill="solid" color="primary" size="small" class="rounded my-5">
+            <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+            Añadir pago móvil
+          </ion-button>
+        </div>
+
+      </ion-card-content>
+    </ion-card>
+
+
+  </ion-grid>
+</ion-content>

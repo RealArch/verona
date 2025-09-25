@@ -214,24 +214,47 @@
             </ion-toolbar>
 
             <div formArrayName="variants">
-              <ion-card class="variant-card mb-4 mx-0" *ngFor="let variant of variants.controls; let i = index; trackBy: trackById" [formGroupName]="i">
+              <ion-card class="variant-card mb-4 mx-0" style="border: 1px solid rgb(221, 221, 221);"
+                *ngFor="let variant of variants.controls; let i = index; trackBy: trackById" [formGroupName]="i">
                 @if(primaryAttributeType === 'color'){
-                  <div [ngStyle]="{'background-color': variant.value.colorHex}" class="background-color-select">
-                    
-                  </div>
+                <div [ngStyle]="{'background-color': variant.value.colorHex}" class="background-color-select">
+
+                </div>
+                } @else {
+                <div [ngStyle]="{'background-color': 'grey'}" class="background-color-select">
+
+                </div>
                 }
-                <ion-card-header class="p-0 flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <input *ngIf="primaryAttributeType === 'color'" type="color" formControlName="colorHex" class="color-circle">
-                    <ion-input formControlName="name" placeholder="Nombre de la opción" class="font-bold"></ion-input>
-                  </div>
-                  <ion-button fill="clear" color="danger" size="small" (click)="removeVariant(i)" *ngIf="variants.length > 1">
+                <ion-card-header class="p-0 flex justify-content-end">
+
+                  <ion-button fill="clear" class="ms-auto" color="danger" size="small" (click)="removeVariant(i)"
+                    *ngIf="variants.length > 1">
                     <ion-icon name="close-outline"></ion-icon>
+                    Eliminar {{primaryAttributeType}}
                   </ion-button>
                 </ion-card-header>
                 <ion-card-content class="p-0">
                   <ion-grid class="">
                     <ion-row>
+                      <ion-col size="12" size-md="4">
+                        <ion-item color="light" class="bg-light rounded-lg mb-2">
+                          <ion-label position="stacked">{{" Nombre de " + primaryAttributeType}}</ion-label>
+                          <ion-input formControlName="name" placeholder="Nombre de la opción"
+                            class="font-bold"></ion-input>
+                        </ion-item>
+                      </ion-col>
+                      @if(primaryAttributeType === 'color'){
+                      <ion-col size="12" size-md="4">
+                        <ion-item color="light" class="bg-light rounded-lg mb-2">
+                          <ion-label position="stacked">Color a mostrar</ion-label>
+                          <ion-input type="color" formControlName="colorHex" class="color-input"></ion-input>
+                        </ion-item>
+
+                      </ion-col>
+                      }
+                    </ion-row>
+                    <ion-row>
+
                       <ion-col size="12" size-md="4">
                         <ion-item color="light" class="bg-light rounded-lg mb-2">
                           <ion-label position="stacked">SKU</ion-label>

@@ -1,0 +1,10 @@
+.button-login{
+    line-height: normal;
+    :nth-child(1){
+        font-size: 0.70rem;
+    }
+        :nth-child(2){
+        font-size: 0.80rem;
+        font-weight: bold;
+    }
+}

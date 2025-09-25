@@ -17,7 +17,26 @@
             </div>
 
             <!-- Formulario de Registro -->
-            <form class="space-y-5">
+            <form class="space-y-5" (ngSubmit)="onSubmit()">
+
+                <!-- Mensajes de error y éxito -->
+                @if (errorMessage()) {
+                    <div class="alert alert-error text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>{{ errorMessage() }}</span>
+                    </div>
+                }
+
+                @if (successMessage()) {
+                    <div class="alert alert-success text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span>{{ successMessage() }}</span>
+                    </div>
+                }
 
                 <!-- Campos de Nombre -->
                 <div class="grid grid-cols-2 gap-4">
@@ -25,16 +44,26 @@
                         <label class="label">
                             <span class="label-text text-base-content/80">Nombre</span>
                         </label>
-                        <input type="text" placeholder="Juan"
+                        <input 
+                            type="text" 
+                            placeholder="Juan"
+                            [value]="firstName()"
+                            (input)="onFirstNameChange($event)"
                             class="input input-bordered w-full bg-base-200/50 border-base-300 focus:border-primary focus:outline-none transition-colors"
+                            [disabled]="isLoading()"
                             required>
                     </div>
                     <div class="form-control">
                         <label class="label">
                             <span class="label-text text-base-content/80">Apellido</span>
                         </label>
-                        <input type="text" placeholder="Pérez"
+                        <input 
+                            type="text" 
+                            placeholder="Pérez"
+                            [value]="lastName()"
+                            (input)="onLastNameChange($event)"
                             class="input input-bordered w-full bg-base-200/50 border-base-300 focus:border-primary focus:outline-none transition-colors"
+                            [disabled]="isLoading()"
                             required>
                     </div>
                 </div>
@@ -44,8 +73,13 @@
                     <label class="label">
                         <span class="label-text text-base-content/80">Correo electrónico</span>
                     </label>
-                    <input type="email" placeholder="ejemplo@email.com"
+                    <input 
+                        type="email" 
+                        placeholder="ejemplo@email.com"
+                        [value]="email()"
+                        (input)="onEmailChange($event)"
                         class="input input-bordered w-full bg-base-200/50 border-base-300 focus:border-primary focus:outline-none transition-colors"
+                        [disabled]="isLoading()"
                         required>
                 </div>
 
@@ -55,32 +89,40 @@
                         <span class="label-text text-base-content/80">Contraseña</span>
                     </label>
                     <div class="relative">
-                        <input type="password" placeholder="••••••••"
+                        <input 
+                            #passwordInput
+                            type="password"
+                            placeholder="••••••••"
+                            [value]="password()"
+                            (input)="onPasswordChange($event)"
                             class="input input-bordered w-full bg-base-200/50 border-base-300 focus:border-primary focus:outline-none transition-colors pr-12"
+                            [disabled]="isLoading()"
+                            autocomplete="new-password"
                             required>
-                        <button type="button"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 btn btn-ghost btn-sm btn-square"
-                            title="Mostrar contraseña">
-                            <svg class="w-4 h-4 text-base-content/60" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                </path>
+                        <button 
+                            type="button"
+                            (click)="passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password'"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-base-content/60 hover:text-base-content transition-colors z-10"
+                            style="pointer-events: auto !important;"
+                            tabindex="-1"
+                            title="Mostrar/ocultar contraseña">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
                         </button>
                     </div>
                     <!-- Indicador de fuerza de contraseña -->
-                    <div class="mt-2">
-                        <div class="text-xs text-base-content/60 mb-1">Fuerza de la contraseña</div>
-                        <div class="flex gap-1">
-                            <div class="h-1 flex-1 bg-base-300 rounded-full"></div>
-                            <div class="h-1 flex-1 bg-base-300 rounded-full"></div>
-                            <div class="h-1 flex-1 bg-base-300 rounded-full"></div>
-                            <div class="h-1 flex-1 bg-base-300 rounded-full"></div>
+                    @if (password()) {
+                        <div class="mt-2">
+                            <div class="text-xs text-base-content/60 mb-1">Fuerza de la contraseña</div>
+                            <div class="flex gap-1">
+                                @for (item of [0,1,2,3]; track item) {
+                                    <div [class]="'h-1 flex-1 rounded-full ' + getPasswordStrengthColor(item)"></div>
+                                }
+                            </div>
                         </div>
-                    </div>
+                    }
                 </div>
 
                 <!-- Campo Confirmar Password -->
@@ -89,28 +131,44 @@
                         <span class="label-text text-base-content/80">Confirmar contraseña</span>
                     </label>
                     <div class="relative">
-                        <input type="password" placeholder="••••••••"
-                            class="input input-bordered w-full bg-base-200/50 border-base-300 focus:border-primary focus:outline-none transition-colors pr-12"
+                        <input 
+                            #confirmPasswordInput
+                            type="password"
+                            placeholder="••••••••"
+                            [value]="confirmPassword()"
+                            (input)="onConfirmPasswordChange($event)"
+                            [class]="'input input-bordered w-full bg-base-200/50 border-base-300 focus:border-primary focus:outline-none transition-colors pr-12 ' + 
+                                     (confirmPassword() && !passwordsMatch() ? 'border-red-500' : '')"
+                            [disabled]="isLoading()"
+                            autocomplete="new-password"
                             required>
-                        <button type="button"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 btn btn-ghost btn-sm btn-square"
-                            title="Mostrar contraseña">
-                            <svg class="w-4 h-4 text-base-content/60" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                </path>
+                                                <button 
+                            type="button"
+                            (click)="confirmPasswordInput.type = confirmPasswordInput.type === 'password' ? 'text' : 'password'"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-base-content/60 hover:text-base-content transition-colors z-10"
+                            style="pointer-events: auto !important;"
+                            tabindex="-1"
+                            title="Mostrar/ocultar contraseña">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
                         </button>
                     </div>
+                    @if (confirmPassword() && !passwordsMatch()) {
+                        <div class="text-xs text-red-500 mt-1">Las contraseñas no coinciden</div>
+                    }
                 </div>
 
                 <!-- Términos y condiciones -->
                 <div class="form-control">
                     <label class="label cursor-pointer justify-start items-start w-full max-w-full">
-                        <input type="checkbox" class="checkbox checkbox-primary checkbox-sm mr-3 mt-0.5 flex-shrink-0"
+                        <input 
+                            type="checkbox" 
+                            class="checkbox checkbox-primary checkbox-sm mr-3 mt-0.5 flex-shrink-0"
+                            [checked]="acceptTerms()"
+                            (change)="onTermsChange($event)"
+                            [disabled]="isLoading()"
                             required />
                         <span
                             class="label-text text-sm text-base-content/70 leading-relaxed break-words whitespace-normal w-full max-w-[calc(100%-2rem)]">
@@ -126,28 +184,26 @@
                     </label>
                 </div>
 
-                <!-- Newsletter (opcional) -->
-                <!-- <div class="form-control">
-                    <label class="label cursor-pointer justify-start items-start w-full max-w-full">
-                        <input type="checkbox" class="checkbox checkbox-primary checkbox-sm mr-3 mt-0.5 flex-shrink-0" />
-                        <span class="label-text text-sm text-base-content/70 leading-relaxed break-words whitespace-normal w-full max-w-[calc(100%-2rem)]">
-                            Quiero recibir ofertas especiales y noticias de Verona
-                        </span>
-                    </label>
-                </div> -->
-
                 <!-- Botón de Registro -->
-                <button type="submit"
-                    class="btn btn-primary w-full text-white font-medium py-3 rounded-xl hover:shadow-lg transition-all duration-300 mt-6">
-                    Crear Cuenta
+                <button 
+                    type="submit"
+                    class="btn btn-primary w-full text-white font-medium py-3 rounded-xl hover:shadow-lg transition-all duration-300 mt-6"
+                    [disabled]="isLoading() || !formIsValid()">
+                    
+                    @if (isLoading()) {
+                        <span class="loading loading-spinner loading-sm"></span>
+                        Creando cuenta...
+                    } @else {
+                        Crear Cuenta
+                    }
                 </button>
             </form>
 
             <!-- Divisor -->
-            <div class="divider text-base-content/40 my-6">o</div>
+            <!-- <div class="divider text-base-content/40 my-6">o</div> -->
 
             <!-- Registro con Google -->
-            <button type="button"
+            <!-- <button type="button"
                 class="btn btn-outline w-full border-base-300 hover:border-primary hover:bg-primary/5 text-base-content py-3 rounded-xl transition-all duration-300">
                 <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
                     <path fill="#4285F4"
@@ -160,7 +216,7 @@
                         d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                 </svg>
                 Registrarse con Google
-            </button>
+            </button> -->
 
             <!-- Link de login -->
             <div class="text-center mt-6 pt-4 border-t border-base-200">

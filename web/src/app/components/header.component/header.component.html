@@ -32,16 +32,10 @@
         <div class="navbar-center hidden lg:flex">
             <form class="form-control" (submit)="onSearchSubmit($event)">
                 <div class="input-group">
-                    <input 
-                        type="text" 
-                        placeholder="Buscar productos..."
+                    <input type="text" placeholder="Buscar productos..."
                         class="input w-80 focus:input-primary input-primary bg-primary-alt/50 text-white mr-2"
-                        [value]="searchQuery()"
-                        (input)="onSearchInput($event)"
-                        (keypress)="onSearchKeyPress($event)" />
-                    <button 
-                        type="submit"
-                        class="btn btn-circle btn-ghost h-full py-1.5">
+                        [value]="searchQuery()" (input)="onSearchInput($event)" (keypress)="onSearchKeyPress($event)" />
+                    <button type="submit" class="btn btn-circle btn-ghost h-full py-1.5">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -55,88 +49,47 @@
         <div class="navbar-end flex items-center gap-2">
 
             <!-- Búsqueda móvil -->
-            <button 
-                class="btn btn-ghost btn-circle lg:hidden"
-                (click)="navigateToSearch()">
+            <button class="btn btn-ghost btn-circle lg:hidden" (click)="navigateToSearch()">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </button>
 
-            <!-- Carrito de compras -->
-            <div class="dropdown dropdown-end mr-4">
-                <div tabindex="0" role="button" class="btn btn-ghost btn-circle relative">
-                    <div class="indicator">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13l-1.1 5M7 13l1.1-5m8.9 5L17 8m2 5l1.1 5M9 21a1 1 0 11-2 0 1 1 0 012 0zm10 0a1 1 0 11-2 0 1 1 0 012 0z">
-                            </path>
-                        </svg>
-                        <!-- Contador de items -->
-                        <span
-                            class="badge badge-xs indicator-item badge-accent text-accent-content rounded-full w-5 h-5 flex items-center justify-center">
-                            {{cartItemsCount().uniqueItemCount}}
-                        </span>
-                    </div>
-                </div>
-                <div tabindex="0"
-                    class="mt-3 z-[1] card card-compact dropdown-content w-80 bg-base-100 shadow-xl border border-base-300">
-                    <div class="card-body">
-                        <span class="font-bold text-lg text-base-content">{{cartItemsCount().itemCount}} Items</span>
-                        <span class="text-info text-sm">Subtotal: ${{cartItemsCount().subtotal}}</span>
-                        <div class="card-actions">
-                            <button 
-                                class="btn btn-primary btn-block"
-                                (click)="closeDropdownAndNavigate('/shopping-cart')">
-                                Ver Carrito
-                            </button>
-                            <button 
-                                class="btn btn-secondary btn-block"
-                                (click)="closeDropdownAndAction()">
-                                Checkout
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
+
+            @if(isAuthenticated()) {
             <!-- Menú de usuario -->
             <div class="dropdown dropdown-end">
-                <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-                    <div class="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                        <img alt="Avatar"
-                            src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
-                    </div>
+                <div tabindex="0" role="button" class="">
+                    <button tabindex="0" role="button" class="button-login btn btn-ghost block text-start mr-3">
+                        <div>Hola,</div>
+                        <div>{{userProfile()?.firstName}} ▼</div>
+
+                    </button>
                 </div>
+
                 <ul tabindex="0"
                     class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52 border border-base-300">
                     <li>
-                        <a 
-                            class="justify-between text-base-content hover:bg-primary/10"
+                        <a class="justify-between text-base-content hover:bg-primary/10"
                             (click)="closeDropdownAndNavigate('/user/profile')">
                             Mi Perfil
                             <span class="badge badge-accent badge-sm">Nuevo</span>
                         </a>
                     </li>
                     <li>
-                        <a 
-                            class="text-base-content hover:bg-primary/10"
-                            (click)="closeDropdownAndNavigate('/orders')">
+                        <a class="text-base-content hover:bg-primary/10" (click)="closeDropdownAndNavigate('/orders')">
                             Mis Pedidos
                         </a>
                     </li>
                     <li>
-                        <a 
-                            class="text-base-content hover:bg-primary/10"
-                            (click)="closeDropdownAndAction()">
+                        <a class="text-base-content hover:bg-primary/10" (click)="closeDropdownAndAction()">
                             Lista de Deseos
                         </a>
                     </li>
                     <li>
-                        <a 
-                            class="text-base-content hover:bg-primary/10"
-                            (click)="closeDropdownAndAction()">
+                        <a class="text-base-content hover:bg-primary/10" (click)="closeDropdownAndAction()">
                             Configuración
                         </a>
                     </li>
@@ -144,15 +97,59 @@
                         <hr class="border-base-300">
                     </li>
                     <li>
-                        <a 
-                            class="text-error hover:bg-error/10"
-                            (click)="closeDropdownAndAction()">
+                        <a class="text-error hover:bg-error/10" (click)="logout();closeDropdownAndAction()">
                             Cerrar Sesión
                         </a>
                     </li>
                 </ul>
+
+            </div>
+            } @else {
+
+            <button tabindex="0" role="button" class="button-login btn btn-ghost block text-start mr-3"
+                (click)="navigateToLogin()">
+                <div>Hola,</div>
+                <div>Iniciar Sesión ▼</div>
+
+            </button>
+
+            }
+        </div>
+
+        <!-- Carrito de compras -->
+        <div class="dropdown dropdown-end mr-4">
+            <div tabindex="0" role="button" class="btn btn-ghost btn-circle relative">
+                <div class="indicator">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.1 5H19M7 13l-1.1 5M7 13l1.1-5m8.9 5L17 8m2 5l1.1 5M9 21a1 1 0 11-2 0 1 1 0 012 0zm10 0a1 1 0 11-2 0 1 1 0 012 0z">
+                        </path>
+                    </svg>
+                    <!-- Contador de items -->
+                    <span
+                        class="badge badge-xs indicator-item badge-accent text-accent-content rounded-full w-5 h-5 flex items-center justify-center">
+                        {{cartItemsCount().uniqueItemCount}}
+                    </span>
+                </div>
+            </div>
+            <div tabindex="0"
+                class="mt-3 z-[1] card card-compact dropdown-content w-80 bg-base-100 shadow-xl border border-base-300">
+                <div class="card-body">
+                    <span class="font-bold text-lg text-base-content">{{cartItemsCount().itemCount}} Items</span>
+                    <span class="text-info text-sm">Subtotal: ${{cartItemsCount().subtotal}}</span>
+                    <div class="card-actions">
+                        <button class="btn btn-primary btn-block" (click)="closeDropdownAndNavigate('/shopping-cart')">
+                            Ver Carrito
+                        </button>
+                        <button class="btn btn-secondary btn-block" (click)="closeDropdownAndAction()">
+                            Checkout
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
+
+
     </div>
 
     <!-- Barra de navegación secundaria (opcional) -->

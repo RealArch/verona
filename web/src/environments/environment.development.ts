@@ -1,6 +1,7 @@
 
 export const environment = {
     useEmulators: true,
+    api: "http://127.0.0.1:5001/verona-ffbcd/us-central1/api",
     firebase: {
         projectId: "verona-ffbcd",
         appId: "1:239775263543:web:e132aa664b508b7184c8b2",
