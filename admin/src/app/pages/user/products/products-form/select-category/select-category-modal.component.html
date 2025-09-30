@@ -1,28 +1,95 @@
 <ion-header>
-  <ion-toolbar>
+  <ion-toolbar color="primary">
     <ion-title>Seleccionar Categoría</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="close()">Cerrar</ion-button>
+      <ion-button fill="clear" (click)="close()">
+        <ion-icon name="close" slot="icon-only"></ion-icon>
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
+
 <ion-content>
-  <div *ngIf="selectedPath.length > 0">
-    <ion-button (click)="goBack()">Atrás</ion-button>
-    <div>
-      <strong>Ruta seleccionada:</strong>
-      <span *ngFor="let cat of selectedPath; let last = last">
-        {{cat.name}}{{!last ? ' > ' : ''}}
-      </span>
+  <!-- Breadcrumb Navigation -->
+  <div class="mb-5" *ngIf="selectedPath.length > 0">
+    <div class="flex flex-wrap gap-2">
+      <ion-chip class="cursor-pointer hover:scale-105 transition-transform duration-200" color="light" (click)="goToRoot()">
+        <ion-icon name="home" slot="start"></ion-icon>
+        <ion-label class="text-sm font-medium">Inicio</ion-label>
+      </ion-chip>
+      
+      <ion-chip 
+        class="cursor-pointer hover:scale-105 transition-transform duration-200" 
+        color="medium"
+        *ngFor="let cat of selectedPath; let i = index"
+        (click)="goToCategory(i)">
+        <ion-icon name="chevron-forward" slot="start"></ion-icon>
+        <ion-label class="text-sm font-medium">{{cat.name}}</ion-label>
+      </ion-chip>
     </div>
   </div>
-  <ion-list *ngIf="categories.length > 0">
-    <ion-item *ngFor="let category of categories" (click)="selectCategory(category)">
-      <ion-label>{{category.name}}</ion-label>
-    </ion-item>
-  </ion-list>
-  <div *ngIf="loading">Cargando...</div>
-  <div *ngIf="categories.length === 0 && selectedPath.length > 0 && !loading">
-    <ion-button expand="block" color="primary" (click)="confirmSelection()">Seleccionar árbol</ion-button>
+
+  <!-- Current Level Title -->
+  <div class="mb-5">
+    <h3 class="m-0 text-lg font-semibold text-gray-800" *ngIf="selectedPath.length === 0">Categorías Principales</h3>
+    <h3 class="m-0 text-lg font-semibold text-gray-800" *ngIf="selectedPath.length > 0">Subcategorías de: {{selectedPath[selectedPath.length - 1].name}}</h3>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex flex-col items-center justify-center py-16 px-5">
+    <ion-spinner name="crescent" class="mb-4"></ion-spinner>
+    <p class="text-gray-500 text-sm">Cargando categorías...</p>
+  </div>
+
+  <!-- Categories List -->
+  <div *ngIf="!loading && categories.length > 0">
+    <ion-card *ngFor="let category of categories" 
+              class="mb-3 cursor-pointer rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg" 
+              (click)="selectCategory(category)">
+      <ion-card-content class="p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center flex-1">
+            <ion-icon name="folder" class="text-2xl text-blue-600 mr-3"></ion-icon>
+            <div class="flex-1">
+              <h4 class="m-0 mb-1 text-base font-semibold text-gray-800">{{category.name}}</h4>
+              <p class="m-0 text-sm text-gray-500 leading-tight" *ngIf="category.description">{{category.description}}</p>
+            </div>
+          </div>
+          <ion-icon name="chevron-forward" class="text-xl text-gray-400 transition-all duration-200 arrow-icon"></ion-icon>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- No Subcategories State -->
+  <div *ngIf="!loading && categories.length === 0 && selectedPath.length > 0" class="flex flex-col items-center justify-center py-16 px-5 text-center">
+    <ion-icon name="checkmark-circle" color="success" class="text-6xl mb-4"></ion-icon>
+    <h3 class="m-0 mb-2 text-lg font-semibold text-gray-800">Categoría Final Seleccionada</h3>
+    <p class="m-0 text-sm text-gray-500 leading-relaxed max-w-xs">Esta categoría no tiene subcategorías. Puedes confirmar tu selección.</p>
+  </div>
+
+  <!-- Empty State for Root -->
+  <div *ngIf="!loading && categories.length === 0 && selectedPath.length === 0" class="flex flex-col items-center justify-center py-16 px-5 text-center">
+    <ion-icon name="folder-open" color="medium" class="text-6xl mb-4"></ion-icon>
+    <h3 class="m-0 mb-2 text-lg font-semibold text-gray-800">No hay categorías disponibles</h3>
+    <p class="m-0 text-sm text-gray-500 leading-relaxed max-w-xs">Contacta al administrador para crear categorías.</p>
   </div>
 </ion-content>
+
+<ion-footer *ngIf="selectedPath.length > 0">
+  <ion-toolbar class="px-4">
+    <div class="flex items-center justify-between py-2">
+      <div class="flex items-center gap-2 flex-1">
+        <ion-icon name="folder" color="primary" class="text-xl"></ion-icon>
+        <span class="font-medium text-gray-800 text-sm">{{selectedPath[selectedPath.length - 1].name}}</span>
+      </div>
+      <ion-button color="primary" 
+                  class="font-semibold" 
+                  (click)="confirmSelection()" 
+                  [disabled]="selectedPath.length === 0">
+        <ion-icon name="checkmark" slot="start"></ion-icon>
+        Seleccionar
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-footer>

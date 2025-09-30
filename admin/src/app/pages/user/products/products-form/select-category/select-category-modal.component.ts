@@ -1,8 +1,17 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
-import { ModalController, IonList, IonItem, IonButton, IonLabel, IonHeader, IonToolbar, IonTitle, IonButtons, IonContent } from '@ionic/angular/standalone';
+import { 
+  ModalController, IonList, IonItem, IonButton, IonLabel, IonHeader, IonToolbar, 
+  IonTitle, IonButtons, IonContent, IonIcon, IonChip, IonSpinner, IonCard, 
+  IonCardContent, IonFooter 
+} from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { CategoriesService } from 'src/app/services/categories.service';
 import { Category } from 'src/app/interfaces/category';
+import { addIcons } from 'ionicons';
+import { 
+  close, chevronBack, home, chevronForward, folder, checkmarkCircle, 
+  folderOpen, checkmark 
+} from 'ionicons/icons';
 
 
 @Component({
@@ -10,7 +19,10 @@ import { Category } from 'src/app/interfaces/category';
   templateUrl: './select-category-modal.component.html',
   styleUrls: ['./select-category-modal.component.scss'],
   standalone: true,
-  imports: [IonContent, IonButtons, IonTitle, IonToolbar, IonHeader, CommonModule, IonList, IonItem, IonButton, IonLabel]
+  imports: [
+    CommonModule, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonContent, 
+    IonIcon, IonChip, IonLabel, IonSpinner, IonCard, IonCardContent, IonFooter
+  ]
 })
 export class SelectCategoryModalComponent {
   private categoriesService = inject(CategoriesService);
@@ -20,6 +32,10 @@ export class SelectCategoryModalComponent {
   selectedPath: Category[] = [];
   loading = true;
   initialPath?: Category[];
+
+  constructor() {
+    addIcons({ close, chevronBack, home, chevronForward, folder, checkmarkCircle, folderOpen, checkmark });
+  }
 
   async ngOnInit() {
     if (this.initialPath && this.initialPath.length > 0) {
@@ -71,5 +87,16 @@ export class SelectCategoryModalComponent {
 
   async close() {
     await this.modalController.dismiss(null);
+  }
+
+  async goToRoot() {
+    this.selectedPath = [];
+    await this.loadCategories();
+  }
+
+  async goToCategory(index: number) {
+    this.selectedPath = this.selectedPath.slice(0, index + 1);
+    const parentId = this.selectedPath.length > 0 ? this.selectedPath[this.selectedPath.length - 1].id : null;
+    await this.loadCategories(parentId);
   }
 }

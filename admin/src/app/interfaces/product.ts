@@ -61,13 +61,14 @@ export interface ProductVariant {
     sku?: string;
     status: 'active' | 'paused' | 'archived';
     stock: number;
-
+    // Precios dinámicos para variantes
+    hasDynamicPricing?: boolean;
+    dynamicPrices?: DynamicPriceRange[];
 }
 
 export interface DynamicPriceRange {
     id?: string;
-    minQuantity: number; // Cantidad mínima del rango
-    maxQuantity: number; // Cantidad máxima del rango (null para infinito)
+    minQuantity: number; // Cantidad desde la cual aplica este precio
     price: number; // Precio para este rango
 }
 

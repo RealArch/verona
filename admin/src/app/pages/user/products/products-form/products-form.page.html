@@ -3,9 +3,9 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/products"></ion-back-button>
     </ion-buttons>
-    <ion-title>{{ isEditMode ? 'Editar' : 'Añadir' }} Producto</ion-title>
+    <ion-title>{{ isEditMode() ? 'Editar' : 'Añadir' }} Producto</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="saveProduct()" [disabled]="productForm.invalid || isUploading">
+      <ion-button (click)="saveProduct()" [disabled]="productForm.invalid || isUploading()">
         <ion-icon slot="icon-only" name="save"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -26,43 +26,46 @@
         </ion-card-header>
         <ion-card-content class="mt-3">
           <ion-grid>
-            <ion-row>
+            <ion-row class="ion-justify-content-start">
               <!-- Botón para añadir nuevas imágenes -->
-              <ion-col size="2"
-                class="relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ease-in-out border-2 border-dashed border-medium flex flex-col items-center justify-center bg-light hover:border-primary hover:bg-light-shade"
-                (click)="fileInput.click()">
-                <ion-icon name="add-circle-outline" class="text-4xl text-medium"></ion-icon>
-                <p class="mt-2 text-sm text-medium">Añadir</p>
+              <ion-col size="6" size-sm="4" size-md="3" size-lg="2" class="">
+                <div class="relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ease-in-out border-2 border-dashed border-medium flex flex-col items-center justify-center bg-light hover:border-primary hover:bg-light-shade"
+                  (click)="fileInput.click()">
+                  <ion-icon name="add-circle-outline" class="text-4xl text-medium"></ion-icon>
+                  <p class="mt-2 text-sm text-medium">Añadir</p>
+                </div>
               </ion-col>
 
               <!-- Imágenes existentes (modo edición) -->
-              <ion-col size="2" *ngFor="let existingImg of existingImages; let i = index"
-                class="relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ease-in-out border-2 border-solid border-success">
-                <img [src]="existingImg.previewUrl" class="w-full h-full object-cover" />
+              <ion-col size="6" size-sm="4" size-md="3" size-lg="2" class="" *ngFor="let existingImg of existingImages(); let i = index">
+                <div class="relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ease-in-out border-2 border-solid border-success">
+                  <img [src]="existingImg.previewUrl" class="w-full h-full object-cover" />
 
-                <ion-button color="danger" size="small" class="absolute top-1 right-1 z-10 rounded-full"
-                  (click)="removeExistingImage(i)">
-                  <ion-icon name="trash-outline"></ion-icon>
-                </ion-button>
+                  <ion-button color="danger" size="small" class="absolute top-1 right-1 z-10 rounded-full"
+                    (click)="removeExistingImage(i)">
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </ion-button>
+                </div>
               </ion-col>
 
               <!-- Nuevas imágenes -->
-              <ion-col size="2" *ngFor="let fileWrapper of imageFiles; let i = index"
-                class="relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ease-in-out border-2 border-solid border-primary">
-                <img [src]="fileWrapper.previewUrl" class="w-full h-full object-cover" />
-                <div class="absolute top-1 left-1 bg-primary text-white px-2 py-1 rounded text-xs">
-                  Nueva
+              <ion-col size="6" size-sm="4" size-md="3" size-lg="2" class="" *ngFor="let fileWrapper of imageFiles(); let i = index">
+                <div class="relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ease-in-out border-2 border-solid border-primary">
+                  <img [src]="fileWrapper.previewUrl" class="w-full h-full object-cover" />
+                  <div class="absolute top-1 left-1 bg-primary text-white px-2 py-1 rounded text-xs">
+                    Nueva
+                  </div>
+                  <div *ngIf="fileWrapper.uploading"
+                    class="absolute inset-0 flex items-center justify-center bg-white/50 rounded-lg">
+                    <ion-spinner name="crescent"></ion-spinner>
+                  </div>
+                  <ion-progress-bar *ngIf="fileWrapper.uploading" [value]="fileWrapper.progress / 100"
+                    class="absolute bottom-0 left-0 w-full h-1"></ion-progress-bar>
+                  <ion-button color="danger" size="small" class="absolute top-1 right-1 z-10 rounded-full"
+                    (click)="removeImage(i)">
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </ion-button>
                 </div>
-                <div *ngIf="fileWrapper.uploading"
-                  class="absolute inset-0 flex items-center justify-center bg-white/50 rounded-lg">
-                  <ion-spinner name="crescent"></ion-spinner>
-                </div>
-                <ion-progress-bar *ngIf="fileWrapper.uploading" [value]="fileWrapper.progress / 100"
-                  class="absolute bottom-0 left-0 w-full h-1"></ion-progress-bar>
-                <ion-button color="danger" size="small" class="absolute top-1 right-1 z-10 rounded-full"
-                  (click)="removeImage(i)">
-                  <ion-icon name="trash-outline"></ion-icon>
-                </ion-button>
               </ion-col>
 
               <input type="file" hidden #fileInput (change)="onFileSelected($event)" accept="image/*" multiple />
@@ -82,22 +85,80 @@
           </ion-card-title>
         </ion-card-header>
         <ion-card-content class="mt-4">
-          <div *ngIf="selectedCategoryPath.length > 0" class="flex items-center gap-2 p-3 bg-gray-100 rounded-lg">
-            <span *ngFor="let cat of selectedCategoryPath; let last = last" class="text-sm">
+          <div *ngIf="selectedCategoryPath().length > 0" class="flex items-center gap-2 p-3 bg-gray-100 rounded-lg">
+            <span *ngFor="let cat of selectedCategoryPath(); let last = last" class="text-sm">
               {{cat.name}}<span *ngIf="!last" class="mx-1 text-gray-400">></span>
             </span>
-            <ion-button fill="outline" size="small" (click)="openCategorySelectionModal(true)">Cambiar</ion-button>
           </div>
-          <ion-button *ngIf="selectedCategoryPath.length === 0" expand="block" fill="outline"
-            (click)="openCategorySelectionModal(false)" [disabled]="isUploading">
-            <ion-icon name="folder-outline" slot="start"></ion-icon>
-            Seleccionar categoría
-          </ion-button>
+          <div *ngIf="selectedCategoryPath().length > 0" class="flex">
+            <ion-button class="m-auto mt-3"fill="outline" size="small" (click)="openCategorySelectionModal(true)">Cambiar</ion-button>
+          </div>
+          <div class="flex">
+
+            <ion-button *ngIf="selectedCategoryPath().length === 0" class="m-auto"
+              (click)="openCategorySelectionModal(false)" [disabled]="isUploading()">
+              <ion-icon name="folder-outline" slot="start"></ion-icon>
+              Seleccionar categoría
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Card de Título -->
+      <ion-card class="mb-4">
+        <ion-card-header color="primary">
+          <ion-card-title class="flex items-center gap-2">
+            <ion-icon name="text-outline"></ion-icon>
+            Título del Producto
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content class="mt-4">
+          <ion-item class="form-input">
+            <ion-label position="stacked">Nombre del Producto *</ion-label>
+            <ion-input formControlName="name" type="text" placeholder="Ej: Camiseta deportiva" 
+                       class="text-lg font-bold"></ion-input>
+          </ion-item>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Card de Tipo de Artículo -->
+      <ion-card class="mb-4">
+        <ion-card-header color="primary">
+          <ion-card-title class="flex items-center gap-2">
+            <ion-icon name="layers-outline"></ion-icon>
+            Tipo de Artículo
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content class="mt-4">
+          <ion-grid class="">
+            <ion-row>
+              <ion-col size="6">
+                <div class="product-type-option" [class.selected]="productType() === 'individual'"
+                  (click)="changeProductType('individual')">
+                  <div class="option-icon">
+                    <ion-icon name="cube-outline"></ion-icon>
+                  </div>
+                  <h3>Artículo Individual</h3>
+                  <p>Producto con precio y stock únicos</p>
+                </div>
+              </ion-col>
+              <ion-col size="6">
+                <div class="product-type-option" [class.selected]="productType() === 'variants'"
+                  (click)="changeProductType('variants')">
+                  <div class="option-icon">
+                    <ion-icon name="layers-outline"></ion-icon>
+                  </div>
+                  <h3>Artículo con Variantes</h3>
+                  <p>Producto con múltiples opciones (color, talla, etc.)</p>
+                </div>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
         </ion-card-content>
       </ion-card>
 
       <!-- Información Básica -->
-      <ion-card>
+      <ion-card *ngIf="productType() === 'individual'" class="mb-4">
         <ion-card-header color="primary">
           <ion-card-title class="flex items-center gap-2">
             <ion-icon name="information-circle-outline"></ion-icon>
@@ -105,84 +166,70 @@
           </ion-card-title>
         </ion-card-header>
         <ion-card-content class="space-y-4 pt-4">
-          <ion-item>
-            <ion-label position="stacked">Nombre del Producto *</ion-label>
-            <ion-input formControlName="name" type="text" placeholder="Ej: Camiseta deportiva"></ion-input>
-          </ion-item>
 
           <!-- Toggle de precios dinámicos -->
-          <div class="dynamic-pricing-section">
-            <ion-item class="pricing-toggle">
-              <ion-label>
+          <div class="dynamic-pricing-section mt-5">
+            <ion-item class="pricing-toggle" [class.disabled-section]="hasVariants" lines="none">
+
+              <ion-checkbox formControlName="hasDynamicPricing" [disabled]="hasVariants" labelPlacement="start">
                 <h2>Precios Dinámicos por Cantidad</h2>
-                <p>Activa esta opción para configurar precios diferentes según la cantidad comprada</p>
-              </ion-label>
-              <ion-checkbox 
-                formControlName="hasDynamicPricing"
-                slot="end"
-                [disabled]="hasVariants">
+                <p *ngIf="!hasVariants">Activa esta opción para configurar precios diferentes según la cantidad comprada
+                </p>
+                <p *ngIf="hasVariants" class="text-warning">
+                  No disponible con variantes activas. Usa precios dinámicos por variante.
+                </p>
               </ion-checkbox>
             </ion-item>
           </div>
 
-          <ion-grid class="ion-no-padding">
+          <ion-grid class=" ">
             <ion-row>
-              <ion-col size="12" size-md="3">
-                <ion-item>
+              <ion-col size="12" size-md="4">
+                <ion-item class="form-input">
                   <ion-label position="stacked">SKU</ion-label>
                   <ion-input formControlName="sku" type="text" placeholder="Ej: CAM-001"
                     [disabled]="hasVariants"></ion-input>
                 </ion-item>
               </ion-col>
-              <ion-col size="12" size-md="3">
-                <ion-item>
+              <ion-col size="12" size-md="4">
+                <ion-item class="form-input">
                   <ion-label position="stacked">Precio Base *</ion-label>
-                  <ion-input formControlName="price" type="number" placeholder="0.00" 
-                    [disabled]="hasVariants || hasDynamicPricing">
+                  <ion-input formControlName="price" type="number" placeholder="0.00">
                     <div slot="start">$</div>
                   </ion-input>
                 </ion-item>
               </ion-col>
-              <ion-col size="12" size-md="3">
-                <ion-item>
+              <ion-col size="12" size-md="4">
+                <ion-item class="form-input">
                   <ion-label position="stacked">Stock Base *</ion-label>
                   <ion-input formControlName="stock" type="number" placeholder="0" [readonly]="hasVariants"></ion-input>
-                </ion-item>
-              </ion-col>
-              <ion-col size="12" size-md="3">
-                <ion-item>
-                  <ion-label position="stacked">Estado</ion-label>
-                  <ion-select formControlName="status" interface="popover">
-                    <ion-select-option value="active">Activo</ion-select-option>
-                    <ion-select-option value="paused">Pausado</ion-select-option>
-                    <ion-select-option value="archived">Archivado</ion-select-option>
-                  </ion-select>
                 </ion-item>
               </ion-col>
             </ion-row>
           </ion-grid>
 
-          <div *ngIf="hasVariants" class="info-alert yellow" role="alert">
-            <div class="icon">⚙️</div>
-            <div class="content">
-              <p class="font-bold">SKU, precio y stock son gestionados por variantes.</p>
-              <p>El stock total se calcula automáticamente.</p>
+          <div *ngIf="hasVariants" class="info-alert yellow p-4 rounded mt-4 flex items-start gap-3 bg-[#fef3cd] border-l-4 border-[#fbbf24] text-[#92400e]" role="alert">
+            <div class="icon text-[1.2rem] mt-[0.1rem]">⚙️</div>
+            <div class="content flex-1">
+              <p class="font-bold mb-1">SKU, precio y stock son gestionados por variantes.</p>
+              <p class="m-0">El stock total se calcula automáticamente.</p>
             </div>
           </div>
 
-          <div *ngIf="hasDynamicPricing && !hasVariants" class="info-alert blue" role="alert">
-            <div class="icon">💰</div>
-            <div class="content">
-              <p class="font-bold">Precios dinámicos activados.</p>
-              <p>El precio base está bloqueado. Configura los rangos de precios abajo.</p>
+          <div *ngIf="hasDynamicPricing && !hasVariants" class="info-alert blue p-4 rounded mt-4 flex items-start gap-3 bg-[#dbeafe] border-l-4 border-[#3b82f6] text-[#1e40af]" role="alert">
+            <div class="icon text-[1.2rem] mt-[0.1rem]">💰</div>
+            <div class="content flex-1">
+              <p class="font-bold mb-1">Precios dinámicos activados.</p>
+              <p class="m-0">El precio base está bloqueado. Configura los rangos de precios abajo.</p>
             </div>
           </div>
 
-          <div *ngIf="hasVariants && hasDynamicPricing" class="info-alert red" role="alert">
-            <div class="icon">⚠️</div>
-            <div class="content">
-              <p class="font-bold">Atención:</p>
-              <p>Los precios dinámicos no están disponibles cuando hay variantes activas.</p>
+          <div *ngIf="hasVariants" class="info-alert yellow p-4 rounded mt-4 flex items-start gap-3 bg-[#fef3cd] border-l-4 border-[#fbbf24] text-[#92400e]" role="alert">
+            <div class="icon text-[1.2rem] mt-[0.1rem]">📋</div>
+            <div class="content flex-1">
+              <p class="font-bold mb-1">Gestión por Variantes Activa:</p>
+              <p class="m-0">SKU, precio y stock del producto principal están bloqueados y se gestionan por variante. Los precios
+                dinámicos también se configuran individualmente por cada variante.</p>
             </div>
           </div>
         </ion-card-content>
@@ -193,10 +240,10 @@
         <ion-card-header color="primary">
           <ion-card-title class="flex items-center gap-2">
             <ion-icon name="cube-outline"></ion-icon>
-            Configuración de Precios por Cantidad
+            Configuración de Precios Escalonados
           </ion-card-title>
         </ion-card-header>
-        <ion-card-content class="p-4">
+        <ion-card-content class="p-4 mt-2">
           <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
               <ion-icon name="options-outline"></ion-icon>
@@ -208,100 +255,53 @@
             </ion-button>
           </div>
 
-          <div *ngIf="dynamicPrices.length === 0" class="text-center py-8 text-gray-500">
+          <div *ngIf="dynamicPrices.length === 0" class="text-center py-4 text-gray-500">
             <ion-icon name="cube-outline" size="large"></ion-icon>
-            <p class="mt-2">Añade rangos de precio por cantidad.</p>
+            <p class="mt-2">Configura precios escalonados por cantidad.</p>
           </div>
 
-          <div formArrayName="dynamicPrices">
-            <ion-card 
-              class="price-range-card mb-4 mx-0" 
-              style="border: 1px solid rgb(221, 221, 221);"
-              *ngFor="let priceRange of dynamicPrices.controls; let i = index" 
+          <div formArrayName="dynamicPrices" class="price-ranges-list">
+            <div class="price-range-row" *ngFor="let priceRange of dynamicPrices.controls; let i = index"
               [formGroupName]="i">
-              
-              <ion-card-header class="p-3 flex justify-between items-center">
-                <h3 class="text-lg font-semibold">Rango {{i + 1}}</h3>
-                <ion-button 
-                  fill="clear" 
-                  color="danger" 
-                  size="small" 
-                  (click)="removeDynamicPriceRange(i)"
-                  *ngIf="canRemoveDynamicPriceRange(i)">
-                  <ion-icon name="close-outline"></ion-icon>
-                  Eliminar
-                </ion-button>
-              </ion-card-header>
-              
-              <ion-card-content class="p-3">
-                <div class="range-inputs">
-                  <ion-grid>
-                    <ion-row>
-                      <ion-col size="12" size-md="4">
-                        <ion-item color="light">
-                          <ion-label position="stacked">
-                            Desde * 
-                            <span *ngIf="i === 0" class="locked-indicator">(Bloqueado)</span>
-                          </ion-label>
-                          <ion-input 
-                            formControlName="minQuantity" 
-                            type="number" 
-                            placeholder="1"
-                            min="1">
-                          </ion-input>
-                        </ion-item>
-                      </ion-col>
-                      <ion-col size="12" size-md="4">
-                        <ion-item color="light">
-                          <ion-label position="stacked">Hasta *</ion-label>
-                          <ion-input 
-                            formControlName="maxQuantity" 
-                            type="number" 
-                            placeholder="10"
-                            min="1">
-                          </ion-input>
-                        </ion-item>
-                      </ion-col>
-                      <ion-col size="12" size-md="4">
-                        <ion-item color="light">
-                          <ion-label position="stacked">Precio por Unidad *</ion-label>
-                          <ion-input 
-                            formControlName="price" 
-                            type="number" 
-                            placeholder="0.00"
-                            min="0"
-                            step="0.01">
-                            <div slot="start">$</div>
-                          </ion-input>
-                        </ion-item>
-                      </ion-col>
-                    </ion-row>
-                  </ion-grid>
-                </div>
-              </ion-card-content>
-            </ion-card>
+
+              <ion-grid class="">
+                <ion-row class="ion-align-items-center">
+                  <ion-col size="5">
+                    <ion-item class="form-input">
+                      <ion-label position="stacked">
+                        Desde *
+                        <span *ngIf="i === 0" class="locked-indicator text-xs italic text-[var(--ion-color-warning)] ml-2">(Bloqueado)</span>
+                        <span *ngIf="i > 0" class="auto-adjust-indicator text-xs italic text-[var(--ion-color-success)] ml-2">(Auto-ajuste)</span>
+                      </ion-label>
+                      <ion-input formControlName="minQuantity" type="number" placeholder="1" min="1">
+                      </ion-input>
+                    </ion-item>
+                  </ion-col>
+                  <ion-col size="5">
+                    <ion-item class="form-input">
+                      <ion-label position="stacked">Precio por Unidad *</ion-label>
+                      <ion-input formControlName="price" type="number" placeholder="0.00" min="0" step="0.01">
+                        <div slot="start">$</div>
+                      </ion-input>
+                    </ion-item>
+                  </ion-col>
+                  <ion-col size="2" class="ion-text-center">
+                    <ion-button fill="clear" color="danger" size="small" (click)="removeDynamicPriceRange(i)"
+                      [disabled]="!canRemoveDynamicPriceRange(i)">
+                      <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                    </ion-button>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </div>
           </div>
         </ion-card-content>
       </ion-card>
 
-      <!-- Card de Descripción con Quill -->
-      <ion-card class="mb-4">
-        <ion-card-header color="primary">
-          <ion-card-title class="flex items-center gap-2">
-            <ion-icon name="document-text-outline"></ion-icon>
-            Descripción
-          </ion-card-title>
-        </ion-card-header>
-        <ion-card-content class="mt-4">
-          <div class="w-full">
-            <quill-editor formControlName="description" placeholder="Describe tu producto..." [modules]="quillModules"
-              class="h-100 w-full"></quill-editor>
-          </div>
-        </ion-card-content>
-      </ion-card>
+
 
       <!-- Gestión de Variantes -->
-      <ion-card>
+      <ion-card *ngIf="productType() === 'variants'">
         <ion-card-header color="primary">
           <ion-card-title class="flex items-center gap-2">
             <ion-icon name="layers-outline"></ion-icon>
@@ -309,7 +309,7 @@
           </ion-card-title>
         </ion-card-header>
         <ion-card-content class="p-4">
-          <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center justify-between mb-3 mt-3">
             <div class="flex items-center gap-2">
               <ion-icon name="options-outline"></ion-icon>
               <strong>Atributo de Variación</strong>
@@ -364,10 +364,10 @@
                   </ion-button>
                 </ion-card-header>
                 <ion-card-content class="p-0">
-                  <ion-grid class="">
+                  <ion-grid class="mt-4">
                     <ion-row>
                       <ion-col size="12" size-md="4">
-                        <ion-item color="light" class="bg-light rounded-lg mb-2">
+                        <ion-item class="form-input">
                           <ion-label position="stacked">{{" Nombre de " + primaryAttributeType}}</ion-label>
                           <ion-input formControlName="name" placeholder="Nombre de la opción"
                             class="font-bold"></ion-input>
@@ -375,7 +375,7 @@
                       </ion-col>
                       @if(primaryAttributeType === 'color'){
                       <ion-col size="12" size-md="4">
-                        <ion-item color="light" class="bg-light rounded-lg mb-2">
+                        <ion-item class="form-input">
                           <ion-label position="stacked">Color a mostrar</ion-label>
                           <ion-input type="color" formControlName="colorHex" class="color-input"></ion-input>
                         </ion-item>
@@ -386,25 +386,29 @@
                     <ion-row>
 
                       <ion-col size="12" size-md="4">
-                        <ion-item color="light" class="bg-light rounded-lg mb-2">
+                        <ion-item class="form-input">
                           <ion-label position="stacked">SKU</ion-label>
-                          <ion-input formControlName="sku"></ion-input>
+                          <ion-input formControlName="sku" placeholder="EJ. RTS-300"></ion-input>
                         </ion-item>
                       </ion-col>
                       <ion-col size="12" size-md="4">
-                        <ion-item color="light" class="bg-light rounded-lg mb-2">
-                          <ion-label position="stacked">Precio *</ion-label>
-                          <ion-input formControlName="price" type="number"></ion-input>
+                        <ion-item class="form-input">
+                          <ion-label position="stacked">
+                            Precio *
+                          </ion-label>
+                          <ion-input formControlName="price" type="number" placeholder="0.00">
+                            <div slot="start">$</div>
+                          </ion-input>
                         </ion-item>
                       </ion-col>
                       <ion-col size="12" size-md="4">
-                        <ion-item color="light" class="bg-light rounded-lg mb-2">
+                        <ion-item class="form-input">
                           <ion-label position="stacked">Stock *</ion-label>
-                          <ion-input formControlName="stock" type="number"></ion-input>
+                          <ion-input formControlName="stock" type="number" placeholder="Ej. 30"></ion-input>
                         </ion-item>
                       </ion-col>
                       <ion-col size="12" size-md="4">
-                        <ion-item color="light" class="bg-light rounded-lg mb-2">
+                        <ion-item class="form-input">
                           <ion-label position="stacked">Estado</ion-label>
                           <ion-select formControlName="status" interface="popover">
                             <ion-select-option value="active">Activo</ion-select-option>
@@ -414,6 +418,76 @@
                         </ion-item>
                       </ion-col>
                     </ion-row>
+
+                    <!-- Toggle de precios dinámicos para variante -->
+                    <ion-row>
+                      <ion-col size="12">
+                        <ion-item color="light" class="bg-light rounded-lg mb-2">
+                          <ion-label>
+                            <h3>Precios Dinámicos para esta variante</h3>
+                            <p>Activa precios escalonados por cantidad para esta variante específica</p>
+                          </ion-label>
+                          <ion-checkbox formControlName="hasDynamicPricing" slot="end">
+                          </ion-checkbox>
+                        </ion-item>
+                      </ion-col>
+                    </ion-row>
+
+                    <!-- Sección de precios dinámicos de variante -->
+                    <div *ngIf="hasVariantDynamicPricing(i)" class="variant-dynamic-pricing mt-3">
+                      <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-sm font-semibold text-gray-700">Rangos de Precios</h4>
+                        <ion-button fill="outline" size="small" (click)="addVariantDynamicPriceRange(i)">
+                          <ion-icon name="add" slot="start"></ion-icon>
+                          Agregar Rango
+                        </ion-button>
+                      </div>
+
+                      <div formArrayName="dynamicPrices" class="price-ranges-list">
+                        <div class="price-range-row"
+                          *ngFor="let priceRange of getVariantDynamicPrices(i).controls; let rangeIndex = index"
+                          [formGroupName]="rangeIndex">
+
+                          <ion-grid class="">
+                            <ion-row class="ion-align-items-center">
+                              <ion-col size="5">
+                                <ion-item class="form-input">
+                                  <ion-label position="stacked">
+                                    Desde *
+                                  </ion-label>
+                                  <ion-input formControlName="minQuantity" type="number" placeholder="1" min="1">
+                                  </ion-input>
+                                </ion-item>
+                              </ion-col>
+                              <ion-col size="5">
+                                <ion-item class="form-input">
+                                  <ion-label position="stacked">Precio *</ion-label>
+                                  <ion-input formControlName="price" type="number" placeholder="0.00" min="0"
+                                    step="0.01">
+                                    <div slot="start">$</div>
+                                  </ion-input>
+                                </ion-item>
+                              </ion-col>
+                              <ion-col size="2" class="ion-text-center">
+                                <ion-button fill="clear" color="danger" size="small"
+                                  (click)="removeVariantDynamicPriceRange(i, rangeIndex)"
+                                  [disabled]="!canRemoveVariantDynamicPriceRange(rangeIndex)">
+                                  <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                                </ion-button>
+                              </ion-col>
+                            </ion-row>
+                          </ion-grid>
+                        </div>
+                      </div>
+
+                      <div *ngIf="hasVariantDynamicPricing(i)" class="info-alert blue mt-2 p-4 rounded flex items-start gap-3 bg-[#dbeafe] border-l-4 border-[#3b82f6] text-[#1e40af]" role="alert">
+                        <div class="icon text-[1.2rem] mt-[0.1rem]">💰</div>
+                        <div class="content flex-1">
+                          <p class="font-bold mb-1">Precios dinámicos activados para esta variante.</p>
+                          <p class="m-0">El precio base está bloqueado.</p>
+                        </div>
+                      </div>
+                    </div>
                   </ion-grid>
                 </ion-card-content>
               </ion-card>
@@ -428,6 +502,43 @@
           </div>
         </ion-card-content>
       </ion-card>
+
+      <!-- Card de Descripción con Quill -->
+      <ion-card class="mb-4">
+        <ion-card-header color="primary">
+          <ion-card-title class="flex items-center gap-2">
+            <ion-icon name="document-text-outline"></ion-icon>
+            Descripción
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content class="mt-4">
+          <div class="w-full">
+            <quill-editor formControlName="description" placeholder="Describe tu producto..." [modules]="quillModules"
+              class="h-100 w-full"></quill-editor>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Card de Estado -->
+      <ion-card class="mb-4">
+        <ion-card-header color="primary">
+          <ion-card-title class="flex items-center gap-2">
+            <ion-icon name="toggle-outline"></ion-icon>
+            Estado del Producto
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content class="mt-4">
+          <ion-item class="form-input">
+            <ion-label position="stacked">Estado</ion-label>
+            <ion-select formControlName="status" interface="popover">
+              <ion-select-option value="active">Activo</ion-select-option>
+              <ion-select-option value="paused">Pausado</ion-select-option>
+              <ion-select-option value="archived">Archivado</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-card-content>
+      </ion-card>
+
     </form>
   </div>
 </ion-content>

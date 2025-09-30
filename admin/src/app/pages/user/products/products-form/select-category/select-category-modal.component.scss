@@ -1,12 +1,18 @@
+// Ion-content padding
 ion-content {
-  padding: 16px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
 }
 
-ion-list {
-  margin-top: 16px;
+// Arrow hover effect for category cards
+ion-card:hover .arrow-icon {
+  transform: translateX(4px);
+  color: var(--ion-color-primary);
 }
 
-.selected-path {
-  margin-bottom: 12px;
-  font-size: 14px;
+// Ion-button text styling
+ion-button {
+  text-transform: none;
 }

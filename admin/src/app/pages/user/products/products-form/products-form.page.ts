@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef, NgZone, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray, AbstractControl, FormControl } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
@@ -10,7 +10,7 @@ import {
   ModalController, IonPopover, IonList, IonButton, IonIcon, IonRow, IonCol, IonGrid
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { save, cloudUploadOutline, folderOpenOutline, cameraOutline, trashOutline, addCircleOutline, add, informationCircleOutline, folderOutline, optionsOutline, colorPaletteOutline, resizeOutline, closeOutline, layersOutline, close, cubeOutline, documentTextOutline, warningOutline, checkmarkOutline } from 'ionicons/icons';
+import { save, cloudUploadOutline, folderOpenOutline, cameraOutline, trashOutline, addCircleOutline, add, informationCircleOutline, folderOutline, optionsOutline, colorPaletteOutline, resizeOutline, closeOutline, layersOutline, close, cubeOutline, documentTextOutline, warningOutline, checkmarkOutline, textOutline, toggleOutline } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { QuillModule } from 'ngx-quill';
 import { firstValueFrom, Subscription } from 'rxjs';
@@ -44,7 +44,6 @@ interface ExistingImage {
   templateUrl: './products-form.page.html',
   styleUrls: ['./products-form.page.scss'],
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, ReactiveFormsModule, FormsModule, QuillModule,
     IonHeader, IonToolbar, IonButtons, IonBackButton, IonTitle, IonContent,
@@ -62,19 +61,22 @@ export class ProductFormPage implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private toastCtrl = inject(ToastController);
-  private cdr = inject(ChangeDetectorRef);
   private modalCtrl = inject(ModalController);
 
   // Propiedades del componente
   productForm!: FormGroup;
-  isEditMode = false;
-  productId: string | null = null;
-  categories: Category[] = [];
-  selectedCategoryPath: Category[] = [];
-  imageFiles: ImageFile[] = [];
-  existingImages: ExistingImage[] = [];
-  imagesToDelete: ProductPhoto[] = []; // Objetos completos de imágenes a eliminar
-  isUploading = false;
+  
+  // Signals para propiedades reactivas
+  isEditMode = signal(false);
+  productId = signal<string | null>(null);
+  categories = signal<Category[]>([]);
+  selectedCategoryPath = signal<Category[]>([]);
+  imageFiles = signal<ImageFile[]>([]);
+  existingImages = signal<ExistingImage[]>([]);
+  imagesToDelete = signal<ProductPhoto[]>([]);
+  isUploading = signal(false);
+  productType = signal<'individual' | 'variants'>('individual');
+  
   private variantsSub: Subscription | undefined;
 
   // Configuración de Quill
@@ -87,7 +89,10 @@ export class ProductFormPage implements OnInit {
   };
 
   constructor() {
-    addIcons({ save, cameraOutline, addCircleOutline, trashOutline, folderOutline, informationCircleOutline, documentTextOutline, layersOutline, optionsOutline, add, colorPaletteOutline, resizeOutline, closeOutline, close, cloudUploadOutline, folderOpenOutline, cubeOutline, warningOutline, checkmarkOutline });
+    addIcons({save,cameraOutline,addCircleOutline,trashOutline,folderOutline,textOutline,
+      layersOutline,cubeOutline,informationCircleOutline,optionsOutline,add,closeOutline,
+      documentTextOutline,toggleOutline,colorPaletteOutline,resizeOutline,close,
+      cloudUploadOutline,folderOpenOutline,warningOutline,checkmarkOutline});
   }
 
   // --- Ciclo de Vida ---
@@ -160,6 +165,14 @@ export class ProductFormPage implements OnInit {
 
     // Suscripción para manejar el toggle de precios dinámicos
     this.productForm.get('hasDynamicPricing')?.valueChanges.subscribe(hasDynamicPricing => {
+      // Prevenir activar precios dinámicos del producto principal si hay variantes
+      if (hasDynamicPricing && this.hasVariants) {
+        // Revertir el cambio y mostrar mensaje
+        this.productForm.get('hasDynamicPricing')?.setValue(false, { emitEvent: false });
+        this.presentToast('No se pueden activar precios dinámicos del producto cuando hay variantes activas. Usa precios dinámicos por variante.', 'warning');
+        return;
+      }
+
       const priceControl = this.productForm.get('price');
       if (hasDynamicPricing) {
         // Deshabilitar el campo de precio base cuando se activan precios dinámicos
@@ -172,23 +185,29 @@ export class ProductFormPage implements OnInit {
           this.addInitialDynamicPriceRanges();
         }
       } else {
-        // Habilitar el campo de precio base cuando se desactivan precios dinámicos
-        priceControl?.enable();
-        // Restaurar validadores del precio base
-        priceControl?.setValidators([Validators.required, Validators.min(0)]);
+        // Al desactivar precios dinámicos, verificar si hay variantes para decidir si habilitar el precio base
+        if (!this.hasVariants) {
+          // Solo habilitar el campo de precio base si no hay variantes
+          priceControl?.enable();
+          // Restaurar validadores del precio base
+          priceControl?.setValidators([Validators.required, Validators.min(0)]);
+        } else {
+          // Si hay variantes, mantener el campo deshabilitado
+          priceControl?.disable();
+          priceControl?.clearValidators();
+        }
         priceControl?.updateValueAndValidity();
         // Limpiar rangos de precios dinámicos
         this.clearDynamicPrices();
       }
-      this.cdr.markForCheck();
     });
   }
 
   private checkEditMode() {
-    this.productId = this.route.snapshot.paramMap.get('id');
-    if (this.productId) {
-      this.isEditMode = true;
-      this.productsService.getProduct(this.productId)
+    this.productId.set(this.route.snapshot.paramMap.get('id'));
+    if (this.productId()) {
+      this.isEditMode.set(true);
+      this.productsService.getProduct(this.productId()!)
         .pipe(take(1))
         .subscribe(product => {
           if (product) {
@@ -201,11 +220,11 @@ export class ProductFormPage implements OnInit {
 
             // Cargar imágenes existentes
             if (product.photos && product.photos.length > 0) {
-              this.existingImages = product.photos.map((photo, index) => ({
+              this.existingImages.set(product.photos.map((photo, index) => ({
                 photo,
                 index,
                 previewUrl: photo.medium?.url || photo.large?.url || photo.small?.url || ''
-              }));
+              })));
             }
 
             // Cargar categoría seleccionada
@@ -219,17 +238,73 @@ export class ProductFormPage implements OnInit {
               variantsArray.clear();
 
               product.variants.forEach(variant => {
-                variantsArray.push(this.fb.group({
+                const hasDynamicPricing = variant.hasDynamicPricing || false;
+                
+                const variantGroup = this.fb.group({
                   id: [variant.id],
                   type: [this.getVariantType(variant)],
                   name: [variant.name, Validators.required],
                   colorHex: [variant.colorHex || null],
-                  sku: [variant.sku || '', Validators.required],
-                  price: [variant.price, [Validators.required, Validators.min(0)]],
+                  sku: [variant.sku || ''],
+                  price: hasDynamicPricing ? 
+                    [{ value: null, disabled: true }] : // Si tiene precios dinámicos, bloquear
+                    [variant.price, [Validators.required, Validators.min(0)]], // Si no, habilitar con valor existente
                   stock: [variant.stock, [Validators.required, Validators.min(0)]],
-                  status: [variant.status || 'active', Validators.required]
-                }));
+                  status: [variant.status || 'active', Validators.required],
+                  hasDynamicPricing: [hasDynamicPricing],
+                  dynamicPrices: this.fb.array([])
+                });
+
+                // Cargar precios dinámicos de variante si existen Y están activados
+                if (hasDynamicPricing && variant.dynamicPrices && variant.dynamicPrices.length > 0) {
+                  const dynamicPricesArray = variantGroup.get('dynamicPrices') as FormArray;
+                  
+                  variant.dynamicPrices.forEach((priceRange, index) => {
+                    const isFirstRange = index === 0;
+                    const rangeGroup = this.fb.group({
+                      id: [priceRange.id || Date.now().toString()],
+                      minQuantity: [
+                        { value: priceRange.minQuantity, disabled: isFirstRange },
+                        [Validators.required, Validators.min(1)]
+                      ],
+                      price: [priceRange.price, [Validators.required, Validators.min(0)]]
+                    });
+                    
+                    dynamicPricesArray.push(rangeGroup);
+
+                    // Agregar suscripción para auto-ajustar valores
+                    if (!isFirstRange) {
+                      rangeGroup.get('minQuantity')?.valueChanges.pipe(debounceTime(300)).subscribe(value => {
+                        if (value !== null && value !== undefined) {
+                          const variantIndex = variantsArray.controls.indexOf(variantGroup);
+                          this.adjustVariantMinQuantityValues(variantIndex, index);
+                        }
+                      });
+                    }
+                  });
+                }
+
+                // Suscripción para toggle de precios dinámicos
+                variantGroup.get('hasDynamicPricing')?.valueChanges.subscribe(hasDynamicPricing => {
+                  const variantIndex = variantsArray.controls.indexOf(variantGroup);
+                  this.toggleVariantDynamicPricing(variantIndex, !!hasDynamicPricing);
+                });
+
+                variantsArray.push(variantGroup);
               });
+
+              // Si hay variantes cargadas, asegurar que los campos del producto principal estén bloqueados
+              this.productForm.get('price')?.disable();
+              this.productForm.get('sku')?.disable();
+              
+              // Si hay variantes cargadas y precios dinámicos del producto están activos, desactivarlos
+              if (product.hasDynamicPricing) {
+                this.productForm.get('hasDynamicPricing')?.setValue(false, { emitEvent: true });
+                console.warn('Precios dinámicos del producto desactivados automáticamente debido a la presencia de variantes.');
+              }
+              
+              // Establecer tipo de producto como 'variants'
+              this.productType.set('variants');
             }
 
             // Cargar precios dinámicos existentes si los hay
@@ -243,19 +318,24 @@ export class ProductFormPage implements OnInit {
                   id: [priceRange.id || Date.now().toString()],
                   minQuantity: [
                     { value: priceRange.minQuantity, disabled: isFirstRange }, // El primer "desde" está bloqueado
-                    [Validators.required, Validators.min(1)]
+                    [Validators.required, Validators.min(1), this.minQuantityValidator.bind(this)]
                   ],
-                  maxQuantity: [priceRange.maxQuantity, [Validators.required, Validators.min(1)]],
                   price: [priceRange.price, [Validators.required, Validators.min(0)]]
                 });
                 
-                // Agregar validación de rango
-                rangeGroup.setValidators(this.rangeValidator.bind(this));
                 dynamicPricesArray.push(rangeGroup);
+
+                // Agregar suscripción para auto-ajustar valores cuando cambien
+                if (!isFirstRange) {
+                  rangeGroup.get('minQuantity')?.valueChanges.pipe(debounceTime(300)).subscribe(value => {
+                    if (value !== null && value !== undefined) {
+                      this.adjustMinQuantityValues(index);
+                    }
+                  });
+                }
               });
             }
 
-            this.cdr.markForCheck();
           }
         });
     }
@@ -274,8 +354,7 @@ export class ProductFormPage implements OnInit {
       const flatCategories = this.flattenCategories(categories);
       const category = flatCategories.find(cat => cat.id === categoryId);
       if (category) {
-        this.selectedCategoryPath = this.buildCategoryPath(category, flatCategories);
-        this.cdr.markForCheck();
+        this.selectedCategoryPath.set(this.buildCategoryPath(category, flatCategories));
       }
     });
   }
@@ -296,13 +375,65 @@ export class ProductFormPage implements OnInit {
     return path;
   }
 
+  // --- Gestión de Tipo de Producto ---
+  changeProductType(type: 'individual' | 'variants') {
+    this.productType.set(type);
+    
+    if (type === 'individual') {
+      // Limpiar y reiniciar valores para modo individual
+      this.resetToIndividualMode();
+    } else if (type === 'variants') {
+      // Limpiar y reiniciar valores para modo variantes
+      this.resetToVariantsMode();
+    }
+  }
+
+  private resetToIndividualMode() {
+    this.clearAllVariants();
+    this.setProductFieldsState(true, null, '', 0);
+    this.productForm.get('hasDynamicPricing')?.setValue(false);
+    this.clearDynamicPrices();
+  }
+
+  private resetToVariantsMode() {
+    this.productForm.get('hasDynamicPricing')?.setValue(false);
+    this.clearDynamicPrices();
+    this.setProductFieldsState(false, null, '', 0);
+    this.clearAllVariants();
+  }
+
+  private setProductFieldsState(enabled: boolean, priceValue: any, skuValue: string, stockValue: number) {
+    const priceControl = this.productForm.get('price');
+    const skuControl = this.productForm.get('sku');
+    
+    enabled ? priceControl?.enable() : priceControl?.disable();
+    enabled ? skuControl?.enable() : skuControl?.disable();
+    
+    priceControl?.setValue(priceValue);
+    skuControl?.setValue(skuValue);
+    this.productForm.get('stock')?.setValue(stockValue);
+  }
+
+  private clearAllVariants() { this.variants.clear(); }
+
   // --- Gestión de Variantes ---
   addVariant(type: 'color' | 'size' | 'material') {
     if (this.hasVariants) return; // Solo permite un tipo de atributo
+    
+    // Cambiar automáticamente a tipo 'variants'
+    this.productType.set('variants');
 
-    this.productForm.get('price')?.setValue(0, { emitEvent: false });
+    // Desactivar precios dinámicos del producto principal cuando se activan variantes
+    if (this.hasDynamicPricing) {
+      this.productForm.get('hasDynamicPricing')?.setValue(false, { emitEvent: true });
+    }
+
+    // Bloquear campos del producto principal cuando hay variantes
+    this.productForm.get('price')?.setValue(null, { emitEvent: false });
+    this.productForm.get('price')?.disable();
     this.productForm.get('stock')?.setValue(0, { emitEvent: false });
     this.productForm.get('sku')?.setValue('', { emitEvent: false });
+    this.productForm.get('sku')?.disable();
 
     this.addVariantOption(type);
   }
@@ -320,139 +451,273 @@ export class ProductFormPage implements OnInit {
       name = `Talla ${index}`;
     }
 
-    this.variants.push(this.fb.group({
+    const variantGroup = this.fb.group({
       id: [newId],
       type: [type],
       name: [name, Validators.required],
       colorHex: [colorHex],
-      sku: ['', Validators.required],
-      price: [null, [Validators.required, Validators.min(0)]],
+      sku: [''],
+      price: [null, [Validators.required, Validators.min(0)]], // Precio habilitado por defecto
       stock: [null, [Validators.required, Validators.min(0)]],
       status: ['active', Validators.required],
-      totalSales:[0]
-    }));
+      totalSales: [0],
+      hasDynamicPricing: [false], // No activar precios dinámicos por defecto
+      dynamicPrices: this.fb.array([])
+    });
+
+    this.variants.push(variantGroup);
+
+    // Suscripción para manejar precios dinámicos en variantes
+    const variantIndex = this.variants.length - 1;
+    variantGroup.get('hasDynamicPricing')?.valueChanges.subscribe(hasDynamicPricing => {
+      this.toggleVariantDynamicPricing(variantIndex, !!hasDynamicPricing);
+    });
   }
 
   removeVariant(index: number) {
     if (this.variants.length > 1) {
       this.variants.removeAt(index);
+      
+      // Si después de eliminar una variante no quedan más, rehabilitar campos del producto principal
+      if (this.variants.length === 0) {
+        this.productForm.get('price')?.enable();
+        this.productForm.get('price')?.setValue(null);
+        this.productForm.get('sku')?.enable();
+        this.productForm.get('price')?.setValidators([Validators.required, Validators.min(0)]);
+        this.productForm.get('price')?.updateValueAndValidity();
+      }
     }
   }
 
   removeAllVariants() {
     this.variants.clear();
+    
+    // Rehabilitar los campos del producto principal
+    this.productForm.get('price')?.enable();
     this.productForm.get('price')?.setValue(null);
-    this.productForm.get('stock')?.setValue(null);
+    this.productForm.get('sku')?.enable();
     this.productForm.get('sku')?.setValue('');
+    this.productForm.get('stock')?.setValue(null);
+    
+    // Restaurar validadores del precio base
+    this.productForm.get('price')?.setValidators([Validators.required, Validators.min(0)]);
+    this.productForm.get('price')?.updateValueAndValidity();
+    
+    // Cuando se eliminan todas las variantes, permitir nuevamente precios dinámicos del producto principal
   }
 
   // --- Gestión de Precios Dinámicos ---
   addInitialDynamicPriceRanges() {
     // Agregar dos rangos iniciales automáticamente
-    this.addDynamicPriceRangeWithValues(1, 10, null); // Primer rango: 1-10
-    this.addDynamicPriceRangeWithValues(11, 50, null); // Segundo rango: 11-50
+    this.addDynamicPriceRangeWithValues(1, null); // Primer rango: desde 1 unidad
+    this.addDynamicPriceRangeWithValues(10, null); // Segundo rango: desde 10 unidades
   }
 
   addDynamicPriceRange() {
-    const currentRanges = this.dynamicPrices.value as DynamicPriceRange[];
+    const currentRanges = this.dynamicPrices.controls.map(control => control.getRawValue()) as DynamicPriceRange[];
     let minQuantity = 1;
-    let maxQuantity = 10;
     
     // Si hay rangos existentes, calcular la siguiente cantidad mínima
     if (currentRanges.length > 0) {
-      // Ordenar por maxQuantity y tomar el último
-      const sortedRanges = currentRanges.sort((a, b) => a.maxQuantity - b.maxQuantity);
+      // Ordenar por minQuantity y tomar el último + 1
+      const sortedRanges = currentRanges.sort((a, b) => a.minQuantity - b.minQuantity);
       const lastRange = sortedRanges[sortedRanges.length - 1];
-      minQuantity = lastRange.maxQuantity + 1;
-      maxQuantity = minQuantity + 9;
+      minQuantity = lastRange.minQuantity + 1;
     }
 
-    this.addDynamicPriceRangeWithValues(minQuantity, maxQuantity, null);
+    this.addDynamicPriceRangeWithValues(minQuantity, null);
   }
 
-  private addDynamicPriceRangeWithValues(minQuantity: number, maxQuantity: number, price: number | null) {
-    const isFirstRange = this.dynamicPrices.length === 0;
-    
-    const newRange = this.fb.group({
-      id: [Date.now().toString() + '_' + this.dynamicPrices.length],
-      minQuantity: [
-        { value: minQuantity, disabled: isFirstRange }, // El primer "desde" está bloqueado
-        [Validators.required, Validators.min(1)]
-      ],
-      maxQuantity: [maxQuantity, [Validators.required, Validators.min(1)]],
-      price: [price, [Validators.required, Validators.min(0)]]
-    });
 
-    // Agregar validación de rango al FormGroup
-    newRange.setValidators(this.rangeValidator.bind(this));
 
-    this.dynamicPrices.push(newRange);
+  private addDynamicPriceRangeWithValues(minQuantity: number, price: number | null) {
+    this.createPriceRange(this.dynamicPrices, minQuantity, price, 
+      (index) => this.adjustMinQuantityValues(index));
   }
 
-  // Validador para asegurar que minQuantity < maxQuantity
-  private rangeValidator(control: AbstractControl): { [key: string]: any } | null {
-    if (!control.get('minQuantity') || !control.get('maxQuantity')) {
-      return null;
+  // Validador para asegurar que minQuantity sea mayor que el anterior
+  private minQuantityValidator(control: AbstractControl): { [key: string]: any } | null {
+    if (!control.value || control.disabled) {
+      return null; // No validar si está vacío o deshabilitado
     }
 
-    const minQuantity = control.get('minQuantity')!.value;
-    const maxQuantity = control.get('maxQuantity')!.value;
+    const currentIndex = this.dynamicPrices.controls.findIndex(c => c === control.parent);
+    if (currentIndex <= 0) {
+      return null; // No validar el primer elemento
+    }
 
-    if (minQuantity && maxQuantity && minQuantity >= maxQuantity) {
-      return { invalidRange: true };
+    const previousRange = this.dynamicPrices.at(currentIndex - 1).getRawValue();
+    if (control.value <= previousRange.minQuantity) {
+      return { minQuantityTooLow: true };
     }
 
     return null;
   }
 
-  // Validar que no haya solapamiento entre rangos
+
+
+  // Validar que cada minQuantity sea mayor que el anterior
   validateDynamicPricesRanges(): boolean {
     // Usar getRawValue() para incluir campos deshabilitados
     const ranges = this.dynamicPrices.controls.map(control => control.getRawValue()) as DynamicPriceRange[];
     
-    for (let i = 0; i < ranges.length; i++) {
-      for (let j = i + 1; j < ranges.length; j++) {
-        const range1 = ranges[i];
-        const range2 = ranges[j];
-        
-        // Verificar solapamiento
-        if (
-          (range1.minQuantity <= range2.maxQuantity && range1.maxQuantity >= range2.minQuantity) ||
-          (range2.minQuantity <= range1.maxQuantity && range2.maxQuantity >= range1.minQuantity)
-        ) {
-          return false; // Hay solapamiento
-        }
+    // Ordenar por minQuantity para verificar secuencia
+    const sortedRanges = ranges.sort((a, b) => a.minQuantity - b.minQuantity);
+    
+    for (let i = 1; i < sortedRanges.length; i++) {
+      const currentRange = sortedRanges[i];
+      const previousRange = sortedRanges[i - 1];
+      
+      // Verificar que el minQuantity actual sea mayor que el anterior
+      if (currentRange.minQuantity <= previousRange.minQuantity) {
+        return false; // minQuantity no es mayor que el anterior
       }
     }
     
-    return true; // No hay solapamiento
+    return true; // Secuencia correcta
   }
 
-  removeDynamicPriceRange(index: number) {
-    // Solo permitir eliminar a partir del tercer ítem (índice 2)
-    if (index >= 2) {
-      this.dynamicPrices.removeAt(index);
+  // Métodos unificados para manejo de rangos
+  removeDynamicPriceRange(index: number) { if (index >= 2) this.dynamicPrices.removeAt(index); }
+  canRemoveDynamicPriceRange(index: number): boolean { return index >= 2; }
+  clearDynamicPrices() { this.dynamicPrices.clear(); }
+  
+  removeVariantDynamicPriceRange(variantIndex: number, rangeIndex: number) {
+    if (rangeIndex >= 2) {
+      const variantGroup = this.variants.at(variantIndex);
+      const dynamicPricesArray = variantGroup.get('dynamicPrices') as FormArray;
+      dynamicPricesArray.removeAt(rangeIndex);
+    }
+  }
+  canRemoveVariantDynamicPriceRange(rangeIndex: number): boolean { return rangeIndex >= 2; }
+
+  // Métodos para manejar precios dinámicos en variantes
+  toggleVariantDynamicPricing(variantIndex: number, hasDynamicPricing: boolean) {
+    const variantGroup = this.variants.at(variantIndex);
+    const priceControl = variantGroup.get('price');
+    const dynamicPricesArray = variantGroup.get('dynamicPrices') as FormArray;
+
+    if (hasDynamicPricing) {
+      // Deshabilitar precio base y usar precios dinámicos
+      priceControl?.setValue(null, { emitEvent: false });
+      priceControl?.disable();
+      priceControl?.clearValidators();
+      priceControl?.updateValueAndValidity();
+      
+      if (dynamicPricesArray.length === 0) {
+        this.addVariantDynamicPriceRange(variantIndex);
+        this.addVariantDynamicPriceRange(variantIndex);
+      }
+    } else {
+      // Habilitar precio base para precio fijo
+      priceControl?.enable();
+      priceControl?.setValue(null, { emitEvent: false });
+      priceControl?.setValidators([Validators.required, Validators.min(0)]);
+      priceControl?.updateValueAndValidity();
+      
+      // Limpiar rangos de precios dinámicos
+      dynamicPricesArray.clear();
     }
   }
 
-  canRemoveDynamicPriceRange(index: number): boolean {
-    // Solo permitir eliminar a partir del tercer ítem (índice 2)
-    return index >= 2;
+  addVariantDynamicPriceRange(variantIndex: number) {
+    const variantGroup = this.variants.at(variantIndex);
+    const dynamicPricesArray = variantGroup.get('dynamicPrices') as FormArray;
+    
+    const currentRanges = dynamicPricesArray.controls.map(control => control.getRawValue()) as DynamicPriceRange[];
+    let minQuantity = 1;
+    
+    if (currentRanges.length > 0) {
+      const sortedRanges = currentRanges.sort((a, b) => a.minQuantity - b.minQuantity);
+      const lastRange = sortedRanges[sortedRanges.length - 1];
+      minQuantity = currentRanges.length === 1 ? 10 : lastRange.minQuantity + 1;
+    } else {
+      minQuantity = currentRanges.length === 0 ? 1 : 10;
+    }
+
+    this.addVariantDynamicPriceRangeWithValues(variantIndex, minQuantity, null);
   }
 
-  clearDynamicPrices() {
-    this.dynamicPrices.clear();
+  private addVariantDynamicPriceRangeWithValues(variantIndex: number, minQuantity: number, price: number | null) {
+    const variantGroup = this.variants.at(variantIndex);
+    const dynamicPricesArray = variantGroup.get('dynamicPrices') as FormArray;
+    this.createPriceRange(dynamicPricesArray, minQuantity, price, 
+      (index) => this.adjustVariantMinQuantityValues(variantIndex, index));
   }
 
-  toggleDynamicPricing() {
-    const currentValue = this.productForm.get('hasDynamicPricing')?.value;
-    this.productForm.get('hasDynamicPricing')?.setValue(!currentValue);
+
+
+  private adjustVariantMinQuantityValues(variantIndex: number, changedIndex: number) {
+    if (changedIndex === 0) return;
+    const variantGroup = this.variants.at(variantIndex);
+    const dynamicPricesArray = variantGroup.get('dynamicPrices') as FormArray;
+    this.adjustPriceSequence(dynamicPricesArray.controls, changedIndex);
+  }
+
+
+
+  getVariantDynamicPrices(variantIndex: number): FormArray {
+    const variantGroup = this.variants.at(variantIndex);
+    return variantGroup.get('dynamicPrices') as FormArray;
+  }
+
+  hasVariantDynamicPricing(variantIndex: number): boolean {
+    const variantGroup = this.variants.at(variantIndex);
+    return variantGroup.get('hasDynamicPricing')?.value || false;
+  }
+
+  private adjustMinQuantityValues(changedIndex: number) {
+    if (changedIndex === 0) return;
+    this.adjustPriceSequence(this.dynamicPrices.controls, changedIndex);
+  }
+
+  // Método para ajustar valores subsecuentes
+  // Método unificado para crear rangos de precios
+  private createPriceRange(formArray: FormArray, minQuantity: number, price: number | null, 
+                          adjustCallback: (index: number) => void) {
+    const isFirstRange = formArray.length === 0;
+    const validators = isFirstRange ? 
+      [Validators.required, Validators.min(1), this.minQuantityValidator.bind(this)] :
+      [Validators.required, Validators.min(1)];
+    
+    const newRange = this.fb.group({
+      id: [Date.now().toString() + '_' + formArray.length],
+      minQuantity: [{ value: minQuantity, disabled: isFirstRange }, validators],
+      price: [price, [Validators.required, Validators.min(0)]]
+    });
+
+    formArray.push(newRange);
+
+    if (!isFirstRange) {
+      const currentIndex = formArray.length - 1;
+      newRange.get('minQuantity')?.valueChanges.pipe(debounceTime(300)).subscribe(value => {
+        if (value !== null && value !== undefined) adjustCallback(currentIndex);
+      });
+    }
+  }
+
+  // Método unificado para ajustar secuencias de precios
+  private adjustPriceSequence(controls: AbstractControl[], startIndex: number) {
+    for (let i = Math.max(1, startIndex); i < controls.length; i++) {
+      const currentControl = controls[i].get('minQuantity');
+      const previousControl = controls[i - 1]?.get('minQuantity');
+      
+      if (currentControl && previousControl && !currentControl.disabled) {
+        const previousValue = previousControl.disabled ? previousControl.value : previousControl.getRawValue();
+        const currentValue = currentControl.value;
+        
+        if (currentValue <= previousValue) {
+          const newValue = previousValue + 1;
+          currentControl.setValue(newValue, { emitEvent: false });
+        }
+      }
+    }
   }
 
   // --- Gestión de Categorías ---
   private loadCategories() {
     this.categoriesService.getCategories().subscribe(cats => {
-      this.categories = this.flattenCategories(cats);
+      this.categories.set(this.flattenCategories(cats));
     });
   }
 
@@ -470,25 +735,29 @@ export class ProductFormPage implements OnInit {
   async openCategorySelectionModal(isEditing: boolean = false) {
     const modal = await this.modalCtrl.create({
       component: SelectCategoryModalComponent,
-      componentProps: isEditing ? { initialPath: this.selectedCategoryPath } : undefined
+      componentProps: isEditing ? { initialPath: this.selectedCategoryPath() } : undefined
     });
     await modal.present();
 
     const { data, role } = await modal.onWillDismiss();
     if (role === 'confirm' && data?.length) {
-      this.selectedCategoryPath = data;
+      this.selectedCategoryPath.set(data);
       this.productForm.get('categoryId')?.setValue(data[data.length - 1].id);
     } else if (role === 'confirm') {
-      this.selectedCategoryPath = [];
+      this.selectedCategoryPath.set([]);
       this.productForm.get('categoryId')?.setValue(null);
     }
-    this.cdr.markForCheck();
   }
 
   // --- Gestión de Imágenes ---
   async onFileSelected(event: Event) {
-    const files = (event.target as HTMLInputElement).files;
-    if (files) this.handleFiles(Array.from(files));
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
+    if (files) {
+      this.handleFiles(Array.from(files));
+      // Limpiar el valor del input para permitir seleccionar la misma imagen de nuevo
+      input.value = '';
+    }
   }
 
   async takePicture() {
@@ -510,7 +779,7 @@ export class ProductFormPage implements OnInit {
   }
 
   private handleFiles(files: File[]) {
-    if (this.isUploading) return;
+    if (this.isUploading()) return;
     files.forEach(file => {
       const fileWrapper: ImageFile = {
         file,
@@ -518,13 +787,13 @@ export class ProductFormPage implements OnInit {
         uploading: false,
         progress: 0
       };
-      this.imageFiles.push(fileWrapper);
+      this.imageFiles.update(files => [...files, fileWrapper]);
       this.uploadFile(fileWrapper);
     });
   }
 
   private async uploadFile(fileWrapper: ImageFile) {
-    this.isUploading = true;
+    this.isUploading.set(true);
     fileWrapper.uploading = true;
     try {
       const user = await firstValueFrom(this.authService.user$);
@@ -545,16 +814,16 @@ export class ProductFormPage implements OnInit {
       } as NewPhoto));
     } catch (error) {
       console.error('Error uploading image:', error);
-      this.imageFiles = this.imageFiles.filter(fw => fw !== fileWrapper);
+      this.imageFiles.update(files => files.filter(fw => fw !== fileWrapper));
     } finally {
       fileWrapper.uploading = false;
-      this.isUploading = this.imageFiles.some(f => f.uploading);
-      this.cdr.markForCheck();
+      this.isUploading.set(this.imageFiles().some(f => f.uploading));
     }
   }
 
   async removeImage(index: number) {
-    const fileWrapper = this.imageFiles[index];
+    const files = this.imageFiles();
+    const fileWrapper = files[index];
     if (fileWrapper.tempPath) {
       try {
         await this.productsService.deleteTempImage(fileWrapper.tempPath);
@@ -563,34 +832,31 @@ export class ProductFormPage implements OnInit {
         if (photoIndex > -1) photos.removeAt(photoIndex);
       } catch (error) {
         console.error('Error deleting temp image', error);
-      } finally {
-        this.cdr.markForCheck();
-
       }
     }
-    this.imageFiles.splice(index, 1);
+    this.imageFiles.update(files => files.filter((_, i) => i !== index));
   }
 
   removeExistingImage(index: number) {
-    const existingImage = this.existingImages[index];
+    const existingImages = this.existingImages();
+    const existingImage = existingImages[index];
     if (existingImage) {
       // Agregar el objeto completo de la imagen a la lista de eliminación
-      this.imagesToDelete.push(existingImage.photo);
+      this.imagesToDelete.update(images => [...images, existingImage.photo]);
 
       // Eliminar la imagen del array visualmente
-      this.existingImages.splice(index, 1);
-      this.cdr.markForCheck();
+      this.existingImages.update(images => images.filter((_, i) => i !== index));
     }
   }
 
   // --- Guardado del Producto ---
   async saveProduct() {
-    if (this.productForm.invalid || this.isUploading) {
+    if (this.productForm.invalid || this.isUploading()) {
       this.presentToast('Por favor, completa el formulario y espera a que terminen de subirse las imágenes.', 'warning');
       return;
     }
 
-    // Validaciones específicas para precios dinámicos
+    // Validaciones específicas para precios dinámicos del producto
     if (this.hasDynamicPricing) {
       if (this.dynamicPrices.length === 0) {
         this.presentToast('Debes agregar al menos un rango de precios dinámicos.', 'warning');
@@ -598,12 +864,11 @@ export class ProductFormPage implements OnInit {
       }
 
       if (!this.validateDynamicPricesRanges()) {
-        this.presentToast('Los rangos de cantidad no pueden solaparse entre sí.', 'warning');
+        this.presentToast('Cada cantidad "Desde" debe ser mayor que la anterior.', 'warning');
         return;
       }
 
       // Verificar que el primer rango empiece desde 1
-      // Obtenemos el valor raw para incluir campos deshabilitados
       const ranges = this.dynamicPrices.controls.map(control => control.getRawValue()) as DynamicPriceRange[];
       const sortedRanges = ranges.sort((a, b) => a.minQuantity - b.minQuantity);
       if (sortedRanges[0].minQuantity !== 1) {
@@ -612,12 +877,53 @@ export class ProductFormPage implements OnInit {
       }
     }
 
+    // Validaciones para variantes
+    const variantsArray = this.productForm.get('variants') as FormArray;
+    for (let i = 0; i < variantsArray.length; i++) {
+      const variantGroup = variantsArray.at(i);
+      const hasDynamicPricing = variantGroup.get('hasDynamicPricing')?.value;
+      
+      if (hasDynamicPricing) {
+        // Si tiene precios dinámicos, validar rangos
+        const dynamicPricesArray = variantGroup.get('dynamicPrices') as FormArray;
+        
+        if (dynamicPricesArray.length === 0) {
+          this.presentToast(`La variante "${variantGroup.get('name')?.value}" debe tener al menos un rango de precios dinámicos.`, 'warning');
+          return;
+        }
+
+        // Validar secuencia de precios dinámicos de la variante
+        const variantRanges = dynamicPricesArray.controls.map(control => control.getRawValue()) as DynamicPriceRange[];
+        const sortedVariantRanges = variantRanges.sort((a, b) => a.minQuantity - b.minQuantity);
+        
+        if (sortedVariantRanges[0].minQuantity !== 1) {
+          this.presentToast(`El primer rango de la variante "${variantGroup.get('name')?.value}" debe empezar desde 1.`, 'warning');
+          return;
+        }
+
+        // Validar secuencia creciente
+        for (let j = 1; j < sortedVariantRanges.length; j++) {
+          if (sortedVariantRanges[j].minQuantity <= sortedVariantRanges[j - 1].minQuantity) {
+            this.presentToast(`Los rangos de la variante "${variantGroup.get('name')?.value}" deben tener una secuencia creciente.`, 'warning');
+            return;
+          }
+        }
+      } else {
+        // Si no tiene precios dinámicos, validar que tenga precio fijo
+        const priceValue = variantGroup.get('price')?.value;
+        if (!priceValue || priceValue <= 0) {
+          this.presentToast(`La variante "${variantGroup.get('name')?.value}" debe tener un precio válido.`, 'warning');
+          return;
+        }
+      }
+    }
+
     try {
       // Obtener solo los campos que existen en el formulario
       const formData = this.getFormData();
 
-      if (this.isEditMode && this.productId) {
-        await this.productsService.updateProduct(this.productId, formData);
+      if (this.isEditMode() && this.productId()) {
+        await this.productsService.updateProduct(this.productId()!, formData);
         this.presentToast('Producto actualizado con éxito', 'success');
       } else {
         formData.totalSales = 0
@@ -648,14 +954,25 @@ export class ProductFormPage implements OnInit {
 
     // Manejar fotos
     let photos = this.productForm.get('photos')?.value || [];
-    if (this.isEditMode) {
+    if (this.isEditMode()) {
       // Para modo edición, combinar imágenes existentes restantes con nuevas fotos
-      const remainingPhotos = this.existingImages.map(img => img.photo);
+      const remainingPhotos = this.existingImages().map(img => img.photo);
       photos = [...remainingPhotos, ...photos];
     }
 
-    // Manejar variantes
-    const variants = this.productForm.get('variants')?.value || [];
+    // Manejar variantes - usar getRawValue() para incluir campos deshabilitados
+    const variantsArray = this.productForm.get('variants') as FormArray;
+    const variants = variantsArray.controls.map(control => {
+      const variantData = control.getRawValue();
+      
+      // Para cada variante, obtener también los precios dinámicos con getRawValue()
+      if (variantData.hasDynamicPricing) {
+        const dynamicPricesArray = control.get('dynamicPrices') as FormArray;
+        variantData.dynamicPrices = dynamicPricesArray.controls.map(priceControl => priceControl.getRawValue());
+      }
+      
+      return variantData;
+    }) || [];
 
     // Manejar precios dinámicos - usar getRawValue() para incluir campos deshabilitados
     const dynamicPricesArray = this.productForm.get('dynamicPrices') as FormArray;
@@ -673,39 +990,25 @@ export class ProductFormPage implements OnInit {
     };
 
     // Agregar imagesToDelete solo si hay imágenes para eliminar (modo edición)
-    if (this.isEditMode && this.imagesToDelete.length > 0) {
-      productData.imagesToDelete = [...this.imagesToDelete];
+    if (this.isEditMode() && this.imagesToDelete().length > 0) {
+      productData.imagesToDelete = [...this.imagesToDelete()];
     }
 
     return productData;
   }
 
   // --- Utilidades ---
-  trackById(index: number, item: { value: { id: string } }): string {
-    return item.value.id;
-  }
-
-  getActiveImages(): ExistingImage[] {
-    return this.existingImages; // Ya no hay imágenes marcadas, solo las que quedan en el array
-  }
-
-  getMarkedForDeletionCount(): number {
-    // El conteo se basa directamente en la longitud del array de objetos
-    return this.imagesToDelete.length;
-  }
-
+  trackById(index: number, item: { value: { id: string } }): string { return item.value.id; }
+  getActiveImages(): ExistingImage[] { return this.existingImages(); }
+  
   async presentToast(message: string, color: 'success' | 'warning' | 'danger') {
     const toast = await this.toastCtrl.create({ message, duration: 3000, color, position: 'top' });
     toast.present();
   }
 
-  // Generate URL-friendly slug from text
   private generateSlug(text: string): string {
-    return text.toString().toLowerCase()
-      .replace(/\s+/g, '-')           // Replace spaces with -
-      .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-      .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-      .replace(/^-+/, '')             // Trim - from start of text
-      .replace(/-+$/, '');            // Trim - from end of text
+    return text.toLowerCase()
+      .replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-')
+      .replace(/^-+/, '').replace(/-+$/, '');
   }
 }

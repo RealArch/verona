@@ -1,241 +1,4 @@
-// Category selection
-.selected-path {
-  .flex {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    background: var(--ion-color-light);
-    border-radius: 8px;
-    margin-top: 0.5rem;
-  }
-}
-
-// Attributes section
-.attribute-block {
-
-  .attribute-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1rem;
-
-    .attribute-title {
-      margin: 0;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--ion-color-dark);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-
-      &::before {
-        content: '';
-        width: 4px;
-        height: 20px;
-        background: var(--ion-color-primary);
-        border-radius: 2px;
-      }
-    }
-  }
-
-  .options-grid {
-    display: grid;
-    gap: 0.75rem;
-
-    .option-item {
-      background: white;
-      border-radius: 8px;
-      border: 1px solid var(--ion-color-light-shade);
-
-      ion-item {
-        --background: transparent;
-        --border-width: 0;
-        --padding-start: 1rem;
-        --padding-end: 1rem;
-      }
-
-      .flex {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      input[type="color"] {
-        border: 2px solid var(--ion-color-light-shade);
-        border-radius: 4px;
-        cursor: pointer;
-        overflow: hidden;
-      }
-    }
-  }
-}
-
-// Variants section
-.variants-grid {
-  display: grid;
-  gap: 1rem;
-
-  .variant-card {
-    background: white;
-    border: 1px solid var(--ion-color-light-shade);
-    border-radius: 12px;
-    padding: 1rem;
-    transition: all 0.2s ease;
-
-    &:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .variant-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid var(--ion-color-light);
-
-      .variant-name {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 600;
-        color: var(--ion-color-dark);
-      }
-    }
-
-    .variant-fields {
-      .grid {
-        display: grid;
-        gap: 0.75rem;
-      }
-
-      ion-item {
-        --background: var(--ion-color-light);
-        --border-radius: 8px;
-        --border-width: 0;
-        margin-bottom: 0.5rem;
-      }
-    }
-  }
-}
-
-// Nueva UI para variantes anidadas
-.variant-block {
-  background: white;
-  border: 1px solid var(--ion-color-light-shade);
-  border-radius: 12px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-
-  .primary-option-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--ion-color-light);
-
-    h4 {
-      margin: 0;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--ion-color-dark);
-    }
-  }
-
-  .secondary-options {
-    margin-top: 1rem;
-
-    h5 {
-      margin: 0 0 0.5rem 0;
-      font-size: 1rem;
-      font-weight: 500;
-      color: var(--ion-color-medium-shade);
-    }
-
-    .secondary-options-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-
-      .secondary-option-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        background: var(--ion-color-light);
-        padding: 0.5rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.875rem;
-
-        span {
-          color: var(--ion-color-dark);
-        }
-      }
-    }
-  }
-}
-
-// Estilos para productos por atributo
-.products-for-attribute {
-  margin-top: 1rem;
-  
-  .products-list {
-    .product-item {
-      background: var(--ion-color-light);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border: 1px solid var(--ion-color-light-shade);
-      
-      .product-fields {
-        ion-item {
-          --background: white;
-          --border-radius: 6px;
-          --border-width: 0;
-          margin-bottom: 0.5rem;
-        }
-      }
-      
-      // Estilo para botón de eliminar disabled
-      ion-button[disabled] {
-        opacity: 0.4;
-        pointer-events: none;
-        
-        ion-icon {
-          opacity: 0.5;
-        }
-      }
-    }
-  }
-}
-
-.color-circle {
-  width: 20px;
-  height: 20px;
-  aspect-ratio: 1/1;
-  border: none;
-  border-radius: 50%;
-  padding: 0;
-  cursor: pointer;
-  background: none;
-  box-shadow: 0 0 0 2px #ddd;
-  appearance: none;
-}
-
-/* Elimina el borde interno en algunos navegadores */
-.color-circle::-webkit-color-swatch-wrapper {
-  padding: 0;
-  border-radius: 50%;
-}
-.color-circle::-webkit-color-swatch {
-  border: none;
-  border-radius: 50%;
-}
-.color-circle::-moz-color-swatch {
-  border: none;
-  border-radius: 50%;
-}
+// Solo mantener estilos específicos que no se pueden replicar directamente con Tailwind o requieren variables de Ionic
 .background-color-select {
   position: absolute;
   // top: 0;
@@ -289,140 +52,162 @@ ion-input.color-input {
   }
 }
 
-// Estilos para precios dinámicos
+// Estilos para precios dinámicos: mantener solo lo que no es utilitario
 .dynamic-pricing-section {
   .pricing-toggle {
-    padding: 1rem;
     border-radius: 12px;
     background: var(--ion-color-light-tint);
     border: 2px solid var(--ion-color-light-shade);
     margin-bottom: 1rem;
+    transition: all 0.3s ease;
     
-    ion-label h2 {
-      margin: 0 0 0.5rem 0;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--ion-color-dark);
-    }
-    
-    ion-label p {
-      margin: 0;
-      font-size: 0.9rem;
-      color: var(--ion-color-medium-shade);
+    &.disabled-section {
+      opacity: 0.6;
+      background: var(--ion-color-light);
+      border-color: var(--ion-color-medium);
+      
+      ion-label h2 { color: var(--ion-color-medium); }
     }
   }
 }
 
-.price-range-card {
-  border: 2px solid var(--ion-color-light-shade) !important;
-  border-radius: 12px;
+
+
+// Alertas: migradas a Tailwind en plantilla
+
+// Indicadores: estilos utilitarios movidos a la plantilla
+
+// Estilos para precios dinámicos de variantes
+.variant-dynamic-pricing {
+  background: var(--ion-color-light-tint);
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid var(--ion-color-light-shade);
+  
+  h4 {
+    margin: 0;
+    color: var(--ion-color-dark);
+  }
+}
+
+// .variant-price-range: utilitarios reemplazados con Tailwind en la plantilla
+
+// Product type selection styles
+.product-type-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 1rem;
   background: white;
-  transition: all 0.2s ease;
-  position: relative;
-  overflow: hidden;
-  
+  border: 2px solid var(--ion-color-light-shade);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  height: 100%;
+
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: var(--ion-color-primary);
+    background: var(--ion-color-light);
   }
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 4px;
-    height: 100%;
-    background: linear-gradient(45deg, var(--ion-color-primary), var(--ion-color-secondary));
-  }
-  
-  ion-card-header {
-    background: var(--ion-color-light-tint);
-    border-bottom: 1px solid var(--ion-color-light-shade);
+
+  &.selected {
+    border-color: var(--ion-color-primary);
+    background: var(--ion-color-primary);
+    
+    .option-icon ion-icon {
+      color: white;
+    }
     
     h3 {
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--ion-color-dark);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      
-      &::before {
-        content: '💰';
-        font-size: 1.2rem;
-      }
+      color: white;
     }
-  }
-  
-  .range-inputs {
-    ion-item {
-      --background: var(--ion-color-light);
-      --border-radius: 8px;
-      margin-bottom: 0.75rem;
-      
-      ion-label {
-        font-weight: 500;
-        font-size: 0.9rem;
-      }
-      
-      ion-input {
-        font-weight: 600;
-      }
-    }
-  }
-}
-
-// Alertas de información
-.info-alert {
-  padding: 1rem;
-  border-radius: 8px;
-  margin-top: 1rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  
-  &.yellow {
-    background: #fef3cd;
-    border-left: 4px solid #fbbf24;
-    color: #92400e;
-  }
-  
-  &.blue {
-    background: #dbeafe;
-    border-left: 4px solid #3b82f6;
-    color: #1e40af;
-  }
-  
-  &.red {
-    background: #fee2e2;
-    border-left: 4px solid #ef4444;
-    color: #991b1b;
-  }
-  
-  .icon {
-    font-size: 1.2rem;
-    margin-top: 0.1rem;
-  }
-  
-  .content {
-    flex: 1;
     
     p {
-      margin: 0;
+      color: white;
+    }
+  }
+
+  .option-icon {
+    margin-bottom: 1rem;
+    
+    ion-icon {
+      font-size: 2.5rem;
+      color: var(--ion-color-medium);
+      transition: color 0.3s ease;
+    }
+  }
+
+  h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ion-color-dark);
+    transition: color 0.3s ease;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--ion-color-medium);
+    line-height: 1.4;
+  }
+}
+
+// Compact dynamic pricing styles
+.price-ranges-list {
+  .price-range-row {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--ion-color-light-shade);
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    ion-button {
+      height: 36px;
+      width: 36px;
       
-      &.font-bold {
-        font-weight: 600;
-        margin-bottom: 0.25rem;
+      &:disabled {
+        opacity: 0.3;
+        
+        ion-icon {
+          color: var(--ion-color-medium);
+        }
+      }
+      
+      &:not(:disabled):hover {
+        --background: var(--ion-color-danger-tint);
       }
     }
   }
 }
 
-// Indicador de campo bloqueado
-.locked-indicator {
-  font-size: 0.75rem;
-  color: var(--ion-color-medium);
-  font-weight: normal;
-  font-style: italic;
+// Unified input styling
+.form-input {
+  --background: var(--ion-color-light) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  margin-bottom: 0.5rem !important;
+  --padding-start: 16px !important;
+  --padding-end: 16px !important;
+
+  
+  ion-label {
+    --color: var(--ion-color-dark);
+    margin-bottom: 8px !important;
+    font-weight: 500;
+    
+    // Indicadores movidos a utilitarios en plantilla
+  }
+  
+  ion-input,
+  ion-select {
+    --padding-start: 0 !important;
+    --padding-end: 0 !important;
+    --padding-top: 8px !important;
+    --padding-bottom: 8px !important;
+    --color: var(--ion-color-dark);
+  }
 }
+
