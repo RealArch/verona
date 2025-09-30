@@ -16,6 +16,9 @@ export interface Product {
     variationAttributes?: VariationAttribute[];
     variants?: ProductVariant[]; // combinaciones generadas de atributos
     pausedVariantsCount: number; // Número de variantes en estado 'paused'
+    // Precios dinámicos
+    hasDynamicPricing?: boolean; // Toggle para activar precios dinámicos
+    dynamicPrices?: DynamicPriceRange[]; // Rangos de precios por cantidad
 }
 
 
@@ -35,8 +38,9 @@ export interface newProduct {
     variationAttributes?: VariationAttribute[];
     variants?: ProductVariant[];
     pausedVariantsCount: number;
-    
-
+    // Precios dinámicos
+    hasDynamicPricing?: boolean; // Toggle para activar precios dinámicos
+    dynamicPrices?: DynamicPriceRange[]; // Rangos de precios por cantidad
 }
 
 
@@ -58,6 +62,13 @@ export interface ProductVariant {
     status: 'active' | 'paused' | 'archived';
     stock: number;
 
+}
+
+export interface DynamicPriceRange {
+    id?: string;
+    minQuantity: number; // Cantidad mínima del rango
+    maxQuantity: number; // Cantidad máxima del rango (null para infinito)
+    price: number; // Precio para este rango
 }
 
 export type ProductStatus = 'active' | 'paused' | 'archived';

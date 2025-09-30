@@ -288,3 +288,141 @@ ion-input.color-input {
     }
   }
 }
+
+// Estilos para precios dinámicos
+.dynamic-pricing-section {
+  .pricing-toggle {
+    padding: 1rem;
+    border-radius: 12px;
+    background: var(--ion-color-light-tint);
+    border: 2px solid var(--ion-color-light-shade);
+    margin-bottom: 1rem;
+    
+    ion-label h2 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+    }
+    
+    ion-label p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--ion-color-medium-shade);
+    }
+  }
+}
+
+.price-range-card {
+  border: 2px solid var(--ion-color-light-shade) !important;
+  border-radius: 12px;
+  background: white;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(45deg, var(--ion-color-primary), var(--ion-color-secondary));
+  }
+  
+  ion-card-header {
+    background: var(--ion-color-light-tint);
+    border-bottom: 1px solid var(--ion-color-light-shade);
+    
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      
+      &::before {
+        content: '💰';
+        font-size: 1.2rem;
+      }
+    }
+  }
+  
+  .range-inputs {
+    ion-item {
+      --background: var(--ion-color-light);
+      --border-radius: 8px;
+      margin-bottom: 0.75rem;
+      
+      ion-label {
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+      
+      ion-input {
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// Alertas de información
+.info-alert {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  
+  &.yellow {
+    background: #fef3cd;
+    border-left: 4px solid #fbbf24;
+    color: #92400e;
+  }
+  
+  &.blue {
+    background: #dbeafe;
+    border-left: 4px solid #3b82f6;
+    color: #1e40af;
+  }
+  
+  &.red {
+    background: #fee2e2;
+    border-left: 4px solid #ef4444;
+    color: #991b1b;
+  }
+  
+  .icon {
+    font-size: 1.2rem;
+    margin-top: 0.1rem;
+  }
+  
+  .content {
+    flex: 1;
+    
+    p {
+      margin: 0;
+      
+      &.font-bold {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+    }
+  }
+}
+
+// Indicador de campo bloqueado
+.locked-indicator {
+  font-size: 0.75rem;
+  color: var(--ion-color-medium);
+  font-weight: normal;
+  font-style: italic;
+}
