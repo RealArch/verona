@@ -5,6 +5,7 @@ import { defineSecret } from 'firebase-functions/params';
 import { syncDocumentAlgolia, removeDocumentAlgolia } from '../utils/syncWithAlgolia';
 import { processCategoriesImages } from '../utils/processImages';
 import { db, storage } from '../firebase-init';
+import { FieldValue } from 'firebase-admin/firestore';
 
 // Define los secrets
 const algoliaAdminKey = defineSecret("ALGOLIA_ADMIN_KEY");
@@ -14,6 +15,43 @@ const algoliaAppId = defineSecret("ALGOLIA_APP_ID");
 const CATEGORIES_ALGOLIA_INDEX = !process.env.FUNCTIONS_EMULATOR ? 'categories_prod' : 'categories_dev';
 
 const categoriesRouter: Router = Router();
+
+// Helper: elimina recursivamente todas las subcategorías de una categoría dada en dos fases
+// Fase 1: marcar hijos directos con internalCascadeDelete y COMMIT
+// Fase 2: procesar recursivamente descendientes
+// Fase 3: borrar hijos directos en batch y COMMIT
+async function deleteSubcategoriesRecursiveBatch(parentCategoryId: string): Promise<number> {
+  let deletedCount = 0;
+  const subcatsSnap = await db
+    .collection('categories')
+    .where('parentId', '==', parentCategoryId)
+    .get();
+  if (subcatsSnap.empty) return 0;
+
+  // Fase 1: marcar hijos
+  const markBatch = db.batch();
+  for (const doc of subcatsSnap.docs) {
+    markBatch.update(doc.ref, { internalCascadeDelete: true });
+  }
+  await markBatch.commit();
+
+  // Fase 2: eliminar descendientes de cada hijo
+  for (const doc of subcatsSnap.docs) {
+    const childId = doc.id;
+    deletedCount += await deleteSubcategoriesRecursiveBatch(childId);
+  }
+
+  // Fase 3: borrar hijos directos
+  const deleteBatch = db.batch();
+  for (const doc of subcatsSnap.docs) {
+    deleteBatch.delete(doc.ref);
+    deletedCount += 1;
+    console.log(`[Categories] Deleted child category ${doc.id} (parent ${parentCategoryId})`);
+  }
+  await deleteBatch.commit();
+
+  return deletedCount;
+}
 
 categoriesRouter.post('/', async (req: Request, res: Response) => {
   try {
@@ -62,11 +100,12 @@ export const onCategoryCreated = onDocumentCreated({ document: "categories/{cate
     const batch = db.batch();
     const categoryId = event.params.categoryId;
     const categoryRef = db.collection("categories").doc(categoryId);
+    const countersRef = db.collection("metadata").doc("counters");
 
-    //Sync with algolia
+    // Sync with algolia
     syncDocumentAlgolia(CATEGORIES_ALGOLIA_INDEX, categoryId, data, adminKey, appId);
 
-    //
+    // Process image if exists
     if (data.image) {
       const processedPhoto = await processCategoriesImages(categoryId, data.image);
       batch.update(categoryRef, {
@@ -75,9 +114,13 @@ export const onCategoryCreated = onDocumentCreated({ document: "categories/{cate
       });
     }
 
+    // Incrementar contador de categorías (merge para crear doc/campo si no existe)
+    batch.set(countersRef, {
+      categories: FieldValue.increment(1)
+    }, { merge: true });
 
-    batch.commit()
-
+    console.log(`[Categories] Created category ${categoryId}, incrementing counter`);
+    await batch.commit();
   })
 
 export const onCategoryUpdated = onDocumentUpdated({ document: "categories/{categoryId}", secrets: [algoliaAdminKey, algoliaAppId] },
@@ -151,15 +194,20 @@ export const onCategoryUpdated = onDocumentUpdated({ document: "categories/{cate
 export const onCategoryDeleted = onDocumentDeleted({ document: "categories/{categoryId}", secrets: [algoliaAdminKey, algoliaAppId] },
   async (event) => {
     const data = event.data?.data();
-    
     if (!data) {
       console.log("No data associated with the event");
       return;
     }
-
     const adminKey = algoliaAdminKey.value();
     const appId = algoliaAppId.value();
     const categoryId = event.params.categoryId;
+    const countersRef = db.collection("metadata").doc("counters");
+
+    // Si el borrado es interno (por cascada), NO decrementar contador (ya lo hace el padre)
+    if (data.internalCascadeDelete) {
+      console.log(`[Categories] Internal cascade delete for ${categoryId}, skipping counter (handled by parent)`);
+      return;
+    }
 
     // Remover de Algolia
     removeDocumentAlgolia(CATEGORIES_ALGOLIA_INDEX, categoryId, adminKey, appId);
@@ -174,7 +222,22 @@ export const onCategoryDeleted = onDocumentDeleted({ document: "categories/{cate
       }
     }
 
-    console.log(`Category ${categoryId} deleted successfully`);
+    // Eliminar recursivamente subcategorías en batch
+    let totalDeleted = 1; // La categoría actual
+    try {
+      const removed = await deleteSubcategoriesRecursiveBatch(categoryId);
+      totalDeleted += removed;
+      console.log(`[Categories] Recursively batch removed ${removed} descendant categories for ${categoryId}`);
+    } catch (err) {
+      console.error(`[Categories] Error recursively removing descendants for ${categoryId}:`, err);
+    }
+
+    // Decrementar contador por todas las categorías eliminadas (merge para crear doc/campo si no existe)
+    await countersRef.set({
+      categories: FieldValue.increment(-totalDeleted)
+    }, { merge: true });
+
+    console.log(`Category ${categoryId} deleted successfully. Total categories removed: ${totalDeleted}`);
   })
 
 export default categoriesRouter;

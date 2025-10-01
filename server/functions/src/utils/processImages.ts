@@ -1,6 +1,6 @@
 import { storage } from "../firebase-init";
 import { ProductPhoto } from "../interfaces/productPhoto";
-import { CategoryPhoto } from "../interfaces/categoryPhoto";
+import { CategoryImage } from "../interfaces/category.interface";
 import sharp from "sharp";
 
 
@@ -92,7 +92,7 @@ export async function processProductImages(productId: string, photos: ProductPho
     return processedPhotos;
 }
 
-export async function processCategoriesImages(categoryId: string, photo: CategoryPhoto): Promise<CategoryPhoto> {
+export async function processCategoriesImages(categoryId: string, photo: CategoryImage): Promise<CategoryImage> {
     if (!photo.processing || !photo.path) {
         return photo;
     }

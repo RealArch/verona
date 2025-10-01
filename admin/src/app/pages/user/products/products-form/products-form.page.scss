@@ -1,14 +1,5 @@
 // Solo mantener estilos específicos que no se pueden replicar directamente con Tailwind o requieren variables de Ionic
-.background-color-select {
-  position: absolute;
-  // top: 0;
-  // left: 0;
-  // width: 100px;
-  height: 100%;
-  width: 100px;
-  // min-height: 200px;
-  // pointer-events: none;
-}
+// background color strip moved to Tailwind classes in template
 
 /* Estilos para ion-input como color picker rectangular */
 ion-input.color-input {
@@ -52,24 +43,7 @@ ion-input.color-input {
   }
 }
 
-// Estilos para precios dinámicos: mantener solo lo que no es utilitario
-.dynamic-pricing-section {
-  .pricing-toggle {
-    border-radius: 12px;
-    background: var(--ion-color-light-tint);
-    border: 2px solid var(--ion-color-light-shade);
-    margin-bottom: 1rem;
-    transition: all 0.3s ease;
-    
-    &.disabled-section {
-      opacity: 0.6;
-      background: var(--ion-color-light);
-      border-color: var(--ion-color-medium);
-      
-      ion-label h2 { color: var(--ion-color-medium); }
-    }
-  }
-}
+// pricing toggle util styles moved to template
 
 
 
@@ -154,34 +128,7 @@ ion-input.color-input {
   }
 }
 
-// Compact dynamic pricing styles
-.price-ranges-list {
-  .price-range-row {
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--ion-color-light-shade);
-    
-    &:last-child {
-      border-bottom: none;
-    }
-    
-    ion-button {
-      height: 36px;
-      width: 36px;
-      
-      &:disabled {
-        opacity: 0.3;
-        
-        ion-icon {
-          color: var(--ion-color-medium);
-        }
-      }
-      
-      &:not(:disabled):hover {
-        --background: var(--ion-color-danger-tint);
-      }
-    }
-  }
-}
+// price ranges row util styles moved to template
 
 // Unified input styling
 .form-input {

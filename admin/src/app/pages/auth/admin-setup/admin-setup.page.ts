@@ -12,8 +12,7 @@ import { personAddOutline, warningOutline } from 'ionicons/icons';
   templateUrl: './admin-setup.page.html',
   styleUrls: ['./admin-setup.page.scss'],
   standalone: true,
-  imports: [IonToolbar, IonTitle, IonHeader, 
-    IonSpinner, IonInput, IonButton, IonLabel, IonIcon,
+  imports: [IonSpinner, IonInput, IonButton, IonLabel, IonIcon,
     IonContent, CommonModule, ReactiveFormsModule,
   ]
 })

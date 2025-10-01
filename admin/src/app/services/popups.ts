@@ -39,4 +39,27 @@ export class Popups {
     await alert.present();
   }
 
+  async confirm(header: string, message: string, confirmText = 'Sí, eliminar', cancelText = 'Cancelar'): Promise<boolean> {
+    return new Promise(async (resolve) => {
+      const alert = await this.alertController.create({
+        header,
+        message,
+        backdropDismiss: false,
+        buttons: [
+          {
+            text: cancelText,
+            role: 'cancel',
+            handler: () => resolve(false)
+          },
+          {
+            text: confirmText,
+            role: 'confirm',
+            handler: () => resolve(true)
+          }
+        ]
+      });
+      await alert.present();
+    });
+  }
+
 }

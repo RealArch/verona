@@ -11,7 +11,7 @@ import { AuthService } from 'src/app/services/auth.service';
   templateUrl: './auth.page.html',
   styleUrls: ['./auth.page.scss'],
   standalone: true,
-  imports: [IonRouterOutlet, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
+  imports: [IonRouterOutlet, CommonModule, FormsModule]
 })
 export class AuthPage implements OnInit {
   private router = inject(Router);

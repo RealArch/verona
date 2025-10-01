@@ -27,7 +27,7 @@ import { CurrencyPipe } from '@angular/common';
     CommonModule, FormsModule, RouterLink, CurrencyPipe,
     IonHeader, IonToolbar, IonButtons, IonMenuButton, IonTitle, IonContent,
     IonSegment, IonSegmentButton, IonLabel, IonList, IonItemSliding, IonItem,
-    IonThumbnail, IonNote, IonItemOptions, IonItemOption, IonIcon, IonFab,
+    IonThumbnail, IonItemOptions, IonItemOption, IonIcon, IonFab,
     IonFabButton, IonSpinner
   ]
 })
@@ -51,6 +51,29 @@ export class ProductsPage implements OnInit {
 
   ngOnInit() {
     this.loadProducts();
+  }
+
+  // Precio a mostrar para producto (single)
+  displayProductPrice(product: Product): number {
+    const hasDynamic = (product as any).hasDynamicPricing as boolean | undefined;
+    const dynamicPrices = (product as any).dynamicPrices as Array<{ price: number }> | undefined;
+    if (hasDynamic && Array.isArray(dynamicPrices) && dynamicPrices.length > 0) {
+      // Mostrar el primer item del array de precios dinámicos
+      const first = dynamicPrices[0];
+      return typeof first?.price === 'number' ? first.price : (product.price ?? 0);
+    }
+    return product.price ?? 0;
+  }
+
+  // Precio a mostrar para variante
+  displayVariantPrice(variant: any): number {
+    const hasDynamic = !!variant?.hasDynamicPricing;
+    const dynamicPrices = variant?.dynamicPrices as Array<{ price: number }> | undefined;
+    if (hasDynamic && Array.isArray(dynamicPrices) && dynamicPrices.length > 0) {
+      const first = dynamicPrices[0];
+      return typeof first?.price === 'number' ? first.price : (variant?.price ?? 0);
+    }
+    return variant?.price ?? 0;
   }
 
   loadProducts() {

@@ -168,14 +168,17 @@
         <ion-card-content class="space-y-4 pt-4">
 
           <!-- Toggle de precios dinámicos -->
-          <div class="dynamic-pricing-section mt-5">
-            <ion-item class="pricing-toggle" [class.disabled-section]="hasVariants" lines="none">
+          <div class="mt-5">
+            <ion-item
+              class="rounded-[12px] bg-[var(--ion-color-light-tint)] border-2 border-[var(--ion-color-light-shade)] mb-4 transition-all"
+              [ngClass]="hasVariants ? 'opacity-60 bg-[var(--ion-color-light)] border-[var(--ion-color-medium)]' : ''"
+              lines="none">
 
               <ion-checkbox formControlName="hasDynamicPricing" [disabled]="hasVariants" labelPlacement="start">
-                <h2>Precios Dinámicos por Cantidad</h2>
+                <h2 [ngClass]="hasVariants ? 'text-[var(--ion-color-medium)]' : ''">Precios Dinámicos por Cantidad</h2>
                 <p *ngIf="!hasVariants">Activa esta opción para configurar precios diferentes según la cantidad comprada
                 </p>
-                <p *ngIf="hasVariants" class="text-warning">
+                <p *ngIf="hasVariants" class="text-[var(--ion-color-warning)] font-medium">
                   No disponible con variantes activas. Usa precios dinámicos por variante.
                 </p>
               </ion-checkbox>
@@ -260,8 +263,8 @@
             <p class="mt-2">Configura precios escalonados por cantidad.</p>
           </div>
 
-          <div formArrayName="dynamicPrices" class="price-ranges-list">
-            <div class="price-range-row" *ngFor="let priceRange of dynamicPrices.controls; let i = index"
+          <div formArrayName="dynamicPrices">
+            <div class="py-2 border-b border-[var(--ion-color-light-shade)] last:border-b-0" *ngFor="let priceRange of dynamicPrices.controls; let i = index"
               [formGroupName]="i">
 
               <ion-grid class="">
@@ -347,11 +350,11 @@
               <ion-card class="variant-card mb-4 mx-0" style="border: 1px solid rgb(221, 221, 221);"
                 *ngFor="let variant of variants.controls; let i = index; trackBy: trackById" [formGroupName]="i">
                 @if(primaryAttributeType === 'color'){
-                <div [ngStyle]="{'background-color': variant.value.colorHex}" class="background-color-select">
+                <div [ngStyle]="{'background-color': variant.value.colorHex}" class="absolute h-full w-[100px]">
 
                 </div>
                 } @else {
-                <div [ngStyle]="{'background-color': 'grey'}" class="background-color-select">
+                <div [ngStyle]="{'background-color': 'grey'}" class="absolute h-full w-[100px]">
 
                 </div>
                 }
@@ -443,8 +446,8 @@
                         </ion-button>
                       </div>
 
-                      <div formArrayName="dynamicPrices" class="price-ranges-list">
-                        <div class="price-range-row"
+                      <div formArrayName="dynamicPrices">
+                        <div class="py-2 border-b border-[var(--ion-color-light-shade)] last:border-b-0"
                           *ngFor="let priceRange of getVariantDynamicPrices(i).controls; let rangeIndex = index"
                           [formGroupName]="rangeIndex">
 

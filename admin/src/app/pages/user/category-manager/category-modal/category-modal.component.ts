@@ -1,7 +1,7 @@
 import { Component, inject, Input, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonLabel, IonInput, ModalController, IonSpinner, IonIcon, IonImg } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonLabel, IonInput, ModalController, IonSpinner, IonIcon, IonImg, IonFooter, IonButtons } from '@ionic/angular/standalone';
 import { CategoriesService } from '../../../../services/categories.service';
 import { ProductsService } from 'src/app/services/products.service';
 import { AuthService } from 'src/app/services/auth.service';
@@ -24,7 +24,7 @@ interface ImageUpload {
   standalone: true,
   imports: [
     IonInput, IonLabel, IonItem, IonButton, IonContent, IonHeader, IonTitle,
-    IonToolbar, CommonModule, FormsModule, ReactiveFormsModule, IonSpinner, IonIcon, IonImg
+    IonToolbar, IonFooter, IonButtons, CommonModule, FormsModule, ReactiveFormsModule, IonSpinner, IonIcon, IonImg
   ]
 })
 export class CategoryModalComponent implements OnInit {
@@ -42,6 +42,8 @@ export class CategoryModalComponent implements OnInit {
   imageUpload: ImageUpload | null = null;
   private originalImagePath?: string; // Para detectar si la imagen cambió
 
+  isSaving = false;
+
   constructor() {
     addIcons({ cameraOutline, trashOutline });
   }
@@ -49,7 +51,6 @@ export class CategoryModalComponent implements OnInit {
   ngOnInit() {
     this.categoryForm = this.fb.group({
       name: [this.category?.name || '', Validators.required],
-      description: [this.category?.description || ''],
       image: [this.category?.image || null]
     });
 
@@ -138,56 +139,51 @@ export class CategoryModalComponent implements OnInit {
   }
 
   async save() {
-    if (this.categoryForm.invalid) {
+    if (this.categoryForm.invalid || this.isSaving) {
       return;
     }
-
-    const formData = this.categoryForm.value;
-    
-    // Detectar si la imagen cambió en una categoría principal
-    const isMainCategory = !this.parentId;
-    let imageChanged = false;
-    
-    if (isMainCategory) {
-      const currentImagePath = formData.image?.path;
-      const originalPath = this.originalImagePath;
-      
-      // La imagen cambió si:
-      // 1. Antes no había imagen y ahora sí
-      // 2. Antes había imagen y ahora no
-      // 3. La ruta de la imagen cambió
-      imageChanged = (
-        (!originalPath && currentImagePath) || 
-        (originalPath && !currentImagePath) || 
-        (originalPath !== currentImagePath)
-      );
-      
-      // Si hay imagen y cambió, asegurar que processing sea true
-      if (formData.image && imageChanged) {
-        formData.image.processing = true;
-      } else if (formData.image && !imageChanged) {
-        // Si no cambió, mantener processing en false
-        formData.image.processing = false;
+    this.isSaving = true;
+    try {
+      const formData = this.categoryForm.value;
+      // Detectar si la imagen cambió en una categoría principal
+      const isMainCategory = !this.parentId;
+      let imageChanged = false;
+      if (isMainCategory) {
+        const currentImagePath = formData.image?.path;
+        const originalPath = this.originalImagePath;
+        imageChanged = (
+          (!originalPath && currentImagePath) || 
+          (originalPath && !currentImagePath) || 
+          (originalPath !== currentImagePath)
+        );
+        if (formData.image && imageChanged) {
+          formData.image.processing = true;
+        } else if (formData.image && !imageChanged) {
+          formData.image.processing = false;
+        }
       }
-    }
-
-    if (this.category) {
-      // Para actualización, asegurar que parentId sea "root" si es categoría principal
-      if (!this.parentId) {
-        formData.parentId = "root";
+      if (this.category) {
+        if (!this.parentId) {
+          formData.parentId = "root";
+        }
+        await this.categoriesService.updateCategory(this.category.id!, formData);
+      } else {
+        const newCategory: Partial<Category> = {
+          name: formData.name,
+          parentId: this.parentId || "root",
+          order: 0,
+          image: formData.image
+        };
+        await this.categoriesService.addCategory(newCategory);
       }
-      await this.categoriesService.updateCategory(this.category.id!, formData);
-    } else {
-      const newCategory: Partial<Category> = {
-        name: formData.name,
-        description: formData.description,
-        parentId: this.parentId || "root", // Usar "root" en lugar de null
-        order: 0, // Deberías implementar una lógica para el orden
-        image: formData.image
-      };
-      await this.categoriesService.addCategory(newCategory);
+      this.modalController.dismiss();
+    } catch (error) {
+      // Puedes mostrar un toast aquí si quieres
+      console.error('Error saving category:', error);
+    } finally {
+      this.isSaving = false;
+      this.cdr.markForCheck();
     }
-    this.modalController.dismiss();
   }
 
   cancel() {

@@ -56,15 +56,17 @@
                 <ion-col class="py-0">
                   <p style="line-height: 12px;">SKU: {{ product.sku || "N/A"}} | Total stock: {{ product.stock }}</p>
                   @if(product.variants?.length == 0) {
-                  <p>{{ product.price | currency:'USD' }}</p>
+                      <p>{{ displayProductPrice(product) | currency:'USD' }}</p>
                   } @else {
-                  @for(variant of product.variants; track variant.id) {
-                  <div class="inline-flex align-items-center color-container">
-                    <div class="colorBox" [style.background]="variant.colorHex"></div>
-                    <div class="ps-1 text-xs">{{ variant.price| currency:'USD' }} / {{ variant.stock }}</div>
+                    @for(variant of product.variants; track variant.id) {
+                      <div class="inline-flex align-items-center color-container">
+                        <div class="colorBox" [style.background]="variant.colorHex"></div>
+                        <div class="ps-1 text-xs">
+                          {{ displayVariantPrice(variant) | currency:'USD' }} / {{ variant.stock }}
+                        </div>
 
-                  </div>
-                  }
+                      </div>
+                    }
                   }
                 </ion-col>
                 <ion-col class="py-0">

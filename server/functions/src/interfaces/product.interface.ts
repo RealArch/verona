@@ -1,26 +1,55 @@
+import { ProductPhoto } from './productPhoto';
+
 export interface Product {
     id?: string;
-    objectID?: string;
-    categoryId: string;
-    description: string;
     name: string;
-    pausedVariantsCount: number;
-    photos: PhotosArray[];
+    slug: string; // URL-friendly version of the name
+    description?: string;
     price: number;
-    processing: boolean;
-    sku: string;
+    stock: number;
+    sku?: string;
+    categoryId: string;
     status: string;
-    stock: string;
-    totalSales: number;
-    variants: ProductVariant[];
-    slug: string;
-    minPrice: number; 
-    maxPrice: number; 
+    photos: ProductPhoto[];
+    processing?: boolean;
+    // Atributos de variación (p.ej., Color, Talla) y combinaciones (variants)
+    variationAttributes?: VariationAttribute[];
+    variants?: ProductVariant[]; // combinaciones generadas de atributos
+    pausedVariantsCount: number; // Número de variantes en estado 'paused'
+    // Precios dinámicos
+    hasDynamicPricing?: boolean; // Toggle para activar precios dinámicos
+    dynamicPrices?: DynamicPriceRange[]; // Rangos de precios por cantidad
 }
 
+
+export interface newProduct {
+    id?: string;
+    name: string;
+    description?: string;
+    stock: number;
+    sku?: string;
+    categories: string[];
+    status: string;
+    photos: ProductPhoto[];
+    processing: boolean;
+    slug: string;
+    tags?: string[];
+    price: number;
+    variationAttributes?: VariationAttribute[];
+    variants?: ProductVariant[];
+    pausedVariantsCount: number;
+    // Precios dinámicos
+    hasDynamicPricing?: boolean; // Toggle para activar precios dinámicos
+    dynamicPrices?: DynamicPriceRange[]; // Rangos de precios por cantidad
+}
+
+
+
 export interface VariationAttribute {
+    // id: string;            // slug o id único: color, size
     name: string;          // Etiqueta visible: Color, Talla
-    type: 'color' | 'size' | 'material' | 'custom';
+    type?: 'color' | 'size' | 'material' | 'custom';
+    // options: VariationOption[]; // Valores disponibles (Rojo, Azul, S, M, L)
 }
 
 
@@ -32,23 +61,15 @@ export interface ProductVariant {
     sku?: string;
     status: 'active' | 'paused' | 'archived';
     stock: number;
+    // Precios dinámicos para variantes
+    hasDynamicPricing?: boolean;
+    dynamicPrices?: DynamicPriceRange[];
+}
 
+export interface DynamicPriceRange {
+    id?: string;
+    minQuantity: number; // Cantidad desde la cual aplica este precio
+    price: number; // Precio para este rango
 }
 
 export type ProductStatus = 'active' | 'paused' | 'archived';
-
-export interface PhotosArray {
-    large: ProductPhoto;
-    medium: ProductPhoto;
-    small: ProductPhoto;
-    thumbnail: ProductPhoto;
-    processing: boolean;
-}
-
-export interface ProductPhoto {
-    name: string;
-    path: string;
-    url: string;
-    type: string;
-    processing: boolean;
-}

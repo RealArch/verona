@@ -1,103 +1,78 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>Dashboard</ion-title>
+<ion-header >
+  <ion-toolbar color="primary">
+    <ion-title>Resumen</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-
-
-  <div class="p-6">
-    <div class="mb-8">
-      <h1 class="text-2xl font-bold text-gray-900 mb-2">Bienvenido al Panel de Administración</h1>
-      <p class="text-gray-600">Desde aquí puedes gestionar todas las categorías de tu aplicación.</p>
-    </div>
-
-    <!-- Estadísticas -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div class="card">
-        <div class="flex items-center">
-          <div class="flex-shrink-0 p-3 rounded-lg bg-blue-100">
-            <ion-icon name="stats-chart" class="h-6 w-6 text-blue-600"></ion-icon>
+  <ion-grid class="p-4">
+    <ion-row class="ion-justify-content-center ion-align-items-stretch">
+      <!-- Admin Users -->
+      <ion-col size="12" size-md="6" size-lg="3" class="mb-4">
+        <div class="h-full rounded-xl border border-transparent bg-gradient-to-br from-indigo-50 to-white p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="text-xs uppercase tracking-wide text-gray-500">Usuarios Admin</div>
+              <div class="text-3xl font-bold text-gray-800">{{ counters()?.adminUsers ?? 0 }}</div>
+            </div>
+            <ion-icon name="people" class="text-indigo-500 text-3xl"></ion-icon>
           </div>
-          <div class="ml-4">
-            <h2 class="text-2xl font-bold text-gray-900">150</h2>
-            <p class="text-sm text-gray-600">Categorías totales</p>
-          </div>
+          <div class="text-[11px] text-gray-400 mt-3">Actualizado en tiempo real</div>
         </div>
-      </div>
+      </ion-col>
 
-      <div class="card">
-        <div class="flex items-center">
-          <div class="flex-shrink-0 p-3 rounded-lg bg-green-100">
-            <ion-icon name="layers" class="h-6 w-6 text-green-600"></ion-icon>
+      <!-- Categories -->
+      <ion-col size="12" size-md="6" size-lg="3" class="mb-4">
+        <div class="h-full rounded-xl border border-transparent bg-gradient-to-br from-purple-50 to-white p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="text-xs uppercase tracking-wide text-gray-500">Categorías</div>
+              <div class="text-3xl font-bold text-gray-800">{{ counters()?.categories ?? 0 }}</div>
+            </div>
+            <ion-icon name="layers" class="text-purple-500 text-3xl"></ion-icon>
           </div>
-          <div class="ml-4">
-            <h2 class="text-2xl font-bold text-gray-900">5</h2>
-            <p class="text-sm text-gray-600">Niveles de categorías</p>
-          </div>
+          <div class="text-[11px] text-gray-400 mt-3">Actualizado en tiempo real</div>
         </div>
-      </div>
+      </ion-col>
 
-      <div class="card">
-        <div class="flex items-center">
-          <div class="flex-shrink-0 p-3 rounded-lg bg-yellow-100">
-            <ion-icon name="time" class="h-6 w-6 text-yellow-600"></ion-icon>
+      <!-- Products -->
+      <ion-col size="12" size-md="6" size-lg="3" class="mb-4">
+        <div class="h-full rounded-xl border border-transparent bg-gradient-to-br from-emerald-50 to-white p-4 shadow-sm hover:shadow-md transition flex flex-col">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="text-xs uppercase tracking-wide text-gray-500">Productos</div>
+              <div class="text-3xl font-bold text-gray-800">{{ counters()?.products ?? 0 }}</div>
+            </div>
+            <ion-icon name="stats-chart" class="text-emerald-500 text-3xl"></ion-icon>
           </div>
-          <div class="ml-4">
-            <h2 class="text-2xl font-bold text-gray-900">Hoy</h2>
-            <p class="text-sm text-gray-600">Última actualización</p>
+          <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
+            <div class="rounded-lg bg-green-50 text-green-700 p-2 text-center">
+              Activos
+              <div class="font-bold text-lg">{{ counters()?.products_active ?? 0 }}</div>
+            </div>
+            <div class="rounded-lg bg-yellow-50 text-yellow-700 p-2 text-center">
+              Pausados
+              <div class="font-bold text-lg">{{ counters()?.products_paused ?? 0 }}</div>
+            </div>
           </div>
+          <div class="text-[11px] text-gray-400 mt-3">Actualizado en tiempo real</div>
         </div>
-      </div>
+      </ion-col>
 
-      <div class="card">
-        <div class="flex items-center">
-          <div class="flex-shrink-0 p-3 rounded-lg bg-red-100">
-            <ion-icon name="people" class="h-6 w-6 text-red-600"></ion-icon>
+      <!-- Active Rate -->
+      <ion-col size="12" size-md="6" size-lg="3" class="mb-4">
+        <div class="h-full rounded-xl border border-transparent bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+          <div>
+            <div class="text-xs uppercase tracking-wide text-gray-500">Tasa de activos</div>
+            <div class="text-3xl font-bold text-gray-800">
+              {{ (((counters()?.products_active ?? 0) / ((counters()?.products ?? 0) || 1)) * 100) | number:'1.0-0' }}%
+            </div>
+            <div class="text-xs text-gray-500 mt-1">de {{ counters()?.products ?? 0 }} productos</div>
           </div>
-          <div class="ml-4">
-            <h2 class="text-2xl font-bold text-gray-900">3</h2>
-            <p class="text-sm text-gray-600">Administradores</p>
-          </div>
+          <div class="text-[11px] text-gray-400 mt-3">Actualizado en tiempo real</div>
         </div>
-      </div>
-    </div>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 
-    <!-- Actividad Reciente -->
-    <div class="card">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">Actividad Reciente</h2>
-      <div class="divide-y divide-gray-200">
-        <div class="py-4 flex items-start">
-          <div class="flex-shrink-0 p-2 rounded-full bg-green-100">
-            <ion-icon name="add-circle" class="h-5 w-5 text-green-600"></ion-icon>
-          </div>
-          <div class="ml-4">
-            <h3 class="text-sm font-medium text-gray-900">Nueva categoría agregada</h3>
-            <p class="text-sm text-gray-500">Electrónica - Hace 2 horas</p>
-          </div>
-        </div>
-        
-        <div class="py-4 flex items-start">
-          <div class="flex-shrink-0 p-2 rounded-full bg-yellow-100">
-            <ion-icon name="create" class="h-5 w-5 text-yellow-600"></ion-icon>
-          </div>
-          <div class="ml-4">
-            <h3 class="text-sm font-medium text-gray-900">Categoría actualizada</h3>
-            <p class="text-sm text-gray-500">Ropa - Hace 5 horas</p>
-          </div>
-        </div>
-        
-        <div class="py-4 flex items-start">
-          <div class="flex-shrink-0 p-2 rounded-full bg-red-100">
-            <ion-icon name="trash" class="h-5 w-5 text-red-600"></ion-icon>
-          </div>
-          <div class="ml-4">
-            <h3 class="text-sm font-medium text-gray-900">Categoría eliminada</h3>
-            <p class="text-sm text-gray-500">Antiguo - Hace 1 día</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 </ion-content>

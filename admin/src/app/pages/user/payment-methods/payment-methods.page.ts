@@ -10,7 +10,7 @@ import { addIcons } from 'ionicons';
   templateUrl: './payment-methods.page.html',
   styleUrls: ['./payment-methods.page.scss'],
   standalone: true,
-  imports: [IonCardTitle, IonCardContent, IonCardHeader, IonCard, IonItem, IonCheckbox, IonList, IonGrid, IonIcon, IonBackButton, IonButtons, IonButton, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
+  imports: [IonCardContent, IonCard, IonItem, IonCheckbox, IonGrid, IonIcon, IonBackButton, IonButtons, IonButton, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
 })
 export class PaymentMethodsPage implements OnInit {
 

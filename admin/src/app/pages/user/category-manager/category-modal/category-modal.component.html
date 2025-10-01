@@ -1,50 +1,58 @@
 <ion-header>
-  <ion-toolbar>
+  <ion-toolbar color="primary">
     <ion-title>{{ category ? 'Editar' : 'Nueva' }} Categoría</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <form [formGroup]="categoryForm" (ngSubmit)="save()">
-    <ion-item>
+  <form [formGroup]="categoryForm">
+    <ion-item class="rounded-lg mb-3">
       <ion-label position="floating">Nombre de la Categoría</ion-label>
       <ion-input formControlName="name" type="text" required></ion-input>
     </ion-item>
-    <ion-item>
-      <ion-label position="floating">Descripción (Opcional)</ion-label>
-      <ion-input formControlName="description" type="text"></ion-input>
-    </ion-item>
 
-    <!-- Image Upload for Main Categories -->
-    <div *ngIf="!parentId" class="ion-margin-top">
-      <ion-label>Imagen de la Categoría</ion-label>
-      <div class="image-upload-container" (click)="fileInput.click()">
-        <ng-container *ngIf="!imageUpload; else showImage">
-          <div class="placeholder">
-            <ion-icon name="camera-outline" size="large"></ion-icon>
-            <span>Subir Imagen</span>
-          </div>
-        </ng-container>
-        <ng-template #showImage>
-          <ion-img [src]="imageUpload!.previewUrl" class="preview-image"></ion-img>
-          <div *ngIf="imageUpload!.uploading" class="upload-overlay">
-            <ion-spinner></ion-spinner>
-            <span class="progress-text">{{ imageUpload!.progress.toFixed(0) }}%</span>
-          </div>
-          <ion-button *ngIf="!imageUpload!.uploading" color="danger" size="small" class="remove-btn" (click)="removeImageWithStopPropagation($event)">
-            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
-          </ion-button>
-        </ng-template>
+    <!-- Imagen (solo categorías principales) -->
+    <div *ngIf="!parentId" class="mt-4">
+      <ion-label class="block mb-2">Imagen de la Categoría</ion-label>
+      <div class="flex justify-center">
+        <div class="relative w-[220px] h-[150px] rounded-xl border-2 border-dashed border-medium bg-light hover:border-primary transition cursor-pointer overflow-hidden" (click)="fileInput.click()">
+          <ng-container *ngIf="!imageUpload; else showImage">
+            <div class="h-full w-full flex flex-col items-center justify-center text-medium">
+              <ion-icon name="camera-outline" class="text-3xl"></ion-icon>
+              <span class="mt-1 text-xs">Subir Imagen</span>
+            </div>
+          </ng-container>
+          <ng-template #showImage>
+            <ion-img [src]="imageUpload!.previewUrl" class="w-full h-full object-cover"></ion-img>
+            <div *ngIf="imageUpload!.uploading" class="absolute inset-0 bg-black/30 flex flex-col items-center justify-center text-white">
+              <ion-spinner></ion-spinner>
+              <span class="mt-2 text-xs">{{ imageUpload!.progress.toFixed(0) }}%</span>
+            </div>
+            <ion-button *ngIf="!imageUpload!.uploading" color="danger" size="small" class="absolute top-1 right-1 rounded-full" (click)="removeImageWithStopPropagation($event)">
+              <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+          </ng-template>
+        </div>
       </div>
       <input type="file" hidden #fileInput (change)="onFileSelected($event)" accept="image/*" />
     </div>
 
-    <div class="ion-margin-top">
-      <ion-button type="submit" expand="block" [disabled]="categoryForm.invalid">Guardar</ion-button>
-      <ion-button type="button" expand="block" color="light" (click)="cancel()">Cancelar</ion-button>
-    </div>
   </form>
 </ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button fill="outline" color="medium" (click)="cancel()">Cancelar</ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button color="primary" (click)="save()" [disabled]="categoryForm.invalid || isSaving">
+        <ion-spinner *ngIf="isSaving" name="crescent" slot="start"></ion-spinner>
+        Guardar
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>
 
 
 <!-- anade al admin un botn en el manu debajo de categorias que se llame productos. alli dentro tendremos el sistema de

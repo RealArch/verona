@@ -11,10 +11,7 @@ import { speedometer, layers, logOut, cube } from 'ionicons/icons';
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
-  imports: [IonIcon, IonLabel, IonItem, IonList, IonContent, IonTitle, IonToolbar,
-    IonHeader, IonSplitPane, IonApp, IonRouterOutlet, IonMenu, IonMenuToggle,
-    RouterLink
-  ],
+  imports: [ IonRouterOutlet],
 })
 export class AppComponent {
 
