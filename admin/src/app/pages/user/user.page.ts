@@ -1,8 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonContent, IonHeader, IonTitle, IonToolbar, IonRouterOutlet, IonApp,
-   IonSplitPane, IonList, IonItem, IonIcon, IonLabel,IonMenu, IonMenuToggle, IonText } from '@ionic/angular/standalone';
+   IonSplitPane, IonList, IonItem, IonIcon, IonLabel,IonMenu, IonMenuToggle, IonText, IonFooter } from '@ionic/angular/standalone';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 import { Subscription } from 'rxjs';
@@ -26,6 +26,13 @@ export class UserPage implements OnInit {
 
   constructor(private router: Router) {
     addIcons({speedometer,cube,layers,card,logOut});
+
+    // Monitorea el estado de autenticación y redirige si no está logueado
+    effect(() => {
+      if (!this.authService.isLoggedIn()) {
+        this.router.navigate(['/auth/login']);
+      }
+    });
   }
 
 
@@ -52,5 +59,6 @@ export class UserPage implements OnInit {
 
   async logout() {
     await this.authService.logout();
+    // El effect se encargará de redirigir automáticamente
   }
 }

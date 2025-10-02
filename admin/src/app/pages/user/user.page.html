@@ -1,58 +1,61 @@
 <ion-app>
   <ion-split-pane contentId="main-content">
-    <ion-menu contentId="main-content" type="overlay" class="bg-gray-900">
+    <ion-menu contentId="main-content" type="overlay" class="bg-gray-900" style="max-width: 325px;">
       <ion-header>
         <ion-toolbar color="primary">
           <ion-title class="text-white text-center font-semibold">Menú</ion-title>
         </ion-toolbar>
       </ion-header>
-      <ion-content class="bg-gray-800">
-        <div class="flex flex-col items-center p-8 pb-6  ">
-          <div
-            class="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-[#23272f] flex items-center justify-center mb-3 shadow-md">
-            <span class="text-white text-2xl font-semibold tracking-wide">{{ getInitials(user?.firstName,
-              user?.lastName) }}</span>
+      <ion-content class="bg-gray-800 flex flex-col">
+        <div class="flex flex-col h-full">
+          <div class="flex flex-col items-center p-8 pb-6">
+            <div
+              class="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-[#23272f] flex items-center justify-center mb-3 shadow-md">
+              <span class="text-white text-2xl font-semibold tracking-wide">{{ getInitials(user?.firstName,
+                user?.lastName) }}</span>
+            </div>
+            <div class="text-center">
+              <ion-text color="primary" class=" text-base font-medium mb-1">{{ user?.firstName }} {{ user?.lastName
+                }}</ion-text>
+              <div class="text-gray-400 text-sm font-normal">{{ user?.email }}</div>
+            </div>
           </div>
-          <div class="text-center">
-            <ion-text color="primary" class=" text-base font-medium mb-1">{{ user?.firstName }} {{ user?.lastName
-              }}</ion-text>
-            <div class="text-gray-400 text-sm font-normal">{{ user?.email }}</div>
-          </div>
-        </div>
-        <ion-list lines="none">
-          <ion-menu-toggle auto-hide="false">
+          <ion-list lines="none" class="flex-1">
+            <ion-menu-toggle auto-hide="false">
 
-            <ion-item [routerLink]="['/dashboard']" routerDirection="root" routerLinkActive="active-menu-item"
-              class=" mx-2 mb-2 rounded">
-              <ion-icon color="medium" slot="start" name="speedometer" class="text-gray-400"></ion-icon>
-              <ion-label>Dashboard</ion-label>
-            </ion-item>
+              <ion-item [routerLink]="['/dashboard']" routerDirection="root" routerLinkActive="active-menu-item"
+                class=" mx-2 mb-2 rounded">
+                <ion-icon color="medium" slot="start" name="speedometer" class="text-gray-400"></ion-icon>
+                <ion-label>Dashboard</ion-label>
+              </ion-item>
 
-            <ion-item [routerLink]="['/products']" routerDirection="root" routerLinkActive="active-menu-item"
-              class="mx-2 mb-2 rounded">
-              <ion-icon color="medium" slot="start" name="cube" class="text-gray-400"></ion-icon>
-              <ion-label>Productos</ion-label>
-            </ion-item>
+              <ion-item [routerLink]="['/products']" routerDirection="root" routerLinkActive="active-menu-item"
+                class="mx-2 mb-2 rounded">
+                <ion-icon color="medium" slot="start" name="cube" class="text-gray-400"></ion-icon>
+                <ion-label>Productos</ion-label>
+              </ion-item>
 
-            <ion-item [routerLink]="['/categories']" routerDirection="root" routerLinkActive="active-menu-item"
-              class=" mx-2 mb-2 rounded">
-              <ion-icon color="medium" slot="start" name="layers" class="text-gray-400"></ion-icon>
-              <ion-label>Categorías</ion-label>
-            </ion-item>
+              <ion-item [routerLink]="['/categories']" routerDirection="root" routerLinkActive="active-menu-item"
+                class=" mx-2 mb-2 rounded">
+                <ion-icon color="medium" slot="start" name="layers" class="text-gray-400"></ion-icon>
+                <ion-label>Categorías</ion-label>
+              </ion-item>
 
-            <ion-item [routerLink]="['/payment-methods']" routerDirection="root" routerLinkActive="active-menu-item"
-              class="mx-2 mb-2 rounded">
-              <ion-icon color="medium" slot="start" name="card" class="text-gray-400"></ion-icon>
-              <ion-label>Métodos de Pago</ion-label>
-            </ion-item>
+              <ion-item [routerLink]="['/payment-methods']" routerDirection="root" routerLinkActive="active-menu-item"
+                class="mx-2 mb-2 rounded">
+                <ion-icon color="medium" slot="start" name="card" class="text-gray-400"></ion-icon>
+                <ion-label>Métodos de Pago</ion-label>
+              </ion-item>
 
-            <ion-item color="light" (click)="logout()" class="mx-2 mb-2 rounded">
+            </ion-menu-toggle>
+          </ion-list>
+          <div class="p-4">
+            <ion-item button color="light" (click)="logout()" class="mx-2 mb-2 rounded">
               <ion-icon color="medium" slot="start" name="log-out" class="text-gray-400"></ion-icon>
               <ion-label color="medium">Cerrar Sesión</ion-label>
             </ion-item>
-
-          </ion-menu-toggle>
-        </ion-list>
+          </div>
+        </div>
       </ion-content>
     </ion-menu>
 

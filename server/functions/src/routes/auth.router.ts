@@ -45,11 +45,11 @@ const createUserSchema = Joi.object({
 
 // Endpoint para crear usuario
 authRouter.post('/createUser', async (req: Request, res: Response): Promise<void> => {
-    console.log("entre")
+  console.log("entre")
   try {
     // Validar datos de entrada
     const { error, value } = createUserSchema.validate(req.body);
-    
+
     if (error) {
       res.status(400).json({
         success: false,
@@ -66,7 +66,8 @@ authRouter.post('/createUser', async (req: Request, res: Response): Promise<void
       await admin.auth().getUserByEmail(email);
       res.status(409).json({
         success: false,
-        message: 'Ya existe un usuario con este email'
+        message: 'Ya existe un usuario con este email',
+        errorCode: 'auth/email-already-exists'
       });
       return;
     } catch (getUserError: any) {
@@ -122,7 +123,7 @@ authRouter.post('/createUser', async (req: Request, res: Response): Promise<void
     // Manejar errores específicos de Firebase
     let errorMessage = 'Error interno del servidor';
     let statusCode = 500;
-
+    console.log(error.code)
     if (error.code) {
       switch (error.code) {
         case 'auth/email-already-exists':
@@ -144,7 +145,8 @@ authRouter.post('/createUser', async (req: Request, res: Response): Promise<void
 
     res.status(statusCode).json({
       success: false,
-      message: errorMessage
+      message: errorMessage,
+      errorCode: error.code || 'internal-error'
     });
   }
 });

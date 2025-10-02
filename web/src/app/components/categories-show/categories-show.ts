@@ -32,6 +32,7 @@ export class CategoriesShow implements OnInit {
 
       const categories = await this.categoriesService.getAllMainCategories();
       this.mainCategories.set(categories);
+      console.log(this.mainCategories())
 
     } catch (error) {
       this.error.set('Error al cargar las categorías principales');

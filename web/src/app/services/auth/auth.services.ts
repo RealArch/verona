@@ -155,7 +155,7 @@ export class Auth {
   }
 
   /**
-   * Inicia sesión con email y contraseña
+   * Inicia sesión with email y contraseña
    */
   async login(email: string, password: string): Promise<UserCredential> {
     try {
@@ -203,7 +203,8 @@ export class Auth {
       );
 
       if (!response?.success) {
-        throw new Error(response?.message || 'Error creating user on server');
+        // Propagar el mensaje del backend si vino en la respuesta (caso poco común en 200 con success=false)
+        throw { error: { message: response?.message || 'Error creating user on server' } };
       }
 
       // Una vez creado en el servidor, hacer login con Firebase Auth
@@ -213,13 +214,10 @@ export class Auth {
       this.handlePostLoginRedirect();
       
       return credential;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error durante el registro:', error);
-      // Re-lanzar el error para que el componente pueda manejarlo
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Error desconocido durante el registro');
+      // No transformar el error: propágalo tal cual para que el componente pueda leer status y error.message
+      throw error;
     }
   }
 

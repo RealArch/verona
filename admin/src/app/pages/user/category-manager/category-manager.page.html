@@ -14,7 +14,36 @@
 
 <ion-content>
   <div class="max-w-5xl mx-auto">
-    @if(categoryTree.length > 0){
+    @if (loading) {
+      <ion-grid fixed>
+        <ion-row>
+          <ion-col size="12" *ngFor="let n of [1,2,3]">
+            <ion-card>
+              <ion-card-header color="light" class="mb-0 py-1">
+                <ion-item lines="none" color="transparent" style="border: none;">
+                  <ion-avatar slot="start">
+                    <ion-skeleton-text animated style="width:40px; height:40px; border-radius:50%;"></ion-skeleton-text>
+                  </ion-avatar>
+                  <ion-label>
+                    <ion-skeleton-text animated style="width:120px; height:18px; margin-bottom:6px;"></ion-skeleton-text>
+                    <ion-skeleton-text animated style="width:180px; height:14px;"></ion-skeleton-text>
+                  </ion-label>
+                  <div slot="end" class="flex items-center">
+                    <ion-skeleton-text animated style="width:24px; height:24px; border-radius:50%; margin-right:8px;"></ion-skeleton-text>
+                    <ion-skeleton-text animated style="width:24px; height:24px; border-radius:50%; margin-right:8px;"></ion-skeleton-text>
+                    <ion-skeleton-text animated style="width:24px; height:24px; border-radius:50%;"></ion-skeleton-text>
+                  </div>
+                </ion-item>
+              </ion-card-header>
+              <ion-card-content>
+                <ion-skeleton-text animated style="width:100%; height:18px; margin-bottom:8px;"></ion-skeleton-text>
+                <ion-skeleton-text animated style="width:60%; height:14px;"></ion-skeleton-text>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    } @else if(categoryTree.length > 0){
       <ion-grid fixed>
         <ion-row>
           @for(category of categoryTree; track category.id){

@@ -98,25 +98,41 @@ export class Register {
    * Maneja los errores de registro
    */
   private handleRegisterError(error: any): void {
+    // Normaliza el error a un mensaje amigable priorizando backend -> firebase -> genérico
+    const backendMessage = error?.error?.message;
+    const httpStatus = error?.status;
+    const httpText = error?.statusText;
+    const firebaseCode = error?.errorCode || error?.code;
+    const genericMessage = error?.message;
+
     let message = 'Error al crear la cuenta';
-    
-    switch (error.code) {
-      case 'auth/email-already-in-use':
-        message = 'Este email ya está registrado. Intenta iniciar sesión en su lugar.';
-        break;
-      case 'auth/invalid-email':
-        message = 'El email no es válido';
-        break;
-      case 'auth/operation-not-allowed':
-        message = 'El registro con email/contraseña no está habilitado';
-        break;
-      case 'auth/weak-password':
-        message = 'La contraseña es muy débil. Debe tener al menos 6 caracteres.';
-        break;
-      default:
-        message = error.message || 'Error desconocido al crear la cuenta';
+
+    if (backendMessage) {
+      message = backendMessage;
+    } else if (httpStatus === 409 || httpText === 'Conflict') {
+      message = 'Ya existe un usuario con este email';
+    } else if (firebaseCode) {
+      switch (firebaseCode) {
+        case 'auth/email-already-in-use':
+        case 'auth/email-already-exists':
+          message = 'Este email ya está registrado. Intenta iniciar sesión en su lugar.';
+          break;
+        case 'auth/invalid-email':
+          message = 'El email no es válido';
+          break;
+        case 'auth/operation-not-allowed':
+          message = 'El registro con email/contraseña no está habilitado';
+          break;
+        case 'auth/weak-password':
+          message = 'La contraseña es muy débil. Debe tener al menos 6 caracteres.';
+          break;
+        default:
+          message = genericMessage || 'Error desconocido al crear la cuenta';
+      }
+    } else if (genericMessage) {
+      message = genericMessage;
     }
-    
+
     this.errorMessage.set(message);
   }
 

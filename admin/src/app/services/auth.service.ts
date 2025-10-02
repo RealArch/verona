@@ -1,4 +1,4 @@
-import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
+import { Injectable, inject, Injector, runInInjectionContext, signal, computed } from '@angular/core';
 import { Auth, authState, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, user, User } from '@angular/fire/auth';
 import { doc, Firestore, setDoc, getDoc } from '@angular/fire/firestore';
 import { firstValueFrom, map, Observable, take, filter } from 'rxjs';
@@ -24,10 +24,15 @@ export class AuthService {
   private _user$ = new BehaviorSubject<User | null | undefined>(undefined); // undefined = no inicializado
   user$ = this._user$.asObservable();
 
+  // Signal para estado de autenticación
+  private _isLoggedIn = signal<boolean>(false);
+  isLoggedIn = this._isLoggedIn.asReadonly();
+
   constructor() {
     // Subscribe to the authState to keep the user$ BehaviorSubject updated
     authState(this.auth).subscribe(user => {
       this._user$.next(user); // user puede ser null (sin autenticar) o User (autenticado)
+      this._isLoggedIn.set(!!user); // Actualiza el signal
     });
   }
 

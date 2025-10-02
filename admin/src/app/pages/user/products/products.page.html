@@ -21,116 +21,148 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  @if (products.length !== undefined) {
-  @if (products.length === 0) {
-  <div class="empty-state">
-    <ion-icon name="cube-outline"></ion-icon>
-    <p>No hay productos para mostrar.</p>
-    <p>¡Añade tu primer producto!</p>
-  </div>
-  } @else {
-  <ion-list>
-    @for (product of products; track product.id) {
-    <ion-item-sliding disabled>
-      <ion-item color="light" class="rounded mb-2" lines="none" [routerLink]="['/products', product.id,'edit']">
-        <ion-thumbnail slot="start" class="product-thumbnail">
-          @if (product.processing === false) {
+  <ion-grid fixed>
+
+    @if (loading) {
+    <div class="">
+        <ion-list>
+          <ng-container *ngFor="let n of [1,2,3]">
+            <ion-item color="light" class="rounded mb-2" lines="none">
+              <ion-thumbnail slot="start" class="product-thumbnail">
+                <ion-skeleton-text animated style="width:56px; height:56px; border-radius:8px;"></ion-skeleton-text>
+              </ion-thumbnail>
+              <ion-label>
+                <ion-row class="ion-align-items-center">
+                  <ion-col>
+                    <ion-row>
+                      <ion-col size="12">
+                        <ion-skeleton-text animated style="width:80%; height:18px; margin-bottom:6px;"></ion-skeleton-text>
+                      </ion-col>
+                      <ion-col class="py-0">
+                        <ion-skeleton-text animated style="width:60%; height:14px; margin-bottom:4px;"></ion-skeleton-text>
+                        <ion-skeleton-text animated style="width:40%; height:14px;"></ion-skeleton-text>
+                      </ion-col>
+                      <ion-col class="py-0">
+                        <ion-skeleton-text animated style="width:50px; height:14px;"></ion-skeleton-text>
+                      </ion-col>
+                    </ion-row>
+                  </ion-col>
+                  <ion-col size="auto" class="py-0 ml-auto">
+                    <ion-skeleton-text animated style="width:32px; height:32px; border-radius:50%;"></ion-skeleton-text>
+                  </ion-col>
+                </ion-row>
+              </ion-label>
+            </ion-item>
+          </ng-container>
+        </ion-list>
+    </div>
+    } @else if (products.length !== undefined) {
+    @if (products.length === 0) {
+    <div class="empty-state">
+      <ion-icon name="cube-outline"></ion-icon>
+      <p>No hay productos para mostrar.</p>
+      <p>¡Añade tu primer producto!</p>
+    </div>
+    } @else {
+    <ion-list style="contain: inline-size;">
+      @for (product of products; track product.id) {
+      <ion-item-sliding disabled style="overflow: visible;">
+        <ion-item color="light" class="rounded mb-2 shadow-md"  lines="none" [routerLink]="['/products', product.id,'edit']">
+          <ion-thumbnail slot="start" class="product-thumbnail">
+            @if (product.processing === false) {
             @if(product.photos.length > 0) {
-              <ion-img [src]="product.photos[0]?.thumbnail?.url || 'assets/icon/no-image.svg'" />
+            <ion-img [src]="product.photos[0].thumbnail.url || 'assets/icon/no-image.svg'" />
             } @else {
-              <ion-img class="no-img" src="assets/icon/no-image.svg" />
+            <ion-img class="no-img" src="assets/icon/no-image.svg" />
             }
-          } @else {
-          <ion-spinner></ion-spinner>
-          }
-        </ion-thumbnail>
+            } @else {
+            <ion-spinner></ion-spinner>
+            }
+          </ion-thumbnail>
 
-        <ion-label>
-          <ion-row class="ion-align-items-center">
-            <ion-col>
-              <ion-row>
-                <ion-col size="12">
-                  <h2 style="line-height: 13PX;">{{ product.name }}</h2>
+          <ion-label class="my-0">
+            <ion-grid>
+              <ion-row class="ion-align-items-center">
 
-                </ion-col>
-                <ion-col class="py-0">
-                  <p style="line-height: 12px;">SKU: {{ product.sku || "N/A"}} | Total stock: {{ product.stock }}</p>
-                  @if(product.variants?.length == 0) {
-                      <p>{{ displayProductPrice(product) | currency:'USD' }}</p>
-                  } @else {
-                    @for(variant of product.variants; track variant.id) {
-                      <div class="inline-flex align-items-center color-container">
-                        <div class="colorBox" [style.background]="variant.colorHex"></div>
-                        <div class="ps-1 text-xs">
-                          {{ displayVariantPrice(variant) | currency:'USD' }} / {{ variant.stock }}
+                <ion-col size="12" size-md="6">
+                  <ion-row>
+                    <ion-col size="12">
+                      <h2 class="font-bold text-base">{{ product.name }}</h2>
+                    </ion-col>
+                    <ion-col size="12" class="py-0">
+                      <p class="text-xs text-gray-500">SKU: {{ product.sku || "N/A"}} | Stock: {{ product.stock }}</p>
+                      @if(product.variants?.length == 0) {
+                      <p class="font-semibold">{{ displayProductPrice(product) | currency:'USD' }}</p>
+                      } @else {
+                      <div class="flex flex-wrap items-center gap-2 mt-1">
+                        @for(variant of product.variants; track variant.id) {
+                        <div class="inline-flex items-center color-container">
+                          <div class="colorBox" [style.background]="variant.colorHex"></div>
+                          <div class="ps-1 text-xs">
+                            {{ displayVariantPrice(variant) | currency:'USD' }} / {{ variant.stock }}
+                          </div>
                         </div>
-
-                      </div>
-                    }
-                  }
-                </ion-col>
-                <ion-col class="py-0">
-                  <div class="title text-xs font-medium" style="line-height: 12px;">Status</div>
-                  <div class="info">
-                    <ion-text [color]="product.status === 'active' ? 'success' : 'warning'" class="text-sm">
-                      {{ product.status | titlecase}}
-                    </ion-text>
-                  </div>
-                </ion-col>
-              </ion-row>
-            </ion-col>
-
-            <ion-col size="auto" class="py-0 ml-auto ">
-
-              <ion-buttons class="ml-auto">
-                <ion-button (click)="deleteProduct(product.id!);stopPropagation($event)">
-                  <ion-icon slot="icon-only" color="danger" size="small" name="trash"></ion-icon>
-                </ion-button>
-                <ion-button [id]="'menu-trigger'+product.id" (click)="stopPropagation($event)">
-                  <ion-icon slot="icon-only" size="small" name="ellipsis-vertical"></ion-icon>
-                </ion-button>
-                <ion-popover [trigger]="'menu-trigger'+product.id" triggerAction="click" showBackdrop="false">
-                  <ng-template>
-                    <ion-content class="">
-                      <ion-item button lines="none" (click)="changeStatus(product.id!)">
-                        @if(product.status === 'active') {
-                        <ion-label>Pausar</ion-label>
-                        } @else {
-                        <ion-label>Activar</ion-label>
                         }
-                      </ion-item>
+                      </div>
+                      }
+                    </ion-col>
+                  </ion-row>
+                </ion-col>
 
-                    </ion-content>
-                  </ng-template>
-                </ion-popover>
-              </ion-buttons>
+                <ion-col size="12" size-md="3" class="ion-text-left ion-text-md-center">
+                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" [ngClass]="{
+                        'bg-green-200 text-green-800': product.status === 'active',
+                        'bg-yellow-100 text-yellow-800': product.status === 'paused'
+                      }">
+                    <div class="w-1.5 h-1.5 rounded-full mr-1.5" [ngClass]="{
+                           'bg-green-500': product.status === 'active',
+                           'bg-yellow-500': product.status === 'paused'
+                         }">
+                    </div>
+                    {{ product.status | titlecase }}
+                  </span>
+                </ion-col>
 
+                <ion-col size="12" size-md="3" class="ion-hide-md-down">
+                  <ion-buttons class="justify-end">
+                    <ion-button (click)="deleteProduct(product.id!);stopPropagation($event)">
+                      <ion-icon slot="icon-only" color="danger" size="small" name="trash"></ion-icon>
+                    </ion-button>
+                    <ion-button [id]="'menu-trigger'+product.id" (click)="stopPropagation($event)">
+                      <ion-icon slot="icon-only" size="small" name="ellipsis-vertical"></ion-icon>
+                    </ion-button>
+                    <ion-popover [trigger]="'menu-trigger'+product.id" triggerAction="click" showBackdrop="false">
+                      <ng-template>
+                        <ion-content>
+                          <ion-item button lines="none" (click)="changeStatus(product.id!)">
+                            @if(product.status === 'active') {
+                            <ion-label>Pausar</ion-label>
+                            } @else {
+                            <ion-label>Activar</ion-label>
+                            }
+                          </ion-item>
+                        </ion-content>
+                      </ng-template>
+                    </ion-popover>
+                  </ion-buttons>
+                </ion-col>
 
+              </ion-row>
+            </ion-grid>
+          </ion-label>
 
-            </ion-col>
-
-          </ion-row>
-
-
-        </ion-label>
-
-      </ion-item>
-      <ion-item-options side="end">
-        <ion-item-option (click)="deleteProduct(product.id!)" color="danger" expandable>
-          <ion-icon slot="icon-only" name="trash"></ion-icon>
-        </ion-item-option>
-      </ion-item-options>
-    </ion-item-sliding>
+        </ion-item>
+        <ion-item-options side="end">
+          <ion-item-option (click)="deleteProduct(product.id!)" color="danger" expandable>
+            <ion-icon slot="icon-only" name="trash"></ion-icon>
+          </ion-item-option>
+        </ion-item-options>
+      </ion-item-sliding>
+      }
+    </ion-list>
     }
-  </ion-list>
-  }
-  } @else {
-  <!-- Puedes añadir un spinner de carga o un mensaje de error aquí -->
-  <div class="loading-state">
-    <ion-spinner name="crescent"></ion-spinner>
-    <p>Cargando productos...</p>
-  </div>
-  }
+    }
+  </ion-grid>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button [routerLink]="['/products/add']">

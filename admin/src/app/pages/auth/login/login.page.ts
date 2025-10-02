@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { IonContent, IonInput, IonButton, IonIcon, IonSpinner, IonLabel } from '@ionic/angular/standalone';
 import { AuthService } from 'src/app/services/auth.service';
 import { Router } from '@angular/router';
+import { filter, take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-login',
@@ -43,7 +44,13 @@ export class LoginPage implements OnInit {
 
     try {
       await this.authService.login(email, password);
-      this.router.navigate(['/dashboard']);
+      // Esperar a que el usuario esté confirmado antes de navegar
+      this.authService.user$.pipe(
+        filter(user => !!user),
+        take(1)
+      ).subscribe(() => {
+        this.router.navigate(['/dashboard']);
+      });
     } catch (error: any) {
       console.error('Login error:', error);
       // Customize error message based on error code

@@ -1,0 +1,42 @@
+.bg{
+    background-color: #111a14; /* Cambia este color al que desees */
+    overflow: visible; /* Permite que la imagen sobresalga del background */
+}
+
+header {
+    overflow: visible; /* Permite que la imagen sobresalga del header */
+}
+
+.img-box {
+    /* Hace que la imagen sobresalga solo hacia abajo 20px */
+    margin-bottom: -20px;
+    // height: calc(100% + 20px); /* Compensar el margen negativo inferior */
+
+    /* Border radius solo en las esquinas inferiores */
+    border-radius: 0 0 15px 15px;
+
+    /* Asegurar que el overflow esté oculto para que el border-radius sea visible */
+    overflow: hidden;
+}
+
+.header{
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    box-sizing: content-box;
+    /* Suma 20px extra al alto de la relación de aspecto */
+    padding-bottom: 81px;
+    /* El alto final será el de la relación de aspecto más 20px extra */
+    max-width: 100%;
+    overflow: hidden;
+    border-radius: 0 0 15px 15px;
+
+    @media (max-width: 768px) {
+        aspect-ratio: 1 / 1;
+    }
+    @media (max-width: 640px) {
+        .img-box{
+        border-radius: 0px;
+
+        }
+    }
+}

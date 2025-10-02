@@ -7,10 +7,9 @@ import {
   IonSegment, IonSegmentButton, IonLabel, IonList, IonItemSliding, IonItem,
   IonThumbnail, IonNote, IonItemOptions, IonItemOption, IonIcon, IonFab,
   IonFabButton, IonSpinner, AlertController, IonImg, IonCol, IonRow, IonText, IonButton, IonPopover,
-  PopoverController
-} from '@ionic/angular/standalone';
+  PopoverController, IonGrid, IonSkeletonText, IonChip } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { cubeOutline, add, trash, ellipsisVertical } from 'ionicons/icons';
+import { cubeOutline, add, trash, ellipsisVertical, imageOutline, trashOutline } from 'ionicons/icons';
 import { Subject } from 'rxjs';
 import { take, takeUntil } from 'rxjs/operators';
 import { ProductsService } from '../../../services/products.service';
@@ -23,12 +22,12 @@ import { CurrencyPipe } from '@angular/common';
   templateUrl: './products.page.html',
   styleUrls: ['./products.page.scss'],
   standalone: true,
-  imports: [IonPopover, IonButton, IonText, IonRow, IonCol, IonImg,
+  imports: [IonChip, IonGrid, IonPopover, IonButton, IonText, IonRow, IonCol, IonImg,
     CommonModule, FormsModule, RouterLink, CurrencyPipe,
     IonHeader, IonToolbar, IonButtons, IonMenuButton, IonTitle, IonContent,
     IonSegment, IonSegmentButton, IonLabel, IonList, IonItemSliding, IonItem,
     IonThumbnail, IonItemOptions, IonItemOption, IonIcon, IonFab,
-    IonFabButton, IonSpinner
+    IonFabButton, IonSpinner, IonSkeletonText
   ]
 })
 export class ProductsPage implements OnInit {
@@ -42,11 +41,12 @@ export class ProductsPage implements OnInit {
   private popoverCtrl = inject(PopoverController);
   private cdr = inject(ChangeDetectorRef);
   products: Product[] = [];
+  loading = true;
   private destroy$ = new Subject<void>();
   filterStatus: 'all' | 'active' | 'paused' = 'all';
 
   constructor() {
-    addIcons({ cubeOutline, add, trash, ellipsisVertical });
+    addIcons({cubeOutline,imageOutline,ellipsisVertical,trashOutline,add,trash});
   }
 
   ngOnInit() {
@@ -77,10 +77,14 @@ export class ProductsPage implements OnInit {
   }
 
   loadProducts() {
+    this.loading = true;
     this.productsService.getProductsByStatus(this.filterStatus)
       .pipe(takeUntil(this.destroy$))
       .subscribe(products => {
         this.products = products;
+        this.loading = false;
+      }, () => {
+        this.loading = false;
       });
   }
 
