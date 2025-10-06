@@ -193,7 +193,7 @@ export class ProductComponent implements OnInit, OnDestroy {
     try {
       this.addingToCart.set(true);
       
-      await this.cartService.addToCart(product, variant || undefined, quantity);
+      await this.cartService.addToCart(product, variant ?? undefined, quantity);
       
       console.log('Producto agregado al carrito exitosamente:', {
         product: product.name,

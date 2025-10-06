@@ -1,30 +1,25 @@
-<div class="min-h-screen bg-base-100 ">
+<div class="min-h-screen">
     <!-- Header del Profile -->
-    <div class="bg-gradient-to-r from-primary/20 to-secondary/20 radius mb-4">
-        <div class="container mx-auto px-4 py-8">
-            <div class="flex flex-col md:flex-row items-center gap-6">
-                <!-- Avatar -->
+    <div class="card border"
+        [ngClass]="defaultAddress ? 'bg-primary/5 border-primary/20' : 'bg-base-200/50 border-base-300'">
+        <div class="bg-gradient-to-r from-primary/20 to-secondary/20 radius mb-4">
+            <div class="container mx-auto px-4 py-8">
+                <div class="flex flex-col md:flex-row items-center gap-6">
+                    <!-- Avatar -->
                 <div class="relative">
-                    <div class="avatar">
-                        <div class="w-24 md:w-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80"
-                                alt="Avatar del usuario" />
-                        </div>
+                    <div
+                        class="w-20 md:w-28 aspect-square rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 bg-primary text-primary-content grid place-items-center text-xl md:text-2xl font-bold">
+                        {{ userInitials() }}
                     </div>
-                    <button class="btn btn-circle btn-sm absolute bottom-0 right-0 bg-primary border-white border-2">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
-                            </path>
-                        </svg>
-                    </button>
+
                 </div>
 
                 <!-- Info del lUsuario -->
                 <div class="text-center md:text-left flex-1">
-                    <h1 class="text-2xl md:text-3xl font-light text-base-content mb-2">Rafael Álvarez</h1>
-                    <p class="text-base-content/70 mb-3">rafael.alvarez@email.com</p>
+                    <h1 class="text-2xl md:text-3xl font-light text-base-content mb-2">{{ fullName | titlecase}}</h1>
+                    <p class="text-base-content/70 mb-3">{{ currentUser().email }}</p>
                     <div class="flex flex-col sm:flex-row gap-2 justify-center md:justify-start">
-                        <div class="badge badge-secondary badge-outline">Miembro desde 2024</div>
+                        <!-- <div class="badge badge-secondary badge-outline">Miembro desde 2024</div> -->
                     </div>
                 </div>
 
@@ -53,256 +48,213 @@
 
         <!-- Contenido Principal del Profile -->
 
-            <!-- Información Personal -->
-            <div class="bg-base-200 rounded-2xl shadow-sm border border-base-200 p-4 mb-4">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-light text-base-content">Información Personal</h2>
-                    <button class="btn btn-outline btn-sm">Editar</button>
-                </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text">Nombre Completo</span>
-                        </label>
-                        <input type="text" value="Rafael Álvarez" class="input input-bordered" readonly />
-                    </div>
 
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text">Email</span>
-                        </label>
-                        <input type="email" value="rafael.alvarez@email.com" class="input input-bordered" readonly />
-                    </div>
+        <!-- Direcciones -->
+        <div class="bg-base-100 rounded-2xl shadow-sm border border-base-200 p-6 mb-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-light text-base-content">Mis Direcciones</h2>
+                <button class="btn btn-primary btn-sm" (click)="addNewAddress()">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+                        </path>
+                    </svg>
+                    Nueva Dirección
+                </button>
+            </div>
 
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text">Teléfono</span>
-                        </label>
-                        <input type="tel" value="+51 987 654 321" class="input input-bordered" readonly />
-                    </div>
-
-                    <div class="form-control">
-                        <label class="label">
-                            <span class="label-text">Fecha de Nacimiento</span>
-                        </label>
-                        <input type="date" value="1990-05-15" class="input input-bordered" readonly />
-                    </div>
-
-                    <div class="form-control md:col-span-2">
-                        <label class="label">
-                            <span class="label-text">DNI</span>
-                        </label>
-                        <input type="text" value="12345678" class="input input-bordered" readonly />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" *ngIf="userAddresses().length > 0; else noAddresses">
+                <!-- Dirección -->
+                <div class="card border bg-base-200/50 border-base-300" *ngFor="let address of userAddresses()">
+                    <div class="card-body p-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <h3 class="font-medium">{{ address.name | titlecase }}</h3>
+                                    <div class="badge badge-primary badge-sm" *ngIf="address === defaultAddress">Principal</div>
+                                </div>
+                                <p class="text-sm text-base-content/70 mb-1">{{ address.address_1 }}</p>
+                                <p class="text-sm text-base-content/70 mb-1" *ngIf="address.address_2">{{
+                                    address.address_2 }}</p>
+                                <p class="text-sm text-base-content/70 mb-1">{{ address.municipality }}, {{ address.city
+                                    }}, {{ address.state }} {{ address.postalCode }}</p>
+                                <p class="text-sm text-base-content/70 mb-1">{{ address.country }}</p>
+                                <p class="text-sm text-base-content/70" *ngIf="address.phone">{{ address.phone }}</p>
+                            </div>
+                            <div class="dropdown dropdown-end">
+                                <div tabindex="0" role="button" class="btn btn-ghost btn-xs">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <ul tabindex="0"
+                                    class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32">
+                                    <li><a class="text-sm" (click)="editAddress(address.id)">Editar</a></li>
+                                    <li *ngIf="address !== defaultAddress"><a class="text-sm"
+                                            (click)="setDefaultAddress(address.id)">Principal</a></li>
+                                    <li><a class="text-sm text-error" (click)="deleteAddress(address.id)">Eliminar</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Direcciones -->
-            <div class="bg-base-100 rounded-2xl shadow-sm border border-base-200 p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-light text-base-content">Mis Direcciones</h2>
-                    <button class="btn btn-primary btn-sm">
+            <!-- No hay direcciones -->
+            <ng-template #noAddresses>
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 bg-base-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-base-content/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
+                            </path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-base-content mb-2">No tienes direcciones registradas</h3>
+                    <p class="text-base-content/70 mb-4">Agrega tu primera dirección para facilitar tus pedidos</p>
+                    <button class="btn btn-primary" (click)="addNewAddress()">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
                             </path>
                         </svg>
-                        Nueva Dirección
+                        Agregar Dirección
                     </button>
                 </div>
+            </ng-template>
+        </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Dirección Principal -->
-                    <div class="card bg-primary/5 border border-primary/20">
-                        <div class="card-body p-4">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <h3 class="font-medium">Casa</h3>
-                                        <div class="badge badge-primary badge-sm">Principal</div>
-                                    </div>
-                                    <p class="text-sm text-base-content/70 mb-1">Rafael Álvarez</p>
-                                    <p class="text-sm text-base-content/70 mb-1">Av. Larco 123, Miraflores</p>
-                                    <p class="text-sm text-base-content/70 mb-1">Lima, Perú 15074</p>
-                                    <p class="text-sm text-base-content/70">+51 987 654 321</p>
-                                </div>
-                                <div class="dropdown dropdown-end">
-                                    <div tabindex="0" role="button" class="btn btn-ghost btn-xs">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z">
-                                            </path>
-                                        </svg>
-                                    </div>
-                                    <ul tabindex="0"
-                                        class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32">
-                                        <li><a class="text-sm">Editar</a></li>
-                                        <li><a class="text-sm text-error">Eliminar</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+        <!-- Actividad Reciente -->
+        <div class="bg-base-100 rounded-2xl shadow-sm border border-base-200 p-6">
+            <h2 class="text-xl font-light text-base-content mb-6">Actividad Reciente</h2>
+
+            <div class="space-y-4">
+                <!-- Actividad 1 -->
+                <div class="flex items-center gap-4 p-4 bg-base-200/30 rounded-lg">
+                    <div class="w-10 h-10 bg-success/20 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
                     </div>
+                    <div class="flex-1">
+                        <h4 class="font-medium text-base-content">Pedido completado</h4>
+                        <p class="text-sm text-base-content/70">Sofá Mediterráneo - Pedido #VR-2024-001</p>
+                        <p class="text-xs text-base-content/50">Hace 2 días</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-semibold text-success">S/ 2,890.00</p>
+                    </div>
+                </div>
 
-                    <!-- Dirección Trabajo -->
-                    <div class="card bg-base-200/50 border border-base-300">
-                        <div class="card-body p-4">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <h3 class="font-medium">Trabajo</h3>
-                                    </div>
-                                    <p class="text-sm text-base-content/70 mb-1">Rafael Álvarez</p>
-                                    <p class="text-sm text-base-content/70 mb-1">Jr. De la Unión 456, Cercado de Lima
-                                    </p>
-                                    <p class="text-sm text-base-content/70 mb-1">Lima, Perú 15001</p>
-                                    <p class="text-sm text-base-content/70">+51 987 654 321</p>
-                                </div>
-                                <div class="dropdown dropdown-end">
-                                    <div tabindex="0" role="button" class="btn btn-ghost btn-xs">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z">
-                                            </path>
-                                        </svg>
-                                    </div>
-                                    <ul tabindex="0"
-                                        class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-32">
-                                        <li><a class="text-sm">Editar</a></li>
-                                        <li><a class="text-sm">Principal</a></li>
-                                        <li><a class="text-sm text-error">Eliminar</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Actividad 2 -->
+                <div class="flex items-center gap-4 p-4 bg-base-200/30 rounded-lg">
+                    <div class="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-medium text-base-content">Agregado a favoritos</h4>
+                        <p class="text-sm text-base-content/70">Mesa de Centro Oslo</p>
+                        <p class="text-xs text-base-content/50">Hace 5 días</p>
+                    </div>
+                </div>
+
+                <!-- Actividad 3 -->
+                <div class="flex items-center gap-4 p-4 bg-base-200/30 rounded-lg">
+                    <div class="w-10 h-10 bg-warning/20 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-medium text-base-content">Información actualizada</h4>
+                        <p class="text-sm text-base-content/70">Datos personales modificados</p>
+                        <p class="text-xs text-base-content/50">Hace 1 semana</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Actividad Reciente -->
-            <div class="bg-base-100 rounded-2xl shadow-sm border border-base-200 p-6">
-                <h2 class="text-xl font-light text-base-content mb-6">Actividad Reciente</h2>
+            <div class="text-center mt-6">
+                <button class="btn btn-outline btn-sm">Ver Historial Completo</button>
+            </div>
+        </div>
 
-                <div class="space-y-4">
-                    <!-- Actividad 1 -->
-                    <div class="flex items-center gap-4 p-4 bg-base-200/30 rounded-lg">
-                        <div class="w-10 h-10 bg-success/20 rounded-full flex items-center justify-center">
-                            <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                            </svg>
-                        </div>
-                        <div class="flex-1">
-                            <h4 class="font-medium text-base-content">Pedido completado</h4>
-                            <p class="text-sm text-base-content/70">Sofá Mediterráneo - Pedido #VR-2024-001</p>
-                            <p class="text-xs text-base-content/50">Hace 2 días</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="font-semibold text-success">S/ 2,890.00</p>
-                        </div>
-                    </div>
+        <!-- Configuración de Cuenta -->
+        <div class="bg-base-100 rounded-2xl shadow-sm border border-base-200 p-6">
+            <h2 class="text-xl font-light text-base-content mb-6">Configuración de Cuenta</h2>
 
-                    <!-- Actividad 2 -->
-                    <div class="flex items-center gap-4 p-4 bg-base-200/30 rounded-lg">
-                        <div class="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
-                            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
-                                </path>
-                            </svg>
-                        </div>
-                        <div class="flex-1">
-                            <h4 class="font-medium text-base-content">Agregado a favoritos</h4>
-                            <p class="text-sm text-base-content/70">Mesa de Centro Oslo</p>
-                            <p class="text-xs text-base-content/50">Hace 5 días</p>
-                        </div>
+            <div class="space-y-4">
+                <!-- Notificaciones -->
+                <div class="flex justify-between items-center p-4 bg-base-200/30 rounded-lg">
+                    <div>
+                        <h4 class="font-medium text-base-content">Notificaciones por Email</h4>
+                        <p class="text-sm text-base-content/70">Recibir ofertas y novedades</p>
                     </div>
-
-                    <!-- Actividad 3 -->
-                    <div class="flex items-center gap-4 p-4 bg-base-200/30 rounded-lg">
-                        <div class="w-10 h-10 bg-warning/20 rounded-full flex items-center justify-center">
-                            <svg class="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                        </div>
-                        <div class="flex-1">
-                            <h4 class="font-medium text-base-content">Información actualizada</h4>
-                            <p class="text-sm text-base-content/70">Datos personales modificados</p>
-                            <p class="text-xs text-base-content/50">Hace 1 semana</p>
-                        </div>
-                    </div>
+                    <input type="checkbox" class="toggle toggle-primary" checked />
                 </div>
 
-                <div class="text-center mt-6">
-                    <button class="btn btn-outline btn-sm">Ver Historial Completo</button>
+                <!-- SMS -->
+                <div class="flex justify-between items-center p-4 bg-base-200/30 rounded-lg">
+                    <div>
+                        <h4 class="font-medium text-base-content">Notificaciones SMS</h4>
+                        <p class="text-sm text-base-content/70">Actualizaciones de pedidos</p>
+                    </div>
+                    <input type="checkbox" class="toggle toggle-primary" />
+                </div>
+
+                <!-- Newsletter -->
+                <div class="flex justify-between items-center p-4 bg-base-200/30 rounded-lg">
+                    <div>
+                        <h4 class="font-medium text-base-content">Newsletter</h4>
+                        <p class="text-sm text-base-content/70">Suscribirse al boletín semanal</p>
+                    </div>
+                    <input type="checkbox" class="toggle toggle-primary" checked />
                 </div>
             </div>
 
-            <!-- Configuración de Cuenta -->
-            <div class="bg-base-100 rounded-2xl shadow-sm border border-base-200 p-6">
-                <h2 class="text-xl font-light text-base-content mb-6">Configuración de Cuenta</h2>
+            <div class="divider"></div>
 
-                <div class="space-y-4">
-                    <!-- Notificaciones -->
-                    <div class="flex justify-between items-center p-4 bg-base-200/30 rounded-lg">
-                        <div>
-                            <h4 class="font-medium text-base-content">Notificaciones por Email</h4>
-                            <p class="text-sm text-base-content/70">Recibir ofertas y novedades</p>
-                        </div>
-                        <input type="checkbox" class="toggle toggle-primary" checked />
-                    </div>
+            <!-- Acciones de Cuenta -->
+            <div class="space-y-3">
+                <button class="btn btn-outline w-full justify-start">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v-2H7v-2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
+                        </path>
+                    </svg>
+                    Cambiar Contraseña
+                </button>
 
-                    <!-- SMS -->
-                    <div class="flex justify-between items-center p-4 bg-base-200/30 rounded-lg">
-                        <div>
-                            <h4 class="font-medium text-base-content">Notificaciones SMS</h4>
-                            <p class="text-sm text-base-content/70">Actualizaciones de pedidos</p>
-                        </div>
-                        <input type="checkbox" class="toggle toggle-primary" />
-                    </div>
+                <button class="btn btn-outline w-full justify-start">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                        </path>
+                    </svg>
+                    Configurar Autenticación en Dos Pasos
+                </button>
 
-                    <!-- Newsletter -->
-                    <div class="flex justify-between items-center p-4 bg-base-200/30 rounded-lg">
-                        <div>
-                            <h4 class="font-medium text-base-content">Newsletter</h4>
-                            <p class="text-sm text-base-content/70">Suscribirse al boletín semanal</p>
-                        </div>
-                        <input type="checkbox" class="toggle toggle-primary" checked />
-                    </div>
-                </div>
-
-                <div class="divider"></div>
-
-                <!-- Acciones de Cuenta -->
-                <div class="space-y-3">
-                    <button class="btn btn-outline w-full justify-start">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v-2H7v-2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
-                            </path>
-                        </svg>
-                        Cambiar Contraseña
-                    </button>
-
-                    <button class="btn btn-outline w-full justify-start">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
-                            </path>
-                        </svg>
-                        Configurar Autenticación en Dos Pasos
-                    </button>
-
-                    <button class="btn btn-outline btn-error w-full justify-start">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                            </path>
-                        </svg>
-                        Eliminar Cuenta
-                    </button>
-                </div>
+                <button class="btn btn-outline btn-error w-full justify-start">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                        </path>
+                    </svg>
+                    Eliminar Cuenta
+                </button>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Modal para agregar dirección -->
+<app-add-address *ngIf="showAddAddressModal" (onClose)="closeAddAddressModal()"></app-add-address>

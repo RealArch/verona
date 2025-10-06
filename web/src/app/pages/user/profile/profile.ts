@@ -1,31 +1,8 @@
-import { Component } from '@angular/core';
-
-// Interfaces para el perfil de usuario
-export interface UserProfile {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  birthDate?: Date;
-  dni?: string;
-  avatar?: string;
-  memberSince: Date;
-  isPremium: boolean;
-}
-
-export interface UserAddress {
-  id: string;
-  label: string;
-  name: string;
-  street: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country: string;
-  phone?: string;
-  isDefault: boolean;
-}
+import { Component, inject, computed, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Auth } from '../../../services/auth/auth.services';
+import { UserProfile, UserAddress } from '../../../interfaces/auth';
+import { AddAddress } from '../../../components/user/add-address/add-address';
 
 export interface UserActivity {
   id: string;
@@ -46,53 +23,24 @@ export interface UserPreferences {
 
 @Component({
   selector: 'app-profile',
-  imports: [],
+  imports: [CommonModule, AddAddress],
   templateUrl: './profile.html',
   styleUrl: './profile.scss'
 })
 export class Profile {
 
-  // Usuario actual
-  currentUser: UserProfile = {
-    id: 'user-001',
-    firstName: 'Rafael',
-    lastName: 'Álvarez',
-    email: 'rafael.alvarez@email.com',
-    phone: '+51 987 654 321',
-    birthDate: new Date('1990-05-15'),
-    dni: '12345678',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&q=80',
-    memberSince: new Date('2024-01-15'),
-    isPremium: true
-  };
+  private auth = inject(Auth);
 
-  // Direcciones del usuario
-  userAddresses: UserAddress[] = [
-    {
-      id: 'addr-001',
-      label: 'Casa',
-      name: 'Rafael Álvarez',
-      street: 'Av. Larco 123, Miraflores',
-      city: 'Lima',
-      state: 'Lima',
-      postalCode: '15074',
-      country: 'Perú',
-      phone: '+51 987 654 321',
-      isDefault: true
-    },
-    {
-      id: 'addr-002',
-      label: 'Trabajo',
-      name: 'Rafael Álvarez',
-      street: 'Jr. De la Unión 456, Cercado de Lima',
-      city: 'Lima',
-      state: 'Lima',
-      postalCode: '15001',
-      country: 'Perú',
-      phone: '+51 987 654 321',
-      isDefault: false
-    }
-  ];
+  // Expose user initials from auth service
+  userInitials = this.auth.userInitials;
+  // Usuario actual desde auth service
+  currentUser = computed(() => this.auth.userProfile() || {} as UserProfile);
+
+  // Direcciones del usuario desde auth service
+  userAddresses = computed(() => {
+    const user = this.currentUser();
+    return user.addresses || [];
+  });
 
   // Actividad reciente
   recentActivity: UserActivity[] = [
@@ -134,6 +82,7 @@ export class Profile {
   // Estados del componente
   activeSection: string = 'personal';
   isEditingProfile: boolean = false;
+  showAddAddressModal: boolean = false;
   
   // Stats del usuario
   userStats = {
@@ -159,8 +108,11 @@ export class Profile {
   }
 
   addNewAddress() {
-    console.log('Agregando nueva dirección');
-    // Lógica para abrir modal de nueva dirección
+    this.showAddAddressModal = true;
+  }
+
+  closeAddAddressModal() {
+    this.showAddAddressModal = false;
   }
 
   editAddress(addressId: string) {
@@ -170,15 +122,13 @@ export class Profile {
 
   deleteAddress(addressId: string) {
     console.log('Eliminando dirección:', addressId);
-    // Lógica para eliminar dirección
-    this.userAddresses = this.userAddresses.filter(addr => addr.id !== addressId);
+    // TODO: Implementar eliminación de dirección en auth service
+    // Por ahora solo log
   }
 
   setDefaultAddress(addressId: string) {
-    // Cambiar dirección principal
-    this.userAddresses.forEach(addr => {
-      addr.isDefault = addr.id === addressId;
-    });
+    // Con el nuevo sistema, la dirección principal es simplemente la primera del array
+    alert('La dirección principal es la primera que registraste. Para cambiarla, elimina otras direcciones o registra una nueva.');
   }
 
   updatePreference(key: keyof UserPreferences, value: boolean) {
@@ -214,20 +164,23 @@ export class Profile {
     // Lógica para subir nueva imagen de avatar
   }
 
-  // Getters para facilitar el uso en el template
+    // Getters para facilitar el uso en el template
   get fullName() {
-    return `${this.currentUser.firstName} ${this.currentUser.lastName}`;
+    const user = this.currentUser();
+    return user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Usuario';
   }
 
   get memberDuration() {
     const now = new Date();
-    const memberSince = new Date(this.currentUser.memberSince);
+    const user = this.currentUser();
+    const memberSince = user.createdAt ? new Date(user.createdAt) : now;
     const years = now.getFullYear() - memberSince.getFullYear();
     return years > 0 ? `${years} año${years > 1 ? 's' : ''}` : 'Menos de 1 año';
   }
 
   get defaultAddress() {
-    return this.userAddresses.find(addr => addr.isDefault);
+    const addresses = this.userAddresses();
+    return addresses.length > 0 ? addresses[0] : null;
   }
 
   formatDate(date: Date): string {

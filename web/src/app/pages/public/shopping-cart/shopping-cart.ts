@@ -345,7 +345,27 @@ export class ShoppingCart implements OnInit {
     if (!selectedItems.length) return;
     
     console.log('Proceeding to checkout with:', selectedItems);
-    // this.router.navigate(['/checkout'], { state: { selectedItems } });
+    
+    // Navegar al checkout pasando los items seleccionados
+    this.router.navigate(['/checkout'], { 
+      state: { 
+        selectedItems: selectedItems.map(item => ({
+          id: item.id,
+          productId: item.productId,
+          productName: item.productName,
+          productSlug: item.productSlug,
+          productImage: item.productImage,
+          variantId: item.variantId,
+          variantName: item.variantName,
+          variantColorHex: item.variantColorHex,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice,
+          currentProduct: item.currentProduct,
+          currentVariant: item.currentVariant
+        }))
+      } 
+    });
   }
 
   async clearSelectedItems(): Promise<void> {

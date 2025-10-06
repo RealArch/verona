@@ -1,1 +1,570 @@
-<p>checkout works!</p>
+<!-- Checkout Container -->
+<div class="container mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-8">
+    <h1 class="text-3xl font-light">Checkout</h1>
+    <button 
+      (click)="goBackToCart()" 
+      class="btn btn-outline btn-sm"
+    >
+      ← Volver al Carrito
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="flex justify-center py-12">
+    <span class="loading loading-spinner loading-lg"></span>
+  </div>
+
+  <!-- Checkout Content -->
+  <div *ngIf="!loading()" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Order Summary -->
+    <div class="lg:col-span-2">
+      <!-- Delivery Method Section -->
+      <div class="card bg-base-100 shadow-lg mb-6">
+        <div class="card-body">
+          <h3 class="card-title text-lg mb-4">Método de Entrega</h3>
+          
+          <!-- Delivery Methods Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div 
+              *ngFor="let method of availableDeliveryMethods()"
+              class="relative"
+            >
+              <input 
+                type="radio" 
+                [id]="'delivery-' + method.key"
+                [value]="method.key"
+                [checked]="selectedDeliveryMethod() === method.key"
+                (change)="selectDeliveryMethod(method.key)"
+                class="peer hidden"
+              />
+              <label 
+                [for]="'delivery-' + method.key"
+                class="flex items-center justify-between p-4 border-2 border-base-300 rounded-lg cursor-pointer 
+                       transition-all hover:border-primary hover:bg-primary/5
+                       peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:shadow-md"
+              >
+                <div class="flex items-center gap-3">
+                  <!-- Icon based on method -->
+                  <div class="text-2xl">
+                    <svg *ngIf="method.key === 'pickup'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    <svg *ngIf="method.key === 'homeDelivery'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    <svg *ngIf="method.key === 'shipping'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
+                    </svg>
+                    <svg *ngIf="method.key === 'arrangeWithSeller'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <span class="font-medium text-base">{{ method.label }}</span>
+                  </div>
+                </div>
+                <!-- Check icon for selected -->
+                <div *ngIf="selectedDeliveryMethod() === method.key" class="text-primary">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+              </label>
+            </div>
+          </div>
+          
+          <!-- No delivery methods available message -->
+          <div *ngIf="availableDeliveryMethods().length === 0" class="text-center py-6">
+            <p class="text-base-content/70">No hay métodos de entrega disponibles en este momento.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delivery Address Section -->
+            <!-- Delivery Address Section -->
+      <div *ngIf="isDeliveryAddressRequired()" class="card bg-base-100 shadow-lg mb-6">
+        <div class="card-body">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="card-title text-lg">Dirección de Entrega</h3>
+            <div class="flex gap-2">
+              <button 
+                (click)="openSelectAddressModal()" 
+                class="btn btn-outline btn-sm"
+              >
+                Cambiar dirección
+              </button>
+            </div>
+          </div>
+
+          <!-- Address Display -->
+          <div *ngIf="currentAddress(); else noAddress">
+            <div class="bg-base-200 p-4 rounded-lg relative">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <h4 class="font-semibold text-base">{{ currentAddress()!.name }}</h4>
+                  <p class="text-sm text-base-content/80 mt-1">
+                    {{ currentAddress()!.address_1 }}
+                    <span *ngIf="currentAddress()!.address_2">, {{ currentAddress()!.address_2 }}</span>
+                  </p>
+                  <p class="text-sm text-base-content/80">
+                    {{ currentAddress()!.municipality }}, {{ currentAddress()!.city }}, {{ currentAddress()!.state }}
+                  </p>
+                  <p class="text-sm text-base-content/80">
+                    {{ currentAddress()!.country }} {{ currentAddress()!.postalCode }}
+                  </p>
+                  <p *ngIf="currentAddress()!.phone" class="text-sm text-base-content/80 mt-2">
+                    <strong>Teléfono:</strong> {{ currentAddress()!.phone }}
+                  </p>
+                  <p *ngIf="currentAddress()!.description" class="text-sm text-base-content/70 mt-2 italic">
+                    {{ currentAddress()!.description }}
+                  </p>
+                </div>
+                <button 
+                  (click)="openEditAddressModal(currentAddress()!)" 
+                  class="btn btn-ghost btn-sm ml-3"
+                  title="Editar dirección"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- No Address Template -->
+          <ng-template #noAddress>
+            <div class="text-center py-6">
+              <svg class="w-12 h-12 mx-auto text-base-content/40 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              <h3 class="text-lg font-semibold mb-2">No hay dirección de entrega</h3>
+              <p class="text-base-content/70 mb-4">Agrega una dirección para continuar con tu pedido</p>
+              <button 
+                (click)="openAddAddressModal()" 
+                class="btn btn-primary"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Agregar Dirección
+              </button>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Billing Address Section -->
+      <div class="card bg-base-100 shadow-lg mb-6">
+        <div class="card-body">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="card-title text-lg">Dirección de Facturación</h3>
+            <div class="flex gap-2">
+              <!-- Botón para usar misma dirección (solo si hay dirección de envío) -->
+              <button
+                *ngIf="isDeliveryAddressRequired() && currentAddress()"
+                (click)="toggleUseSameAsShipping()"
+                [class.btn-primary]="useSameAsShipping()"
+                class="btn btn-outline btn-sm"
+              >
+                <svg *ngIf="useSameAsShipping()" class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                Usar misma dirección de envío
+              </button>
+              <!-- Botón para copiar de direcciones guardadas -->
+              <button
+                (click)="openSelectBillingAddressModal()"
+                class="btn btn-outline btn-sm"
+              >
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                Copiar de mis direcciones
+              </button>
+            </div>
+          </div>
+
+          <!-- Formulario de facturación (oculto si usa misma dirección) -->
+          <div *ngIf="!useSameAsShipping()">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <!-- Nombre y Teléfono en la misma línea -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:col-span-2 lg:col-span-3">
+                <!-- Nombre -->
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">Nombre completo *</span>
+                  </label>
+                  <input
+                    type="text"
+                    [(ngModel)]="billingForm().name"
+                    placeholder="Ej: Juan Pérez"
+                    class="input input-bordered w-full"
+                    required
+                  />
+                </div>
+
+                <!-- Teléfono -->
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">Teléfono</span>
+                  </label>
+                  <input
+                    type="tel"
+                    [(ngModel)]="billingForm().phone"
+                    placeholder="Ej: +58 412 123 4567"
+                    class="input input-bordered w-full"
+                  />
+                </div>
+              </div>
+
+              <!-- Dirección 1 y 2 en la misma línea (solo en pantallas grandes) -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:col-span-2 lg:col-span-3">
+                <!-- Dirección 1 -->
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">Dirección *</span>
+                  </label>
+                  <input
+                    type="text"
+                    [(ngModel)]="billingForm().address_1"
+                    placeholder="Calle, número, edificio, etc."
+                    class="input input-bordered w-full"
+                    required
+                  />
+                </div>
+
+                <!-- Dirección 2 -->
+                <div class="form-control">
+                  <label class="label">
+                    <span class="label-text">Dirección 2 (opcional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    [(ngModel)]="billingForm().address_2"
+                    placeholder="Piso, apartamento, oficina, etc."
+                    class="input input-bordered w-full"
+                  />
+                </div>
+              </div>
+
+              <!-- Distrito -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text">Parroquia/Municipio *</span>
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="billingForm().municipality"
+                  placeholder="Ej: Chacao"
+                  class="input input-bordered w-full"
+                  required
+                />
+              </div>
+
+              <!-- Ciudad -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text">Ciudad *</span>
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="billingForm().city"
+                  placeholder="Ej: Caracas"
+                  class="input input-bordered w-full"
+                  required
+                />
+              </div>
+
+              <!-- Estado -->
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text">Estado *</span>
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="billingForm().state"
+                  placeholder="Ej: Miranda"
+                  class="input input-bordered w-full"
+                  required
+                />
+              </div>
+
+              <!-- Código Postal -->
+              <div class="form-control lg:col-span-1">
+                <label class="label">
+                  <span class="label-text">Código Postal *</span>
+                </label>
+                <input
+                  type="text"
+                  [(ngModel)]="billingForm().postalCode"
+                  placeholder="Ej: 1060"
+                  class="input input-bordered w-full"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Vista cuando usa misma dirección -->
+          <div *ngIf="useSameAsShipping() && currentAddress()" class="bg-base-200 p-4 rounded-lg">
+            <div class="flex items-center gap-2 text-sm text-base-content/70">
+              <svg class="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+              </svg>
+              <span>Se usará la misma dirección de envío para la facturación</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary Card -->
+      <div class="card bg-base-100 shadow-lg">
+        <div class="card-body">
+          <h3 class="card-title text-lg mb-4">Resumen del Pedido</h3>
+          
+          <!-- Items List -->
+          <div class="space-y-4">
+            <div 
+              *ngFor="let item of checkoutItems()" 
+              class="flex items-center gap-4 p-4 bg-base-200 rounded-lg"
+            >
+              <!-- Product Image -->
+              <img 
+                [src]="item.productImage" 
+                [alt]="item.productName"
+                class="w-16 h-16 object-cover rounded-md"
+                loading="lazy"
+              />
+              
+              <!-- Product Details -->
+              <div class="flex-1">
+                <h4 class="font-medium">{{ item.productName }}</h4>
+                <p *ngIf="item.variantName" class="text-sm text-base-content/70 flex items-center gap-2">
+                  {{ item.variantName }}
+                  <span *ngIf="item.variantColorHex" 
+                        class="w-4 h-4 rounded-full border border-base-300" 
+                        [style.background-color]="item.variantColorHex">
+                  </span>
+                </p>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="text-sm">Cantidad: {{ item.quantity }}</span>
+                </div>
+              </div>
+              
+              <!-- Price -->
+              <div class="text-right">
+                <p class="font-semibold">{{ item.totalPrice | currency:'USD':'symbol':'1.2-2' }}</p>
+                <p class="text-sm text-base-content/70">{{ item.unitPrice | currency:'USD':'symbol':'1.2-2' }} c/u</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Order Totals -->
+    <div class="lg:col-span-1">
+      <div class="card bg-base-100 shadow-lg">
+        <div class="card-body">
+          <h3 class="card-title text-lg mb-4">Total del Pedido</h3>
+          
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span>Artículos ({{ checkoutTotals().itemCount }})</span>
+              <span>{{ checkoutTotals().subtotal | currency:'USD':'symbol':'1.2-2' }}</span>
+            </div>
+            
+            <div class="flex justify-between">
+              <span>IGV (18%)</span>
+              <span>{{ checkoutTotals().taxAmount | currency:'USD':'symbol':'1.2-2' }}</span>
+            </div>
+            
+            <div class="flex justify-between" *ngIf="checkoutTotals().shippingCost > 0">
+              <span>Envío</span>
+              <span>{{ checkoutTotals().shippingCost | currency:'USD':'symbol':'1.2-2' }}</span>
+            </div>
+            
+            <div class="divider my-2"></div>
+            
+            <div class="flex justify-between text-lg font-semibold">
+              <span>Total</span>
+              <span>{{ checkoutTotals().total | currency:'USD':'symbol':'1.2-2' }}</span>
+            </div>
+          </div>
+          
+          <div class="card-actions justify-stretch mt-6">
+            <button 
+              (click)="processOrder()" 
+              class="btn btn-primary w-full"
+              [disabled]="!selectedDeliveryMethod() || (isDeliveryAddressRequired() && !currentAddress()) || !currentBillingAddress() || processingOrder()"
+            >
+              <span *ngIf="processingOrder()" class="loading loading-spinner loading-sm"></span>
+              <span *ngIf="!processingOrder()">Procesar Pedido</span>
+              <span *ngIf="processingOrder()">Procesando...</span>
+            </button>
+            <p *ngIf="!selectedDeliveryMethod()" class="text-sm text-base-content/70 text-center mt-2">
+              Selecciona un método de entrega para continuar
+            </p>
+            <p *ngIf="selectedDeliveryMethod() && isDeliveryAddressRequired() && !currentAddress()" class="text-sm text-base-content/70 text-center mt-2">
+              Agrega una dirección de entrega para continuar
+            </p>
+            <p *ngIf="!currentBillingAddress()" class="text-sm text-base-content/70 text-center mt-2">
+              Agrega una dirección de facturación para continuar
+            </p>
+            <p *ngIf="error()" class="text-sm text-error text-center mt-2">
+              {{ error() }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading() && checkoutItems().length === 0" class="text-center py-12">
+    <h2 class="text-xl font-semibold mb-4">No hay items seleccionados</h2>
+    <p class="text-base-content/70 mb-6">Selecciona algunos productos en tu carrito para continuar</p>
+    <button (click)="goBackToCart()" class="btn btn-primary">
+      Ir al Carrito
+    </button>
+  </div>
+</div>
+
+<!-- Select Billing Address Modal -->
+<div *ngIf="showSelectBillingAddressModal()" class="modal modal-open" (click)="closeSelectBillingAddressModal()">
+  <div class="modal-box max-w-2xl" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-light text-base-content">Seleccionar Dirección de Facturación</h3>
+      <button class="btn btn-circle btn-ghost btn-sm" (click)="closeSelectBillingAddressModal()">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Address List -->
+    <div class="space-y-3">
+      <div
+        *ngFor="let address of userAddresses(); let i = index"
+        class="p-4 border border-base-300 rounded-lg cursor-pointer hover:bg-base-200 transition-colors"
+        [class.border-primary]="currentBillingAddress()?.id === address.id"
+        [class.bg-primary/5]="currentBillingAddress()?.id === address.id"
+        (click)="selectBillingAddress(address)"
+      >
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <h4 class="font-semibold">{{ address.name }}</h4>
+              <span *ngIf="i === 0" class="badge badge-primary badge-sm">Principal</span>
+            </div>
+            <p class="text-sm text-base-content/80">
+              {{ address.address_1 }}
+              <span *ngIf="address.address_2">, {{ address.address_2 }}</span>
+            </p>
+            <p class="text-sm text-base-content/80">
+              {{ address.municipality }}, {{ address.city }}, {{ address.state }}
+            </p>
+            <p class="text-sm text-base-content/80">
+              {{ address.country }} {{ address.postalCode }}
+            </p>
+          </div>
+          <div *ngIf="currentBillingAddress()?.id === address.id" class="ml-4">
+            <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add New Address Button -->
+    <div class="mt-6 pt-4 border-t border-base-300">
+      <button
+        (click)="closeSelectBillingAddressModal(); openAddAddressModal()"
+        class="btn btn-outline w-full"
+      >
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        Agregar Nueva Dirección
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Address Modal -->
+<app-add-address 
+  *ngIf="showAddAddressModal()"
+  [editAddress]="editingAddress()"
+  (onClose)="closeAddAddressModal()"
+></app-add-address>
+
+<!-- Select Address Modal -->
+<div *ngIf="showSelectAddressModal()" class="modal modal-open" (click)="closeSelectAddressModal()">
+  <div class="modal-box max-w-2xl" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-light text-base-content">Seleccionar Dirección</h3>
+      <button class="btn btn-circle btn-ghost btn-sm" (click)="closeSelectAddressModal()">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Address List -->
+    <div class="space-y-3">
+      <div 
+        *ngFor="let address of userAddresses(); let i = index"
+        class="p-4 border border-base-300 rounded-lg cursor-pointer hover:bg-base-200 transition-colors"
+        [class.border-primary]="currentAddress()?.id === address.id"
+        [class.bg-primary/5]="currentAddress()?.id === address.id"
+        (click)="selectAddress(address)"
+      >
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <h4 class="font-semibold">{{ address.name }}</h4>
+              <span *ngIf="i === 0" class="badge badge-primary badge-sm">Principal</span>
+            </div>
+            <p class="text-sm text-base-content/80">
+              {{ address.address_1 }}
+              <span *ngIf="address.address_2">, {{ address.address_2 }}</span>
+            </p>
+            <p class="text-sm text-base-content/80">
+              {{ address.municipality }}, {{ address.city }}, {{ address.state }}
+            </p>
+            <p class="text-sm text-base-content/80">
+              {{ address.country }} {{ address.postalCode }}
+            </p>
+          </div>
+          <div *ngIf="currentAddress()?.id === address.id" class="ml-4">
+            <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add New Address Button -->
+    <div class="mt-6 pt-4 border-t border-base-300">
+      <button 
+        (click)="closeSelectAddressModal(); openAddAddressModal()" 
+        class="btn btn-outline w-full"
+      >
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        Agregar Nueva Dirección
+      </button>
+    </div>
+  </div>
+</div>

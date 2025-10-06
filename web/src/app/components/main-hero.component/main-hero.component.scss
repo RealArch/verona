@@ -1,10 +1,13 @@
-.bg{
-    background-color: #111a14; /* Cambia este color al que desees */
-    overflow: visible; /* Permite que la imagen sobresalga del background */
+.bg {
+    background-color: #111a14;
+    /* Cambia este color al que desees */
+    overflow: visible;
+    /* Permite que la imagen sobresalga del background */
 }
 
 header {
-    overflow: visible; /* Permite que la imagen sobresalga del header */
+    overflow: visible;
+    /* Permite que la imagen sobresalga del header */
 }
 
 .img-box {
@@ -19,9 +22,9 @@ header {
     overflow: hidden;
 }
 
-.header{
+.header {
     width: 100%;
-    aspect-ratio: 2 / 1;
+    aspect-ratio: 16 / 6;
     box-sizing: content-box;
     /* Suma 20px extra al alto de la relación de aspecto */
     padding-bottom: 81px;
@@ -33,9 +36,10 @@ header {
     @media (max-width: 768px) {
         aspect-ratio: 1 / 1;
     }
+
     @media (max-width: 640px) {
-        .img-box{
-        border-radius: 0px;
+        .img-box {
+            border-radius: 0px;
 
         }
     }

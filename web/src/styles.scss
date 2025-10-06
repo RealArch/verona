@@ -89,3 +89,64 @@ textarea::placeholder {
   opacity: 1;
 }
 
+/* === MODALES GLOBALES - Estilo similar a Angular Material === */
+
+/* Modal base - Altura fija */
+.modal {
+  height: 100vh; /* Ocupa toda la pantalla */
+}
+
+.modal-box {
+  max-height: 90vh; /* Máximo 90% de viewport height */
+  height: auto; /* Altura automática */
+  overflow: hidden; /* Previene scroll del modal */
+  display: flex;
+  flex-direction: column; /* Layout flex para controlar contenido */
+}
+
+/* Contenido del modal - Scrollable */
+.modal-box > * {
+  flex-shrink: 0; /* Evita que se compriman */
+}
+
+/* Header del modal */
+.modal-box .flex.justify-between.items-center.mb-6 {
+  flex-shrink: 0; /* Header fijo */
+}
+
+/* Contenido principal del modal - Scrollable */
+.modal-box form {
+  padding: 5px;
+  flex: 1;
+  overflow-x: visible;
+  overflow-y: auto; /* Ocupa espacio restante y hace scroll */
+  padding-right: 0.5rem; /* Padding derecho para scrollbar */
+}
+
+/* Footer del modal (botones) */
+.modal-box .flex.flex-col.sm\\:flex-row.gap-3.pt-4 {
+  flex-shrink: 0; /* Footer fijo */
+  margin-top: auto; /* Se alinea al final */
+}
+
+/* === RESPONSIVE - Móviles === */
+@media (max-width: 768px) {
+  .modal-box {
+    max-height: 100vh; /* En móviles ocupa toda la pantalla */
+    height: 100vh;
+    margin: 0 1rem; /* Padding lateral, sin margen vertical */
+    border-radius: 0; /* Sin bordes redondeados en móviles */
+  }
+
+  /* En móviles el contenido puede hacer scroll */
+  .modal-box form {
+    max-height: calc(100vh - 8rem);
+    overflow-y: auto;
+  }
+}
+
+/* === Animaciones suaves === */
+.modal-box {
+  transition: all 0.3s ease-in-out;
+}
+

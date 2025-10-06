@@ -1,0 +1,13 @@
+/* Checkout page styles */
+
+:host {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main container takes full height */
+.container {
+  flex: 1;
+  min-height: 100vh;
+}

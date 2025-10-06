@@ -16,9 +16,10 @@ import { defineSecret } from "firebase-functions/params";
 import adminRouter from "./routes/admin.router";
 import categoriesRouter, { onCategoryCreated, onCategoryDeleted, onCategoryUpdated } from "./routes/categories.router";
 import productsRouter, { onProductCreated, onProductDeleted, onProductUpdated } from "./routes/products.router";
+import authRouter from "./routes/auth.router";
+import ordersRouter from "./routes/orders.router";
 //importamos la app de firebase
 import "./firebase-init";
-import authRouter from "./routes/auth.router";
 
 // Define los secrets
 const algoliaAdminKey = defineSecret("ALGOLIA_ADMIN_KEY");
@@ -48,6 +49,7 @@ app.use("/admin", adminRouter)
 app.use('/categories', categoriesRouter);
 app.use('/products', productsRouter);
 app.use('/auth', authRouter);
+app.use('/orders', ordersRouter);
 
 
 export const api = onRequest(

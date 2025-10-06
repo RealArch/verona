@@ -17,10 +17,12 @@ import {
   getDoc,
   setDoc,
   onSnapshot,
-  DocumentData
+  updateDoc,
+  arrayUnion,
+  runTransaction
 } from '@angular/fire/firestore';
 import { environment } from '../../../environments/environment';
-import { UserProfile } from '../../interfaces/auth';
+import { UserProfile, UserAddress } from '../../interfaces/auth';
 
 // Interface para los datos del usuario en Firestore
 
@@ -40,12 +42,31 @@ export class Auth {
   // Signal que mantiene los datos del usuario desde Firestore
   private userProfileSignal = signal<UserProfile | null>(null);
 
+  // Signal para controlar si Firebase Auth ya se inicializó
+  private authInitialized = signal(false);
+
   // Signal computado para saber si está autenticado
-  public isAuthenticated = computed(() => !!this.userSignal());
+  public isAuthenticated = computed(() => {
+    // Si no se ha inicializado Firebase Auth, asumir que está autenticado temporalmente
+    if (!this.authInitialized()) {
+      return true;
+    }
+    // Una vez inicializado, usar el estado real del usuario
+    return !!this.userSignal();
+  });
 
   // Getters para acceder a los datos desde cualquier componente
   public user = this.userSignal.asReadonly();
   public userProfile = this.userProfileSignal.asReadonly();
+
+  // Signal computado para las iniciales del usuario
+  public userInitials = computed(() => {
+    const profile = this.userProfileSignal();
+    if (!profile) return '';
+    const first = profile.firstName?.trim()[0] || '';
+    const last = profile.lastName?.trim()[0] || '';
+    return (first + last).toUpperCase();
+  });
 
   // Listener de Firestore para el documento del usuario
   private unsubscribeUserProfile?: () => void;
@@ -69,6 +90,8 @@ export class Auth {
    */
   private initAuthListener(): void {
     onAuthStateChanged(this.firebaseAuth, (user) => {
+      // Marcar como inicializado al recibir el primer evento
+      this.authInitialized.set(true);
       this.userSignal.set(user);
 
       if (user) {
@@ -247,6 +270,110 @@ export class Auth {
     } catch (error) {
       console.error('Error verificando claims de admin:', error);
       return false;
+    }
+  }
+
+  /**
+   * Agrega una nueva dirección al perfil del usuario
+   */
+  async addUserAddress(addressData: Omit<UserAddress, 'id'>, isDefault: boolean = false): Promise<void> {
+    const user = this.userSignal();
+    if (!user) {
+      throw new Error('No user is currently logged in');
+    }
+
+    // Generar ID único para la nueva dirección
+    const addressId = `addr-${Date.now()}`;
+
+    // Crear el objeto de dirección completa
+    const newAddress: UserAddress = {
+      id: addressId,
+      ...addressData
+    };
+
+    const userDocRef = doc(this.firestore, 'users', user.uid);
+
+    if (isDefault) {
+      // Si debe ser dirección principal, obtener direcciones actuales e insertar al principio
+      const userProfile = await this.getUserProfile();
+      const currentAddresses = userProfile?.addresses || [];
+
+      // Insertar la nueva dirección al principio del array
+      const updatedAddresses = [newAddress, ...currentAddresses];
+
+      // Actualizar todo el array de direcciones
+      return updateDoc(userDocRef, {
+        addresses: updatedAddresses,
+        updatedAt: new Date()
+      });
+    } else {
+      // Si no es principal, añadir al final usando arrayUnion
+      return updateDoc(userDocRef, {
+        addresses: arrayUnion(newAddress),
+        updatedAt: new Date()
+      });
+    }
+  }
+
+  /**
+   * Actualiza una dirección existente del usuario
+   */
+  async updateUserAddress(addressId: string, addressData: Omit<UserAddress, 'id'>, isDefault: boolean = false): Promise<void> {
+    const user = this.userSignal();
+    if (!user) {
+      throw new Error('No user is currently logged in');
+    }
+
+    const userDocRef = doc(this.firestore, 'users', user.uid);
+
+    try {
+      await runTransaction(this.firestore, async (transaction) => {
+        // Obtener el documento actual
+        const userDoc = await transaction.get(userDocRef);
+        if (!userDoc.exists()) {
+          throw new Error('User profile not found');
+        }
+
+        const userProfile = userDoc.data() as UserProfile;
+        if (!userProfile.addresses) {
+          throw new Error('No addresses found');
+        }
+
+        // Encontrar y actualizar la dirección
+        const updatedAddresses = userProfile.addresses.map(address => {
+          if (address.id === addressId) {
+            return {
+              ...address,
+              ...addressData
+            };
+          }
+          return address;
+        });
+
+        // Verificar que se encontró la dirección
+        const addressFound = updatedAddresses.some(address => address.id === addressId);
+        if (!addressFound) {
+          throw new Error('Address not found');
+        }
+
+        // Si debe ser dirección principal, moverla al principio
+        if (isDefault) {
+          const addressIndex = updatedAddresses.findIndex(addr => addr.id === addressId);
+          if (addressIndex > 0) {
+            const [address] = updatedAddresses.splice(addressIndex, 1);
+            updatedAddresses.unshift(address);
+          }
+        }
+
+        // Actualizar el documento con las direcciones modificadas
+        transaction.update(userDocRef, {
+          addresses: updatedAddresses,
+          updatedAt: new Date()
+        });
+      });
+    } catch (error) {
+      console.error('Error updating user address:', error);
+      throw error;
     }
   }
 

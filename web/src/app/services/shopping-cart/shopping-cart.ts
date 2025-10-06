@@ -122,7 +122,11 @@ export class ShoppingCartService {
     } else {
       // Crear carrito vacío para el usuario
       const emptyCart = this.createEmptyCart(userId);
-      await setDoc(cartRef, emptyCart);
+      
+      // Preparar datos para Firestore, eliminando campos undefined recursivamente
+      const firestoreData = this.sanitizeForFirestore(emptyCart);
+      
+      await setDoc(cartRef, firestoreData);
       this._cart.set(emptyCart);
     }
   }
@@ -175,9 +179,7 @@ export class ShoppingCartService {
    */
   private createEmptyCart(userId?: string): IShoppingCart {
     const now = serverTimestamp() as any;
-    return {
-      userId: userId || undefined,
-      sessionId: userId ? undefined : this.generateSessionId(),
+    const cart: IShoppingCart = {
       items: [],
       subtotal: 0,
       taxAmount: 0,
@@ -189,6 +191,15 @@ export class ShoppingCartService {
       updatedAt: now,
       status: 'active'
     };
+
+    // Solo agregar los campos que tienen valor válido
+    if (userId) {
+      cart.userId = userId;
+    } else {
+      cart.sessionId = this.generateSessionId();
+    }
+
+    return cart;
   }
 
   /**
@@ -229,13 +240,43 @@ export class ShoppingCartService {
       const userId = this._currentUser()?.uid;
       if (userId) {
         const cartRef = doc(this.firestore, 'shopping_carts', userId);
-        await updateDoc(cartRef, calculatedCart as any);
+        
+        // Preparar datos para Firestore, eliminando campos undefined recursivamente
+        const firestoreData = this.sanitizeForFirestore(calculatedCart);
+        
+        await updateDoc(cartRef, firestoreData);
       }
     } else {
       this.saveLocalCart(calculatedCart);
     }
 
     this._cart.set(calculatedCart);
+  }
+
+  /**
+   * Sanitiza un objeto eliminando campos undefined recursivamente
+   */
+  private sanitizeForFirestore(obj: any): any {
+    if (obj === null || obj === undefined) {
+      return null;
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.sanitizeForFirestore(item));
+    }
+
+    if (typeof obj === 'object') {
+      const sanitized: any = {};
+      Object.keys(obj).forEach(key => {
+        const value = obj[key];
+        if (value !== undefined) {
+          sanitized[key] = this.sanitizeForFirestore(value);
+        }
+      });
+      return sanitized;
+    }
+
+    return obj;
   }
 
   /**
@@ -294,7 +335,6 @@ export class ShoppingCartService {
         const newItem: CartItem = {
           id: this.generateItemId(),
           productId: product.id || product.objectID || '',
-          variantId: variant?.id,
           quantity,
           unitPrice,
           totalPrice: unitPrice * quantity,
@@ -302,12 +342,23 @@ export class ShoppingCartService {
           productSku: product.sku,
           productSlug: product.slug,
           productImage: product.photos[0]?.small?.url || '',
-          variantName: variant?.name,
-          variantSku: variant?.sku,
-          variantColorHex: variant?.colorHex,
           addedAt: serverTimestamp() as any,
           updatedAt: serverTimestamp() as any
         };
+
+        // Solo agregar campos de variant si existen
+        if (variant?.id) {
+          newItem.variantId = variant.id;
+        }
+        if (variant?.name) {
+          newItem.variantName = variant.name;
+        }
+        if (variant?.sku) {
+          newItem.variantSku = variant.sku;
+        }
+        if (variant?.colorHex) {
+          newItem.variantColorHex = variant.colorHex;
+        }
 
         updatedCart = {
           ...currentCart,

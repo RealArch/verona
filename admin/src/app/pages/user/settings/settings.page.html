@@ -1,0 +1,182 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="font-bold">Configuración</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-grid fixed class="max-w-4xl mx-auto py-6">
+    
+    <!-- Sección Tienda -->
+    <div class="mb-8">
+      <div class="mb-4">
+        <h2 class="text-xl font-bold text-gray-800 mb-1">Tienda</h2>
+        <p class="text-sm text-gray-500">Controla el modo de operación de tu tienda</p>
+      </div>
+      
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <ion-item lines="none" class="setting-item">
+          <div class="flex flex-col py-3 flex-1">
+            <h3 class="text-base font-semibold text-gray-800 mb-1">Tienda habilitada para ventas</h3>
+            <p class="text-sm text-gray-500">
+              Permite que los clientes realicen compras directamente usando los métodos de pago registrados
+            </p>
+          </div>
+          <ion-toggle 
+            slot="end" 
+            [checked]="storeEnabled()" 
+            (ionChange)="onToggleChange($event)"
+            class="ml-4">
+          </ion-toggle>
+        </ion-item>
+      </div>
+    </div>
+
+    <!-- Sección Métodos de entrega -->
+    <div class="mb-8">
+      <div class="mb-4">
+        <h2 class="text-xl font-bold text-gray-800 mb-1">Métodos de entrega</h2>
+        <p class="text-sm text-gray-500">Define qué opciones de entrega estarán disponibles para tus clientes</p>
+      </div>
+      
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-100">
+        
+        <ion-item lines="none" class="setting-item">
+          <div class="flex items-center py-3 flex-1">
+            <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center mr-4 flex-shrink-0">
+              <ion-icon name="home" class="text-blue-600 text-xl"></ion-icon>
+            </div>
+            <div class="flex flex-col flex-1">
+              <h3 class="text-base font-semibold text-gray-800">Retiro en persona</h3>
+              <p class="text-sm text-gray-500">El cliente recoge en tu ubicación</p>
+            </div>
+          </div>
+          <ion-toggle 
+            slot="end" 
+            [checked]="pickupEnabled()" 
+            (ionChange)="onPickupToggleChange($event)"
+            class="ml-4">
+          </ion-toggle>
+        </ion-item>
+
+        <ion-item lines="none" class="setting-item">
+          <div class="flex items-center py-3 flex-1">
+            <div class="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center mr-4 flex-shrink-0">
+              <ion-icon name="bicycle" class="text-green-600 text-xl"></ion-icon>
+            </div>
+            <div class="flex flex-col flex-1">
+              <h3 class="text-base font-semibold text-gray-800">Delivery</h3>
+              <p class="text-sm text-gray-500">Entrega a domicilio local</p>
+            </div>
+          </div>
+          <ion-toggle 
+            slot="end" 
+            [checked]="deliveryEnabled()" 
+            (ionChange)="onDeliveryToggleChange($event)"
+            class="ml-4">
+          </ion-toggle>
+        </ion-item>
+
+        <ion-item lines="none" class="setting-item">
+          <div class="flex items-center py-3 flex-1">
+            <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center mr-4 flex-shrink-0">
+              <ion-icon name="airplane" class="text-purple-600 text-xl"></ion-icon>
+            </div>
+            <div class="flex flex-col flex-1">
+              <h3 class="text-base font-semibold text-gray-800">Envío</h3>
+              <p class="text-sm text-gray-500">Envío por paquetería o correo</p>
+            </div>
+          </div>
+          <ion-toggle 
+            slot="end" 
+            [checked]="shippingEnabled()" 
+            (ionChange)="onShippingToggleChange($event)"
+            class="ml-4">
+          </ion-toggle>
+        </ion-item>
+
+        <ion-item lines="none" class="setting-item">
+          <div class="flex items-center py-3 flex-1">
+            <div class="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center mr-4 flex-shrink-0">
+              <ion-icon name="chatbubbles" class="text-orange-600 text-xl"></ion-icon>
+            </div>
+            <div class="flex flex-col flex-1">
+              <h3 class="text-base font-semibold text-gray-800">Acordar con el vendedor</h3>
+              <p class="text-sm text-gray-500">Cliente coordina detalles directamente</p>
+            </div>
+          </div>
+          <ion-toggle 
+            slot="end" 
+            [checked]="arrangeWithSellerEnabled()" 
+            (ionChange)="onArrangeWithSellerToggleChange($event)"
+            class="ml-4">
+          </ion-toggle>
+        </ion-item>
+
+      </div>
+    </div>
+
+    <!-- Sección Impuestos -->
+    <div class="mb-8">
+      <div class="mb-4">
+        <h2 class="text-xl font-bold text-gray-800 mb-1">Impuestos</h2>
+        <p class="text-sm text-gray-500">Configura el porcentaje de impuestos aplicado a las ventas</p>
+      </div>
+      
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <ion-item lines="none" class="setting-item" button (click)="openTaxPopover($event)">
+          <div class="flex items-center py-3 flex-1">
+            <div class="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center mr-4 flex-shrink-0">
+              <ion-icon name="calculator" class="text-indigo-600 text-xl"></ion-icon>
+            </div>
+            <div class="flex flex-col flex-1">
+              <h3 class="text-base font-semibold text-gray-800">Porcentaje de impuesto</h3>
+              <p class="text-sm text-gray-500">Impuesto aplicado a cada venta</p>
+            </div>
+            <div class="flex items-center ml-4">
+              <span class="text-2xl font-bold text-indigo-600 mr-2">{{ taxPercentage() }}%</span>
+              <ion-icon name="create-outline" class="text-gray-400 text-lg"></ion-icon>
+            </div>
+          </div>
+        </ion-item>
+      </div>
+    </div>
+
+  </ion-grid>
+
+  <!-- Popover para editar impuesto -->
+  <ion-popover #taxPopover [isOpen]="isTaxPopoverOpen" (didDismiss)="isTaxPopoverOpen = false" [dismissOnSelect]="false">
+    <ng-template>
+      <div class="p-6 w-80">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">Editar porcentaje de impuesto</h3>
+        
+        <div class="mb-6">
+          <ion-label class="text-sm font-medium text-gray-700 mb-2 block">Porcentaje (%)</ion-label>
+          <ion-input
+            type="number"
+            [(ngModel)]="tempTaxPercentage"
+            min="0"
+            max="100"
+            step="0.1"
+            placeholder="0.0"
+            class="border border-gray-300 rounded-lg"
+          ></ion-input>
+          <p class="text-xs text-gray-500 mt-2">Ingresa un valor entre 0 y 100</p>
+        </div>
+
+        <div class="flex gap-2">
+          <ion-button expand="block" color="medium" (click)="closeTaxPopover()">
+            Cancelar
+          </ion-button>
+          <ion-button expand="block" color="primary" (click)="saveTaxPercentage()">
+            Guardar
+          </ion-button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-popover>
+
+</ion-content>

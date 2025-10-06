@@ -1,0 +1,176 @@
+<!-- Modal Container -->
+<div class="modal modal-open" (click)="onBackdropClick($event)">
+    <div class="modal-box max-w-2xl">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-light text-base-content">
+              {{ isEditing ? 'Editar Dirección' : 'Agregar Nueva Dirección' }}
+            </h3>
+            <button class="btn btn-circle btn-ghost btn-sm" (click)="cancel()">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="alert alert-error mb-4">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>{{ errorMessage }}</span>
+        </div>
+
+        <!-- Form -->
+        <form [formGroup]="addressForm" (ngSubmit)="onSubmit()" class="space-y-4">
+
+            <!-- Dirección Línea 1 -->
+            <fieldset class="fieldset">
+                <legend class="fieldset-legend">Dirección Línea 1 <span class="text-error">*</span></legend>
+                <div class="relative">
+                    <input type="text" class="input w-full pr-10" [class.input-error]="hasError('address_1')"
+                        placeholder="Calle, número, zona" formControlName="address_1" />
+                    <div *ngIf="hasError('address_1')" class="absolute inset-y-0 right-0 flex items-center pr-3">
+                        <svg class="w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- Dirección Línea 2 -->
+            <fieldset class="fieldset">
+                <legend class="fieldset-legend">Dirección Línea 2 <span
+                        class="text-base-content/60">(Opcional)</span>
+                </legend>
+                <input type="text" class="input w-full" placeholder="Apartamento, piso, referencia"
+                    formControlName="address_2" />
+            </fieldset>
+
+            <!-- Instrucciones adicionales -->
+            <fieldset class="fieldset">
+                <legend class="fieldset-legend">Instrucciones Adicionales <span
+                        class="text-base-content/60">(Opcional)</span></legend>
+                <textarea class="textarea textarea-bordered h-20 resize-none w-full"
+                    placeholder="Ej: Tocar el timbre del apartamento 5B, edificio azul al lado de la panadería, llamar al teléfono antes de llegar..."
+                    formControlName="instructions"></textarea>
+                <p class="fieldset-label text-sm text-base-content/70 mt-1">
+                    Agrega puntos de referencia, instrucciones para llegar o cualquier detalle que ayude al
+                    repartidor a
+                    encontrar el lugar.
+                </p>
+            </fieldset>
+            <!-- Municipio y Ciudad -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Municipio/Distrito <span class="text-error">*</span></legend>
+                    <div class="relative">
+                        <input type="text" class="input pr-10" [class.input-error]="hasError('municipality')"
+                            placeholder="Ej: Libertador" formControlName="municipality" />
+                        <div *ngIf="hasError('municipality')" class="absolute inset-y-0 right-0 flex items-center pr-3">
+                            <svg class="w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Ciudad <span class="text-error">*</span></legend>
+                    <div class="relative">
+                        <input type="text" class="input pr-10" [class.input-error]="hasError('city')" placeholder="Ej: Caracas"
+                            formControlName="city" />
+                        <div *ngIf="hasError('city')" class="absolute inset-y-0 right-0 flex items-center pr-3">
+                            <svg class="w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <!-- Estado/Provincia y Código Postal -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Estado/Provincia <span class="text-error">*</span></legend>
+                    <div class="relative">
+                        <input type="text" class="input pr-10" [class.input-error]="hasError('state')"
+                            placeholder="Ej: Distrito Capital" formControlName="state" />
+                        <div *ngIf="hasError('state')" class="absolute inset-y-0 right-0 flex items-center pr-3">
+                            <svg class="w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Código Postal <span class="text-error">*</span></legend>
+                    <div class="relative">
+                        <input type="text" class="input pr-10" [class.input-error]="hasError('postalCode')" placeholder="Ej: 1060"
+                            formControlName="postalCode" />
+                        <div *ngIf="hasError('postalCode')" class="absolute inset-y-0 right-0 flex items-center pr-3">
+                            <svg class="w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                <!-- Teléfono -->
+                <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Teléfono <span class="text-base-content/60">(Opcional)</span>
+                    </legend>
+                    <div class="relative">
+                        <input type="tel" class="input pr-10" [class.input-error]="hasError('phone')"
+                            placeholder="+58 412 123 4567" formControlName="phone" />
+                        <div *ngIf="hasError('phone')" class="absolute inset-y-0 right-0 flex items-center pr-3">
+                            <svg class="w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- Nombre del destinatario -->
+                <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Nombre del Destinatario <span class="text-error">*</span></legend>
+                    <div class="relative">
+                        <input type="text" class="input pr-10" [class.input-error]="hasError('name')"
+                            placeholder="Nombre completo" formControlName="name" />
+                        <div *ngIf="hasError('name')" class="absolute inset-y-0 right-0 flex items-center pr-3">
+                            <svg class="w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <!-- Dirección Principal -->
+            <fieldset class="fieldset">
+                <legend class="fieldset-legend">Configuración</legend>
+                <label class="fieldset-label cursor-pointer">
+                    <input type="checkbox" class="checkbox checkbox-primary" formControlName="isDefault" />
+                    <span class="ml-2">Establecer como dirección principal</span>
+                </label>
+
+            </fieldset> <!-- Actions -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-3">
+                <button type="button" class="btn btn-outline flex-1" (click)="cancel()" [disabled]="isLoading">
+                    Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary flex-1" [disabled]="isLoading || !isFormValid">
+                    <span *ngIf="isLoading" class="loading loading-spinner loading-sm"></span>
+                    <span *ngIf="!isLoading">{{ isEditing ? 'Actualizar Dirección' : 'Guardar Dirección' }}</span>
+                    <span *ngIf="isLoading">{{ isEditing ? 'Actualizando...' : 'Guardando...' }}</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
