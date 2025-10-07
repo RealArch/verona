@@ -42,7 +42,8 @@ export class SiteConfig {
               homeDeliveryEnabled: true,
               shippingEnabled: false,
               arrangeWithSellerEnabled: false
-            }
+            },
+            taxPercentage: 16 // Por defecto 18%
           });
         }
       },

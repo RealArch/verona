@@ -1,5 +1,5 @@
 <!-- Checkout Container -->
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-8 margin-nav">
   <!-- Header -->
   <div class="flex items-center justify-between mb-8">
     <h1 class="text-3xl font-light">Checkout</h1>
@@ -381,7 +381,7 @@
             </div>
             
             <div class="flex justify-between">
-              <span>IGV (18%)</span>
+              <span>IGV ({{ checkoutTotals().taxPercentage }}%)</span>
               <span>{{ checkoutTotals().taxAmount | currency:'USD':'symbol':'1.2-2' }}</span>
             </div>
             

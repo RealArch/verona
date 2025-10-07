@@ -1,10 +1,14 @@
 // Interfaces para el servicio de ventas
 
+export type DeliveryMethod = 'pickup' | 'homeDelivery' | 'shipping' | 'arrangeWithSeller';
+
+
 export interface CreateOrderRequest {
   userId: string;
   items: OrderItem[];
-  shippingAddress: UserAddress;
-  billingAddress?: UserAddress; // Opcional, por ahora usaremos la misma dirección
+  shippingAddress?: UserAddress | null; // Opcional cuando no se requiere dirección
+  billingAddress: UserAddress | null; // Opcional cuando no se requiere dirección
+  deliveryMethod: DeliveryMethod; // Método de entrega seleccionado
   paymentMethod: string; // Por ahora placeholder
   notes?: string;
   totals: OrderTotals;
@@ -25,6 +29,7 @@ export interface OrderItem {
 export interface OrderTotals {
   subtotal: number;
   taxAmount: number;
+  taxPercentage: number;  // Porcentaje de impuestos enviado por el frontend
   shippingCost: number;
   total: number;
   itemCount: number;

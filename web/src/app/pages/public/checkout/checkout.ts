@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, PLATFORM_ID, effect } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { Location, CommonModule } from '@angular/common';
@@ -65,12 +65,14 @@ export class Checkout implements OnInit {
   userProfile = this.auth.userProfile;
   isAuthenticated = this.auth.isAuthenticated;
 
-  // Store settings
-  storeSettings = this.siteConfig.storeSettings;
+  // Store settings - capturados una sola vez al inicializar
+  private initialTaxPercentage = signal<number>(0);
+  private initialDeliveryMethods = signal<{ key: DeliveryMethod; label: string; enabled: boolean }[]>([]);
+  private settingsCaptured = signal<boolean>(false);
 
-  // Computed for available delivery methods
+  // Computed for available delivery methods - usa los valores iniciales capturados
   availableDeliveryMethods = computed(() => {
-    return this.siteConfig.getEnabledDeliveryMethods();
+    return this.initialDeliveryMethods();
   });
 
   // Computed to check if delivery address is required
@@ -109,24 +111,43 @@ export class Checkout implements OnInit {
     return null;
   });
 
-  // Computed totals
+  // Computed totals - usa el taxPercentage inicial capturado
   checkoutTotals = computed(() => {
     const items = this.checkoutItems();
-    if (!items.length) return { subtotal: 0, taxAmount: 0, shippingCost: 0, total: 0, itemCount: 0 };
+    if (!items.length) return { subtotal: 0, taxAmount: 0, shippingCost: 0, total: 0, itemCount: 0, taxPercentage: 0 };
     
     const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
-    const taxAmount = subtotal * 0.18; // IGV 18%
+    const taxPercentage = this.initialTaxPercentage();
+    const taxAmount = subtotal * (taxPercentage / 100);
     const shippingCost = 0; // Por defecto cero, se calculará después basado en método de delivery
     const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
     const total = subtotal + taxAmount + shippingCost;
     
-    return { subtotal, taxAmount, shippingCost, total, itemCount };
+    return { subtotal, taxAmount, shippingCost, total, itemCount, taxPercentage };
   });
 
   ngOnInit(): void {
     this.loadCheckoutItems();
     // No seleccionar método por defecto inicialmente
     // this.selectedDeliveryMethod.set(methods[0].key);
+  }
+
+  constructor() {
+    // Effect para capturar los valores de configuración una sola vez cuando estén disponibles
+    effect(() => {
+      const settings = this.siteConfig.storeSettings();
+      
+      // Solo capturar una vez cuando los settings estén disponibles y no se hayan capturado antes
+      if (settings && !this.settingsCaptured()) {
+        this.initialTaxPercentage.set(settings.taxPercentage || 0);
+        this.initialDeliveryMethods.set(this.siteConfig.getEnabledDeliveryMethods());
+        this.settingsCaptured.set(true);
+        console.log('Settings captured:', { 
+          taxPercentage: settings.taxPercentage, 
+          deliveryMethods: this.siteConfig.getEnabledDeliveryMethods() 
+        });
+      }
+    });
   }
 
   private loadCheckoutItems(): void {

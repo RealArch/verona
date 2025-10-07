@@ -6,4 +6,5 @@ export interface StoreSettings {
     shippingEnabled: boolean;
     arrangeWithSellerEnabled: boolean;
   };
+  taxPercentage: number;
 }

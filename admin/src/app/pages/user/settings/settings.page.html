@@ -148,35 +148,42 @@
   </ion-grid>
 
   <!-- Popover para editar impuesto -->
-  <ion-popover #taxPopover [isOpen]="isTaxPopoverOpen" (didDismiss)="isTaxPopoverOpen = false" [dismissOnSelect]="false">
+  <ion-popover
+    #taxPopover
+    [isOpen]="isTaxPopoverOpen"
+    (didDismiss)="isTaxPopoverOpen = false"
+    [dismissOnSelect]="false"
+    [showBackdrop]="true"
+    [backdropDismiss]="true"
+    class="tax-popover">
     <ng-template>
-      <div class="p-6 w-80">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">Editar porcentaje de impuesto</h3>
-        
-        <div class="mb-6">
-          <ion-label class="text-sm font-medium text-gray-700 mb-2 block">Porcentaje (%)</ion-label>
-          <ion-input
-            type="number"
-            [(ngModel)]="tempTaxPercentage"
-            min="0"
-            max="100"
-            step="0.1"
-            placeholder="0.0"
-            class="border border-gray-300 rounded-lg"
-          ></ion-input>
-          <p class="text-xs text-gray-500 mt-2">Ingresa un valor entre 0 y 100</p>
-        </div>
+      <ion-content class="ion-padding " [scrollY]="true">
+        <div class="w-full">
+          <h3 class="text-lg font-bold text-gray-800 mb-4">Editar porcentaje de impuesto</h3>
 
-        <div class="flex gap-2">
-          <ion-button expand="block" color="medium" (click)="closeTaxPopover()">
-            Cancelar
-          </ion-button>
-          <ion-button expand="block" color="primary" (click)="saveTaxPercentage()">
-            Guardar
-          </ion-button>
+          <div class="mb-6">
+            <ion-label class="text-sm font-medium text-gray-700 mb-2 block">Porcentaje (%)</ion-label>
+            <ion-input
+              type="number"
+              [(ngModel)]="tempTaxPercentage"
+              min="0"
+              max="100"
+              step="0.1"
+              placeholder="0.0"
+              class="border border-gray-300 rounded-lg"
+            ></ion-input>
+            <p class="text-xs text-gray-500 mt-2">Ingresa un valor entre 0 y 100</p>
+          </div>
+
+          <div class="flex gap-2 pb-4">
+            <ion-button expand="block" color="medium" (click)="closeTaxPopover()">
+              Cancelar
+            </ion-button>
+            <ion-button expand="block" color="primary" (click)="saveTaxPercentage()">
+              Guardar
+            </ion-button>
+          </div>
         </div>
-      </div>
+      </ion-content>
     </ng-template>
-  </ion-popover>
-
-</ion-content>
+  </ion-popover></ion-content>

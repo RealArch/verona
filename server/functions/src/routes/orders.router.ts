@@ -2,8 +2,9 @@ import { Router, Request, Response } from 'express';
 import * as admin from 'firebase-admin';
 import Joi from 'joi';
 import { CreateOrderRequest, CreateOrderResponse } from '../interfaces/sales.interface';
-import { Timestamp } from '@google-cloud/firestore';
+import { Timestamp, FieldValue } from '@google-cloud/firestore';
 import { prepareVariantStockUpdate, prepareSimpleProductStockUpdate } from '../utils/stockManagement';
+import { getStoreTaxSettings, validateTaxAmount, getStoreDeliverySettings, validateDeliveryMethod } from '../utils/taxValidation';
 
 const ordersRouter: Router = Router();
 
@@ -12,8 +13,8 @@ const userAddressSchema = Joi.object({
   id: Joi.string().optional(),
   name: Joi.string().min(2).max(100).required(),
   address_1: Joi.string().min(5).max(200).required(),
-  address_2: Joi.string().allow(null).optional(),
-  description: Joi.string().allow(null).optional(),
+  address_2: Joi.string().allow(null).allow('').optional(), // Puede venir vacío o null
+  description: Joi.string().allow(null).allow('').optional(), // Puede venir vacío o null
   municipality: Joi.string().min(2).max(100).optional(),
   city: Joi.string().min(2).max(100).required(),
   state: Joi.string().min(2).max(100).required(),
@@ -40,17 +41,24 @@ const orderItemSchema = Joi.object({
 const orderTotalsSchema = Joi.object({
   subtotal: Joi.number().min(0).required(),
   taxAmount: Joi.number().min(0).required(),
+  taxPercentage: Joi.number().min(0).max(100).required(), // Porcentaje de impuestos (0-100%)
   shippingCost: Joi.number().min(0).required(),
   total: Joi.number().min(0).required(),
   itemCount: Joi.number().integer().min(1).required()
 });
 
 // Esquema de validación para CreateOrderRequest
+// La dirección de envío es condicional según el método de entrega
 const createOrderSchema = Joi.object({
   userId: Joi.string().required(),
   items: Joi.array().items(orderItemSchema).min(1).required(),
-  shippingAddress: userAddressSchema.required(),
-  billingAddress: userAddressSchema.optional(),
+  shippingAddress: Joi.alternatives().conditional('deliveryMethod', {
+    is: Joi.valid('pickup', 'arrangeWithSeller'),
+    then: Joi.allow(null), // Puede venir null para estos métodos
+    otherwise: userAddressSchema.required() // Sí se requiere para 'shipping' y 'homeDelivery'
+  }),
+  billingAddress: userAddressSchema.allow(null).optional(),
+  deliveryMethod: Joi.string().valid('pickup', 'homeDelivery', 'shipping', 'arrangeWithSeller').required(),
   paymentMethod: Joi.string().min(1).max(50).required(),
   notes: Joi.string().max(500).optional(),
   totals: orderTotalsSchema.required()
@@ -59,6 +67,7 @@ const createOrderSchema = Joi.object({
 // Ruta POST para crear una orden
 ordersRouter.post('/createOrder', async (req: Request, res: Response) => {
   try {
+    console.log(req.body)
     // Validar los datos de entrada
     const { error, value } = createOrderSchema.validate(req.body, { abortEarly: false });
     if (error) {
@@ -81,6 +90,21 @@ ordersRouter.post('/createOrder', async (req: Request, res: Response) => {
       return res.status(404).json({
         success: false,
         message: 'Usuario no encontrado'
+      } as CreateOrderResponse);
+    }
+
+    // Obtener la configuración de impuestos de la tienda
+    const taxSettings = await getStoreTaxSettings();
+
+    // Obtener la configuración de métodos de entrega de la tienda
+    const deliverySettings = await getStoreDeliverySettings();
+
+    // Validar que el método de entrega esté habilitado
+    const deliveryValidation = validateDeliveryMethod(orderData.deliveryMethod, deliverySettings);
+    if (!deliveryValidation.isValid) {
+      return res.status(400).json({
+        success: false,
+        message: deliveryValidation.error
       } as CreateOrderResponse);
     }
 
@@ -194,6 +218,15 @@ ordersRouter.post('/createOrder', async (req: Request, res: Response) => {
         });
       }
 
+      // 7.5. Validar que el monto de impuestos coincida con la configuración de la tienda
+      const taxValidation = validateTaxAmount(calculatedSubtotal, orderData.totals.taxAmount, orderData.totals.taxPercentage, taxSettings);
+      if (!taxValidation.isValid) {
+        validationErrors.push({
+          field: 'totals.taxAmount',
+          message: taxValidation.error!
+        });
+      }
+
       // 8. Verificar que el total general es correcto
       const calculatedTotal = calculatedSubtotal + orderData.totals.taxAmount + orderData.totals.shippingCost;
       const totalDifference = Math.abs(orderData.totals.total - calculatedTotal);
@@ -249,6 +282,22 @@ ordersRouter.post('/createOrder', async (req: Request, res: Response) => {
     }
 
     console.log(`Order created successfully with ID: ${result.orderId}`);
+
+    // Incrementar el contador de compras del usuario
+    try {
+      const userRef = admin.firestore()
+        .collection('users')
+        .doc(orderData.userId);
+      
+      await userRef.update({
+        'counters.purchases': FieldValue.increment(1)
+      });
+      
+      console.log(`Purchase counter incremented for user: ${orderData.userId}`);
+    } catch (counterError) {
+      console.error('Error updating purchase counter:', counterError);
+      // No fallar la orden por error en contador, solo loggear
+    }
 
     // Responder con éxito
     return res.status(201).json({
