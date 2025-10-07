@@ -1,4 +1,4 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, Injector, runInInjectionContext } from '@angular/core';
 import { Firestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, collection } from '@angular/fire/firestore';
 import { Auth, User } from '@angular/fire/auth';
 import { authState } from '@angular/fire/auth';
@@ -11,6 +11,7 @@ import { Product, ProductVariant } from '../../interfaces/products';
 export class ShoppingCartService {
   private readonly firestore = inject(Firestore);
   private readonly auth = inject(Auth);
+  private readonly injector = inject(Injector);
 
   // Signals para el estado del carrito
   private readonly _cart = signal<IShoppingCart | null>(null);
@@ -51,11 +52,16 @@ export class ShoppingCartService {
     // Escuchar cambios en el estado de autenticación
     this.authState$.subscribe(user => {
       this._currentUser.set(user);
-      this.loadCart(); // Cargar carrito cuando cambie el usuario
+      // Cargar carrito cuando cambie el usuario, pero dentro del contexto de Angular
+      runInInjectionContext(this.injector, () => {
+        this.loadCart();
+      });
     });
 
-    // Cargar carrito inicial
-    this.loadCart();
+    // Cargar carrito inicial dentro del contexto de inyección
+    runInInjectionContext(this.injector, () => {
+      this.loadCart();
+    });
   }
 
   /**

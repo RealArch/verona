@@ -1,19 +1,23 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ShoppingCartService } from '../../../services/shopping-cart/shopping-cart';
-import { ProductsService } from '../../../services/products/products.service';
-import { CartItem } from '../../../interfaces/shopping-cart';
-import { Product, ProductVariant } from '../../../interfaces/products';
 import { CurrencyPipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+
+import { ShoppingCartService } from '../../../services/shopping-cart/shopping-cart';
+import { ProductsService } from '../../../services/products/products.service';
+import { SiteConfig } from '../../../services/site-config/site-config';
+import { CartItem } from '../../../interfaces/shopping-cart';
+import { Product, ProductVariant } from '../../../interfaces/products';
 
 type EnrichedCartItem = CartItem & { 
-  currentProduct?: Product; 
-  currentVariant?: ProductVariant; 
-  maxQuantity: number 
+  product?: Product; 
+  variant?: ProductVariant; 
+  availableStock: number;
+  isStockLoaded?: boolean;
 };
 
-type CustomQuantityState = { visible: boolean; value: number; saving: boolean };
+type QuantityInput = { visible: boolean; value: number; saving: boolean };
 
 @Component({
   selector: 'app-shopping-cart',
@@ -21,335 +25,298 @@ type CustomQuantityState = { visible: boolean; value: number; saving: boolean };
   templateUrl: './shopping-cart.html',
   styleUrl: './shopping-cart.scss'
 })
-export class ShoppingCart implements OnInit {
+export class ShoppingCart {
   private readonly cartService = inject(ShoppingCartService);
   private readonly productsService = inject(ProductsService);
+  private readonly siteConfig = inject(SiteConfig);
   private readonly router = inject(Router);
 
-  // Core state
-  selectedItems = signal<Set<string>>(new Set());
-  enrichedCartItems = signal<EnrichedCartItem[]>([]);
-  customQuantityInputs = signal<Map<string, CustomQuantityState>>(new Map());
-  
-  // Loading states
-  updating = signal<boolean>(false);
-  itemUpdating = signal<Set<string>>(new Set());
-  
-  // UI model for quantity selects
-  selectModel: Record<string, string> = {};
+  // State
+  readonly selectedItems = signal<Set<string>>(new Set());
+  readonly enrichedItems = signal<EnrichedCartItem[]>([]);
+  readonly updating = signal<boolean>(false);
+  readonly itemUpdating = signal<Set<string>>(new Set());
+  readonly initializing = signal<boolean>(true);
 
-  // Computed signals
-  cart = this.cartService.cart;
-  loading = this.cartService.loading;
+  // Service signals
+  readonly cart = this.cartService.cart;
+  readonly loading = this.cartService.loading;
+  readonly taxRate = computed(() => (this.siteConfig.storeSettings()?.taxPercentage ?? 18) / 100);
   
-  selectedCartItems = computed(() => 
-    this.enrichedCartItems().filter(item => this.selectedItems().has(item.id))
+  // Computed
+  readonly selectedCartItems = computed(() => 
+    this.enrichedItems().filter(item => this.selectedItems().has(item.id))
   );
 
-  selectedTotals = computed(() => {
+  readonly totals = computed(() => {
     const items = this.selectedCartItems();
-    if (!items.length) return { subtotal: 0, total: 0, itemCount: 0, taxAmount: 0, shippingCost: 0 };
-    
-    const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
-    const taxAmount = subtotal * 0.18;
-    const shippingCost = subtotal > 300 ? 0 : 25;
     const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+    const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
+    const taxAmount = subtotal * this.taxRate();
+    const total = subtotal + taxAmount;
     
-    return { subtotal, taxAmount, shippingCost, total: subtotal + taxAmount + shippingCost, itemCount };
+    return { itemCount, subtotal, taxAmount, total };
   });
 
-  allItemsSelected = computed(() => {
-    const items = this.enrichedCartItems();
+  readonly allSelected = computed(() => {
+    const items = this.enrichedItems();
     return items.length > 0 && items.every(item => this.selectedItems().has(item.id));
   });
 
-  async ngOnInit(): Promise<void> {
-    await this.waitForCartToLoad();
-    await this.syncCartWithDatabase();
-  }
-
-  private async waitForCartToLoad(): Promise<void> {
-    let attempts = 0;
-    while (attempts < 20 && this.cartService.loading()) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      attempts++;
-    }
-  }
-
-    async syncCartWithDatabase(): Promise<void> {
-    const cart = this.cart();
-    if (!cart?.items.length) {
-      this.enrichedCartItems.set([]);
-      return;
-    }
-
-    try {
-      const enrichedItems: EnrichedCartItem[] = [];
-      const itemsToRemove: string[] = [];
-      const itemsToUpdate: Array<{ itemId: string; newQuantity: number; newPrice: number }> = [];
+  constructor() {
+    effect(() => {
+      const currentCart = this.cart();
+      const isLoading = this.cartService.loading();
       
-      for (const item of cart.items) {
-        try {
-          const product = await this.getProduct(item.productId);
-          if (!product || product.status !== 'active') {
-            itemsToRemove.push(item.id);
-            continue;
-          }
-
-          const { variant, maxQuantity, price } = this.getItemDetails(product, item.variantId);
-          
-          if (maxQuantity === 0) {
-            itemsToRemove.push(item.id);
-            continue;
-          }
-
-          let finalQuantity = Math.min(item.quantity, maxQuantity);
-          
-          if (finalQuantity !== item.quantity || Math.abs(item.unitPrice - price) > 0.01) {
-            itemsToUpdate.push({ itemId: item.id, newQuantity: finalQuantity, newPrice: price });
-          }
-
-          enrichedItems.push({
-            ...item,
-            currentProduct: product,
-            currentVariant: variant,
-            maxQuantity,
-            quantity: finalQuantity,
-            unitPrice: price,
-            totalPrice: price * finalQuantity
-          });
-
-        } catch (error) {
-          console.error(`Error syncing item ${item.id}:`, error);
-          enrichedItems.push({ ...item, maxQuantity: item.quantity });
-        }
+      // Mark as initialized once we have cart data or loading is complete
+      if (currentCart !== null || !isLoading) {
+        this.initializing.set(false);
       }
-
-      // Apply changes
-      await Promise.all([
-        ...itemsToRemove.map(id => this.cartService.removeFromCart(id)),
-        ...itemsToUpdate.map(update => this.cartService.updateQuantity(update.itemId, update.newQuantity))
-      ]);
-
-      this.enrichedCartItems.set(enrichedItems);
-      this.updateSelectModel(enrichedItems);
-      this.selectAllItems();
-
-    } catch (error) {
-      console.error('Error syncing cart:', error);
-    }
-  }
-
-  private async getProduct(productId: string): Promise<Product | null> {
-    const productObservable = await this.productsService.getProduct(productId);
-    return new Promise((resolve, reject) => {
-      const subscription = productObservable.subscribe({
-        next: product => {
-          subscription.unsubscribe();
-          resolve(product);
-        },
-        error: error => {
-          subscription.unsubscribe();
-          reject(error);
-        }
-      });
+      
+      if (currentCart) {
+        this.initializeCart(currentCart.items);
+      }
     });
   }
 
-  private getItemDetails(product: Product, variantId?: string) {
+  private initializeCart(cartItems: CartItem[]): void {
+    if (!cartItems.length) {
+      this.enrichedItems.set([]);
+      return;
+    }
+
+    // Show basic items immediately with generous stock limit until real data loads
+    // Allow up to 50 units initially until real stock is known
+    const basicItems: EnrichedCartItem[] = cartItems.map(item => ({
+      ...item,
+      availableStock: Math.max(item.quantity, 50), // Allow at least 50 until real stock is known
+      isStockLoaded: false
+    }));
+    
+    this.enrichedItems.set(basicItems);
+    this.selectAll();
+
+    // Enrich in background
+    this.enrichCartItems(cartItems).catch(console.error);
+  }
+
+  private async enrichCartItems(cartItems: CartItem[]): Promise<void> {
+    const enriched: EnrichedCartItem[] = [];
+    const updates: Array<{ itemId: string; quantity: number }> = [];
+
+    for (const item of cartItems) {
+      try {
+        const product = await this.fetchProduct(item.productId);
+        console.log('Fetched product:', product?.id, 'status:', product?.status);
+        
+        if (!product || product.status !== 'active') {
+          enriched.push({ ...item, product: product ?? undefined, availableStock: 0, isStockLoaded: true });
+          continue;
+        }
+
+        const { variant, stock, price } = this.getProductDetails(product, item.variantId);
+        console.log('Product stock:', stock, 'for item:', item.id);
+        const adjustedQty = Math.min(item.quantity, stock);
+
+        if (adjustedQty !== item.quantity || Math.abs(price - item.unitPrice) > 0.01) {
+          updates.push({ itemId: item.id, quantity: adjustedQty });
+        }
+
+        enriched.push({
+          ...item,
+          product,
+          variant,
+          availableStock: stock,
+          quantity: adjustedQty,
+          unitPrice: price,
+          totalPrice: price * adjustedQty,
+          isStockLoaded: true
+        });
+      } catch (error) {
+        console.error(`Error enriching item ${item.id}:`, error);
+        enriched.push({ ...item, availableStock: item.quantity, isStockLoaded: true });
+      }
+    }
+
+    // Apply updates if needed
+    if (updates.length > 0) {
+      await Promise.all(
+        updates.map(({ itemId, quantity }) => 
+          this.cartService.updateQuantity(itemId, quantity)
+        )
+      );
+    }
+
+    console.log('Setting enriched items:', enriched.map(i => ({ id: i.id, stock: i.availableStock, loaded: i.isStockLoaded })));
+    this.enrichedItems.set(enriched);
+    this.selectAll();
+  }
+
+  private async fetchProduct(productId: string): Promise<Product | null> {
+    try {
+      const product$ = await this.productsService.getProduct(productId);
+      return await firstValueFrom(product$, { defaultValue: null });
+    } catch {
+      return null;
+    }
+  }
+
+  private getProductDetails(product: Product, variantId?: string) {
     if (variantId) {
       const variant = product.variants?.find(v => v.id === variantId);
       return {
         variant,
-        maxQuantity: variant?.stock || 0,
-        price: variant?.price || product.price
+        stock: variant?.stock ?? 0,
+        price: variant?.price ?? product.price
       };
     }
+    
     return {
       variant: undefined,
-      maxQuantity: parseInt(product.stock) || 0,
+      stock: parseInt(product.stock) || 0,
       price: product.price
     };
   }
 
-  private updateSelectModel(items: EnrichedCartItem[]): void {
-    this.selectModel = items.reduce((model, item) => {
-      model[item.id] = item.quantity <= 10 ? String(item.quantity) : '10+';
-      return model;
-    }, {} as Record<string, string>);
+  // Quantity input management
+  async increaseQuantity(itemId: string): Promise<void> {
+    const item = this.enrichedItems().find(i => i.id === itemId);
+    if (!item || item.quantity >= item.availableStock) return;
+    
+    await this.updateQuantity(itemId, item.quantity + 1);
   }
 
-  selectAllItems(): void {
-    this.selectedItems.set(new Set(this.enrichedCartItems().map(item => item.id)));
+  async decreaseQuantity(itemId: string): Promise<void> {
+    const item = this.enrichedItems().find(i => i.id === itemId);
+    if (!item || item.quantity <= 1) return;
+    
+    await this.updateQuantity(itemId, item.quantity - 1);
+  }
+
+  async onQuantityInputChange(itemId: string, value: string): Promise<void> {
+    const quantity = parseInt(value, 10);
+    if (isNaN(quantity) || quantity < 1) return;
+    
+    await this.updateQuantity(itemId, quantity);
+  }
+
+  // Selection
+  selectAll(): void {
+    this.selectedItems.set(new Set(this.enrichedItems().map(item => item.id)));
   }
 
   toggleSelectAll(): void {
-    const items = this.enrichedCartItems();
-    if (!items.length) return;
-    
-    this.selectedItems.set(this.allItemsSelected() ? new Set() : new Set(items.map(item => item.id)));
+    this.selectedItems.set(
+      this.allSelected() ? new Set() : new Set(this.enrichedItems().map(item => item.id))
+    );
   }
 
-  toggleItemSelection(itemId: string): void {
+  toggleItem(itemId: string): void {
     const selected = new Set(this.selectedItems());
     selected.has(itemId) ? selected.delete(itemId) : selected.add(itemId);
     this.selectedItems.set(selected);
   }
 
-  async onQuantitySelectChange(itemId: string, value: string): Promise<void> {
-    if (value === '10+') {
-      this.showCustomQuantityInput(itemId);
-    } else {
-      await this.updateQuantity(itemId, parseInt(value, 10));
-    }
-  }
 
-  showCustomQuantityInput(itemId: string): void {
-    const inputs = new Map(this.customQuantityInputs());
-    const currentItem = this.enrichedCartItems().find(item => item.id === itemId);
-    const currentQuantity = currentItem?.quantity || 1;
-    
-    inputs.set(itemId, {
-      visible: true,
-      value: currentQuantity > 10 ? currentQuantity : 11,
-      saving: false
-    });
-    
-    this.customQuantityInputs.set(inputs);
-  }
 
-  hideCustomQuantityInput(itemId: string): void {
-    const inputs = new Map(this.customQuantityInputs());
-    inputs.delete(itemId);
-    this.customQuantityInputs.set(inputs);
-  }
+  async updateQuantity(itemId: string, quantity: number): Promise<void> {
+    if (quantity < 1) return;
 
-  updateCustomQuantityValue(itemId: string, value: number): void {
-    const inputs = new Map(this.customQuantityInputs());
-    const inputState = inputs.get(itemId);
-    
-    if (inputState) {
-      inputState.value = value;
-      inputs.set(itemId, inputState);
-      this.customQuantityInputs.set(inputs);
-    }
-  }
+    const item = this.enrichedItems().find(i => i.id === itemId);
+    if (!item) return;
 
-  async saveCustomQuantity(itemId: string): Promise<void> {
-    const inputs = new Map(this.customQuantityInputs());
-    const inputState = inputs.get(itemId);
+    const finalQty = Math.min(quantity, item.availableStock);
     
-    if (!inputState) return;
-    
+    const updating = new Set(this.itemUpdating());
+    updating.add(itemId);
+    this.itemUpdating.set(updating);
+
     try {
-      inputState.saving = true;
-      this.customQuantityInputs.set(inputs);
+      // Optimistic update
+      this.updateItemLocally(itemId, finalQty);
       
-      await this.updateQuantity(itemId, inputState.value);
-      this.hideCustomQuantityInput(itemId);
-      
-    } catch (error) {
-      console.error('Error saving custom quantity:', error);
-      inputState.saving = false;
-      this.customQuantityInputs.set(inputs);
-    }
-  }
-
-  getQuantityOptions(itemId: string): Array<{ value: string; label: string }> {
-    const item = this.enrichedCartItems().find(item => item.id === itemId);
-    const maxQuantity = item?.maxQuantity || 10;
-    const limit = Math.min(10, maxQuantity);
-    
-    const options = Array.from({ length: limit }, (_, i) => ({
-      value: (i + 1).toString(),
-      label: (i + 1).toString()
-    }));
-    
-    if (maxQuantity > 10) {
-      options.push({ value: '10+', label: '10+' });
-    }
-    
-    return options;
-  }
-
-  async updateQuantity(itemId: string, newQuantity: number): Promise<void> {
-    if (newQuantity < 1) return;
-    
-    const item = this.enrichedCartItems().find(item => item.id === itemId);
-    if (item && newQuantity > item.maxQuantity) {
-      newQuantity = item.maxQuantity;
-    }
-    
-    try {
-      const updating = new Set(this.itemUpdating());
-      updating.add(itemId);
-      this.itemUpdating.set(updating);
-      
-      // Update locally for immediate feedback
-      this.updateLocalItem(itemId, newQuantity);
-      
-      await this.cartService.updateQuantity(itemId, newQuantity);
+      await this.cartService.updateQuantity(itemId, finalQty);
       await new Promise(resolve => setTimeout(resolve, 200));
-      await this.syncCartWithDatabase();
       
+      const currentCart = this.cart();
+      if (currentCart) {
+        await this.enrichCartItems(currentCart.items);
+      }
+
     } catch (error) {
-      console.error('Error updating quantity:', error);
-      await this.syncCartWithDatabase();
+      console.error('Update failed:', error);
+      const currentCart = this.cart();
+      if (currentCart) {
+        await this.enrichCartItems(currentCart.items);
+      }
     } finally {
-      const updating = new Set(this.itemUpdating());
       updating.delete(itemId);
-      this.itemUpdating.set(updating);
+      this.itemUpdating.set(new Set(updating));
     }
   }
 
-  private updateLocalItem(itemId: string, newQuantity: number): void {
-    const items = this.enrichedCartItems().map(item => {
+  private updateItemLocally(itemId: string, quantity: number): void {
+    const items = this.enrichedItems().map(item => {
       if (item.id === itemId) {
         return {
           ...item,
-          quantity: newQuantity,
-          totalPrice: item.unitPrice * newQuantity
+          quantity,
+          totalPrice: item.unitPrice * quantity
         };
       }
       return item;
     });
     
-    this.enrichedCartItems.set(items);
-    this.selectModel[itemId] = newQuantity <= 10 ? String(newQuantity) : '10+';
+    this.enrichedItems.set(items);
   }
 
-  isItemUpdating = (itemId: string): boolean => this.itemUpdating().has(itemId);
+  isItemUpdating(itemId: string): boolean {
+    return this.itemUpdating().has(itemId);
+  }
 
+  // Remove items
   async removeItem(itemId: string): Promise<void> {
+    this.updating.set(true);
     try {
-      this.updating.set(true);
       await this.cartService.removeFromCart(itemId);
       
       const selected = new Set(this.selectedItems());
       selected.delete(itemId);
       this.selectedItems.set(selected);
-      
     } catch (error) {
-      console.error('Error removing item:', error);
+      console.error('Remove failed:', error);
     } finally {
       this.updating.set(false);
     }
   }
 
-  navigateToProduct = (item: CartItem): void => {
+  async clearSelected(): Promise<void> {
+    const ids = Array.from(this.selectedItems());
+    if (!ids.length) return;
+
+    this.updating.set(true);
+    try {
+      await Promise.all(ids.map(id => this.cartService.removeFromCart(id)));
+      this.selectedItems.set(new Set());
+    } catch (error) {
+      console.error('Clear failed:', error);
+    } finally {
+      this.updating.set(false);
+    }
+  }
+
+  // Navigation
+  navigateToProduct(item: CartItem): void {
     this.router.navigate(['/product', item.productSlug, item.productId]);
-  };
+  }
 
   proceedToCheckout(): void {
-    const selectedItems = this.selectedCartItems();
-    if (!selectedItems.length) return;
+    const selected = this.selectedCartItems();
+    if (!selected.length) return;
     
-    console.log('Proceeding to checkout with:', selectedItems);
-    
-    // Navegar al checkout pasando los items seleccionados
     this.router.navigate(['/checkout'], { 
       state: { 
-        selectedItems: selectedItems.map(item => ({
+        selectedItems: selected.map(item => ({
           id: item.id,
           productId: item.productId,
           productName: item.productName,
@@ -361,27 +328,10 @@ export class ShoppingCart implements OnInit {
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           totalPrice: item.totalPrice,
-          currentProduct: item.currentProduct,
-          currentVariant: item.currentVariant
+          currentProduct: item.product,
+          currentVariant: item.variant
         }))
       } 
     });
-  }
-
-  async clearSelectedItems(): Promise<void> {
-    const selectedIds = Array.from(this.selectedItems());
-    if (!selectedIds.length) return;
-
-    try {
-      this.updating.set(true);
-      
-      await Promise.all(selectedIds.map(id => this.cartService.removeFromCart(id)));
-      this.selectedItems.set(new Set());
-      
-    } catch (error) {
-      console.error('Error clearing selected items:', error);
-    } finally {
-      this.updating.set(false);
-    }
   }
 }
