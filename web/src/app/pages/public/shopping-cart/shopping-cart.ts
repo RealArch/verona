@@ -107,7 +107,6 @@ export class ShoppingCart {
     for (const item of cartItems) {
       try {
         const product = await this.fetchProduct(item.productId);
-        console.log('Fetched product:', product?.id, 'status:', product?.status);
         
         if (!product || product.status !== 'active') {
           enriched.push({ ...item, product: product ?? undefined, availableStock: 0, isStockLoaded: true });
@@ -115,7 +114,6 @@ export class ShoppingCart {
         }
 
         const { variant, stock, price } = this.getProductDetails(product, item.variantId);
-        console.log('Product stock:', stock, 'for item:', item.id);
         const adjustedQty = Math.min(item.quantity, stock);
 
         if (adjustedQty !== item.quantity || Math.abs(price - item.unitPrice) > 0.01) {
@@ -147,7 +145,6 @@ export class ShoppingCart {
       );
     }
 
-    console.log('Setting enriched items:', enriched.map(i => ({ id: i.id, stock: i.availableStock, loaded: i.isStockLoaded })));
     this.enrichedItems.set(enriched);
     this.selectAll();
   }
