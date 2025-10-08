@@ -99,7 +99,11 @@ authRouter.post('/createUser', async (req: Request, res: Response): Promise<void
       isActive: true,
       emailVerified: false,
       createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp()
+      updatedAt: FieldValue.serverTimestamp(),
+      counters:
+      {
+        purchases: 0
+      }
     };
 
     // Guardar en Firestore

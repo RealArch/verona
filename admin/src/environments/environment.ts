@@ -5,7 +5,17 @@
 export const environment = {
   production: false,
   useEmulators: true,
-  api:'http://localhost:5001/verona-ffbcd/us-central1/api'
+  api: 'http://localhost:5001/verona-ffbcd/us-central1/api',
+
+  algolia: {
+        appId: "WG205GJU2V",
+        apiKey: "00f922c2b509c3ccb44dc0ac7bf56d26",
+        indexes: {
+            products: 'products_dev',
+            categories: 'categories_dev',
+            orders: 'orders_dev'
+        }
+    }
 };
 
 /*

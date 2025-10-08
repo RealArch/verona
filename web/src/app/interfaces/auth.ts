@@ -11,6 +11,10 @@ export interface UserProfile {
   createdAt: Date;
   updatedAt: Date;
   addresses: UserAddress[];
+  counters?: {
+    purchases: number;
+    wishlist: number;
+  };
 }
 export interface UserAddress {
   id: string;

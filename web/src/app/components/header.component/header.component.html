@@ -75,24 +75,24 @@
                         <a class="justify-between text-base-content hover:bg-primary/10"
                             (click)="closeDropdownAndNavigate('/user/profile')">
                             Mi Perfil
-                            <span class="badge badge-accent badge-sm">Nuevo</span>
+                            <!-- <span class="badge badge-accent badge-sm">Nuevo</span> -->
                         </a>
                     </li>
                     <li>
-                        <a class="text-base-content hover:bg-primary/10" (click)="closeDropdownAndNavigate('/orders')">
+                        <a class="text-base-content hover:bg-primary/10" (click)="closeDropdownAndNavigate('user/orders')">
                             Mis Pedidos
                         </a>
                     </li>
                     <li>
-                        <a class="text-base-content hover:bg-primary/10" (click)="closeDropdownAndAction()">
+                        <a class="text-base-content hover:bg-primary/10" (click)="closeDropdownAndNavigate('user/wishlist')">
                             Lista de Deseos
                         </a>
                     </li>
-                    <li>
+                    <!-- <li>
                         <a class="text-base-content hover:bg-primary/10" (click)="closeDropdownAndAction()">
                             Configuración
                         </a>
-                    </li>
+                    </li> -->
                     <li>
                         <hr class="border-base-300">
                     </li>

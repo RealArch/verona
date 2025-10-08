@@ -2,7 +2,7 @@ import { Component, inject, signal, computed, OnInit, PLATFORM_ID, effect } from
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { Location, CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CartItem } from '../../../interfaces/shopping-cart';
 import { Product, ProductVariant } from '../../../interfaces/products';
 import { Auth } from '../../../services/auth/auth.services';
@@ -20,7 +20,7 @@ type CheckoutItem = CartItem & {
 
 @Component({
   selector: 'app-checkout',
-  imports: [CommonModule, AddAddress, FormsModule],
+  imports: [CommonModule, AddAddress, ReactiveFormsModule],
   templateUrl: './checkout.html',
   styleUrl: './checkout.scss'
 })
@@ -31,11 +31,12 @@ export class Checkout implements OnInit {
   private readonly sales = inject(Sales);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly siteConfig = inject(SiteConfig);
+  private readonly fb = inject(FormBuilder);
 
   // State signals
   checkoutItems = signal<CheckoutItem[]>([]);
   loading = signal<boolean>(false);
-  error = signal<string | null>(null);
+  error = signal<{ message?: string; errors?: string[] } | null>(null);
   showAddAddressModal = signal<boolean>(false);
   showSelectAddressModal = signal<boolean>(false);
   selectedAddress = signal<UserAddress | null>(null);
@@ -43,23 +44,25 @@ export class Checkout implements OnInit {
   addressCountBeforeAdd = signal<number>(0);
   processingOrder = signal<boolean>(false);
   selectedDeliveryMethod = signal<DeliveryMethod | null>(null);
-  selectedBillingAddress = signal<UserAddress | null>(null);
   showSelectBillingAddressModal = signal<boolean>(false);
-  useSameAsShipping = signal<boolean>(false);
   
-  // Billing address form fields
-  billingForm = signal({
-    name: '',
-    address_1: '',
-    address_2: '',
-    municipality: '',
-    city: '',
-    state: '',
-    country: 'Venezuela',
-    postalCode: '',
-    phone: '',
-    description: ''
+  // Reactive Form for Billing Address - Manual entry with optional copy from saved addresses
+  billingAddressForm: FormGroup = this.fb.group({
+    name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+    address_1: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(200)]],
+    address_2: ['', [Validators.maxLength(200)]],
+    description: ['', [Validators.maxLength(500)]],
+    municipality: ['', [Validators.minLength(2), Validators.maxLength(100)]],
+    city: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+    state: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+    postalCode: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(15)]],
+    phone: ['', [Validators.required, Validators.minLength(7), Validators.maxLength(20)]]
   });
+
+  // Getter para facilitar acceso a controles del formulario
+  get billingFormControls() {
+    return this.billingAddressForm.controls;
+  }
 
   // User profile and addresses
   userProfile = this.auth.userProfile;
@@ -81,6 +84,12 @@ export class Checkout implements OnInit {
     return selectedMethod === 'shipping' || selectedMethod === 'homeDelivery';
   });
 
+  // Computed to check if shipping address is valid for billing (has valid phone)
+  isShippingAddressValidForBilling = computed(() => {
+    const shippingAddr = this.currentAddress();
+    return shippingAddr && shippingAddr.phone && shippingAddr.phone.trim().length >= 7;
+  });
+
   // Computed for user addresses
   userAddresses = computed(() => this.userProfile()?.addresses || []);
   
@@ -95,20 +104,36 @@ export class Checkout implements OnInit {
     return this.selectedAddress() || this.defaultAddress();
   });
 
-  // Current selected billing address (defaults to shipping address if not set)
+  // Current billing address from form - always returns the form values if valid
   currentBillingAddress = computed(() => {
-    // Si está marcado "usar misma dirección de envío"
-    if (this.useSameAsShipping() && this.isDeliveryAddressRequired()) {
-      return this.currentAddress();
-    }
+    const form = this.billingAddressForm.value;
     
-    // Si hay un formulario con datos
-    const form = this.billingForm();
-    if (form.name && form.address_1 && form.city && form.state && form.country && form.postalCode) {
-      return form as UserAddress;
+    // Check if all required fields are filled
+    const hasRequiredFields = form.name?.trim() && 
+                             form.address_1?.trim() && 
+                             form.city?.trim() && 
+                             form.state?.trim() && 
+                             form.postalCode?.trim() && 
+                             form.phone?.trim();
+
+    if (!hasRequiredFields) {
+      return null;
     }
-    
-    return null;
+
+    // Return billing address object with country default to Venezuela
+    return {
+      id: '',
+      name: form.name.trim(),
+      address_1: form.address_1.trim(),
+      address_2: form.address_2?.trim() || null,
+      description: form.description?.trim() || null,
+      municipality: form.municipality?.trim() || '',
+      city: form.city.trim(),
+      state: form.state.trim(),
+      country: 'Venezuela', // Default country
+      postalCode: form.postalCode.trim(),
+      phone: form.phone.trim()
+    } as UserAddress;
   });
 
   // Computed totals - usa el taxPercentage inicial capturado
@@ -172,7 +197,7 @@ export class Checkout implements OnInit {
       }
     } catch (error) {
       console.error('Error loading checkout items:', error);
-      this.error.set('Error al cargar los items del checkout');
+      this.error.set({ message: 'Error al cargar los items del checkout' });
     }
   }
 
@@ -227,46 +252,20 @@ export class Checkout implements OnInit {
     this.showSelectBillingAddressModal.set(false);
   }
 
-  selectBillingAddress(address: UserAddress): void {
-    this.selectedBillingAddress.set(address);
-    // Copiar los valores al formulario
-    this.billingForm.set({
+  // Copy address from saved addresses to billing form
+  copyAddressToBillingForm(address: UserAddress): void {
+    this.billingAddressForm.patchValue({
       name: address.name,
       address_1: address.address_1,
       address_2: address.address_2 || '',
-      municipality: address.municipality,
+      description: address.description || '',
+      municipality: address.municipality || '',
       city: address.city,
       state: address.state,
-      country: address.country,
       postalCode: address.postalCode,
-      phone: address.phone || '',
-      description: address.description || ''
+      phone: address.phone || ''
     });
-    this.useSameAsShipping.set(false);
     this.closeSelectBillingAddressModal();
-  }
-
-  // Usar misma dirección de envío para facturación
-  toggleUseSameAsShipping(): void {
-    const newValue = !this.useSameAsShipping();
-    this.useSameAsShipping.set(newValue);
-    
-    if (newValue && this.currentAddress()) {
-      // Copiar dirección de envío al formulario
-      const shippingAddr = this.currentAddress()!;
-      this.billingForm.set({
-        name: shippingAddr.name,
-        address_1: shippingAddr.address_1,
-        address_2: shippingAddr.address_2 || '',
-        municipality: shippingAddr.municipality,
-        city: shippingAddr.city,
-        state: shippingAddr.state,
-        country: shippingAddr.country,
-        postalCode: shippingAddr.postalCode,
-        phone: shippingAddr.phone || '',
-        description: shippingAddr.description || ''
-      });
-    }
   }
 
   // Método para volver al carrito
@@ -284,24 +283,41 @@ export class Checkout implements OnInit {
 
     // Validar que se haya seleccionado un método de entrega
     if (!deliveryMethod) {
-      this.error.set('Debe seleccionar un método de entrega');
+      this.error.set({ message: 'Debe seleccionar un método de entrega' });
       return;
     }
 
     // Validar dirección solo si es requerida
     if (this.isDeliveryAddressRequired() && !address) {
-      this.error.set('Debe seleccionar una dirección de entrega');
+      this.error.set({ message: 'Debe seleccionar una dirección de entrega' });
       return;
     }
 
-    // Validar que haya dirección de facturación
-    if (!this.currentBillingAddress()) {
-      this.error.set('Debe seleccionar una dirección de facturación');
+    // Validar que haya una dirección de facturación
+    const billingAddress = this.currentBillingAddress();
+    if (!billingAddress) {
+      this.error.set({ message: 'Debe completar el formulario de facturación' });
+      return;
+    }
+
+    // Validar que el teléfono esté presente
+    if (!billingAddress.phone || !billingAddress.phone.trim()) {
+      this.error.set({ message: 'El teléfono de facturación es requerido' });
+      return;
+    }
+
+    // Validar formulario de facturación
+    if (this.billingAddressForm.invalid) {
+      // Marcar todos los campos como tocados para mostrar errores
+      Object.keys(this.billingAddressForm.controls).forEach(key => {
+        this.billingAddressForm.get(key)?.markAsTouched();
+      });
+      this.error.set({ message: 'Debe completar correctamente el formulario de facturación' });
       return;
     }
 
     if (!user) {
-      this.error.set('Debe estar autenticado para procesar el pedido');
+      this.error.set({ message: 'Debe estar autenticado para procesar el pedido' });
       return;
     }
 
@@ -324,14 +340,17 @@ export class Checkout implements OnInit {
 
       // Preparar la data de la orden
       const orderData: CreateOrderRequest = {
-        userId: user.uid,
+        userId: user?.uid || 'guest',
         items: orderItems,
         shippingAddress: this.isDeliveryAddressRequired() ? address : null,
-        billingAddress: this.currentBillingAddress(),
+        billingAddress: billingAddress,
         deliveryMethod: deliveryMethod,
         paymentMethod: 'pending', // Placeholder, se implementará después
         totals: totals
       };
+
+      console.log('Order data being sent:', orderData);
+      console.log('Billing address phone:', billingAddress.phone, 'Type:', typeof billingAddress.phone); // Debug phone
 
       // Enviar la orden al backend
       const response = await this.sales.createOrder(orderData);
@@ -347,7 +366,33 @@ export class Checkout implements OnInit {
 
     } catch (error: any) {
       console.error('Error processing order:', error);
-      this.error.set(error.message || 'Error al procesar el pedido. Intente nuevamente.');
+      
+      // Extraer mensaje y errores del error HTTP
+      let message = 'Error al procesar el pedido. Intente nuevamente.';
+      let errors: string[] | undefined;
+      
+      if (error.error) {
+        // Si el error viene del servidor con estructura { message, errors }
+        if (error.error.message) {
+          message = error.error.message;
+        }
+        if (error.error.errors && Array.isArray(error.error.errors)) {
+          // Convertir los errores a strings, manejando tanto objetos como strings
+          errors = error.error.errors.map((err: any) => {
+            if (typeof err === 'string') {
+              return err;
+            } else if (err && typeof err === 'object') {
+              // Si es un objeto, intentar extraer el mensaje
+              return err.message || err.msg || err.error || JSON.stringify(err);
+            }
+            return String(err);
+          });
+        }
+      } else if (error.message) {
+        message = error.message;
+      }
+      
+      this.error.set({ message, errors });
     } finally {
       this.processingOrder.set(false);
     }

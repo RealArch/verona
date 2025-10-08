@@ -28,7 +28,7 @@ export class AddAddress implements OnInit {
     state: ['', [Validators.required]],
     postalCode: ['', [Validators.required, Validators.pattern(/^\d{4}$/)]],
     country: ['Venezuela', [Validators.required]],
-    phone: ['', [Validators.pattern(/^[\+]?[0-9\-\(\)\s]+$/)]],
+    phone: ['', [Validators.required, Validators.pattern(/^[\+]?\d{1,4}[\s\-\(\)\d]+$/)]],
     isDefault: [false] // Este campo ya no se usa, pero se mantiene por compatibilidad
   });
 

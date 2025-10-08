@@ -165,18 +165,6 @@
           <div class="flex items-center justify-between mb-4">
             <h3 class="card-title text-lg">Dirección de Facturación</h3>
             <div class="flex gap-2">
-              <!-- Botón para usar misma dirección (solo si hay dirección de envío) -->
-              <button
-                *ngIf="isDeliveryAddressRequired() && currentAddress()"
-                (click)="toggleUseSameAsShipping()"
-                [class.btn-primary]="useSameAsShipping()"
-                class="btn btn-outline btn-sm"
-              >
-                <svg *ngIf="useSameAsShipping()" class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                </svg>
-                Usar misma dirección de envío
-              </button>
               <!-- Botón para copiar de direcciones guardadas -->
               <button
                 (click)="openSelectBillingAddressModal()"
@@ -190,135 +178,199 @@
             </div>
           </div>
 
-          <!-- Formulario de facturación (oculto si usa misma dirección) -->
-          <div *ngIf="!useSameAsShipping()">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <!-- Nombre y Teléfono en la misma línea -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:col-span-2 lg:col-span-3">
-                <!-- Nombre -->
-                <div class="form-control">
-                  <label class="label">
-                    <span class="label-text">Nombre completo *</span>
-                  </label>
-                  <input
-                    type="text"
-                    [(ngModel)]="billingForm().name"
-                    placeholder="Ej: Juan Pérez"
-                    class="input input-bordered w-full"
-                    required
-                  />
+          <!-- Formulario de facturación - siempre visible -->
+          <div>
+            <form [formGroup]="billingAddressForm">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Nombre y Teléfono en la misma línea -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:col-span-2 lg:col-span-3">
+                  <!-- Nombre -->
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text" [class.text-error]="billingAddressForm.get('name')?.invalid && billingAddressForm.get('name')?.touched">
+                        Nombre completo <span class="text-error">*</span> <span class="text-xs text-base-content/50">(mín. 2 caracteres)</span>
+                      </span>
+                    </label>
+                    <div class="relative">
+                      <input
+                        type="text"
+                        formControlName="name"
+                        placeholder="Ej: Juan Pérez"
+                        class="input input-bordered w-full"
+                        maxlength="100"
+                        [class.input-error]="billingAddressForm.get('name')?.invalid && billingAddressForm.get('name')?.touched"
+                      />
+                      <svg *ngIf="billingAddressForm.get('name')?.invalid && billingAddressForm.get('name')?.touched" class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                      </svg>
+                    </div>
+                  </div>
+
+                  <!-- Teléfono -->
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text" [class.text-error]="billingAddressForm.get('phone')?.invalid && billingAddressForm.get('phone')?.touched">
+                        Teléfono <span class="text-error">*</span> <span class="text-xs text-base-content/50">(mín. 7 caracteres)</span>
+                      </span>
+                    </label>
+                    <div class="relative">
+                      <input
+                        type="tel"
+                        formControlName="phone"
+                        placeholder="Ej: +58 412 123 4567"
+                        class="input input-bordered w-full"
+                        maxlength="20"
+                        [class.input-error]="billingAddressForm.get('phone')?.invalid && billingAddressForm.get('phone')?.touched"
+                      />
+                      <svg *ngIf="billingAddressForm.get('phone')?.invalid && billingAddressForm.get('phone')?.touched" class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                      </svg>
+                    </div>
+                  </div>
                 </div>
 
-                <!-- Teléfono -->
+                <!-- Dirección 1 y 2 en la misma línea (solo en pantallas grandes) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:col-span-2 lg:col-span-3">
+                  <!-- Dirección 1 -->
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text" [class.text-error]="billingAddressForm.get('address_1')?.invalid && billingAddressForm.get('address_1')?.touched">
+                        Dirección <span class="text-error">*</span> <span class="text-xs text-base-content/50">(mín. 5 caracteres)</span>
+                      </span>
+                    </label>
+                    <div class="relative">
+                      <input
+                        type="text"
+                        formControlName="address_1"
+                        placeholder="Ej: Calle Principal #123, Edificio Torre"
+                        class="input input-bordered w-full"
+                        maxlength="200"
+                        [class.input-error]="billingAddressForm.get('address_1')?.invalid && billingAddressForm.get('address_1')?.touched"
+                      />
+                      <svg *ngIf="billingAddressForm.get('address_1')?.invalid && billingAddressForm.get('address_1')?.touched" class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                      </svg>
+                    </div>
+                  </div>
+
+                  <!-- Dirección 2 -->
+                  <div class="form-control">
+                    <label class="label">
+                      <span class="label-text">Dirección 2 (opcional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      formControlName="address_2"
+                      placeholder="Ej: Piso 3, Apt 5B"
+                      class="input input-bordered w-full"
+                      maxlength="200"
+                    />
+                  </div>
+                </div>
+
+                <!-- Distrito -->
                 <div class="form-control">
                   <label class="label">
-                    <span class="label-text">Teléfono</span>
+                    <span class="label-text" [class.text-error]="billingAddressForm.get('municipality')?.invalid && billingAddressForm.get('municipality')?.touched">
+                      Parroquia/Municipio <span class="text-xs text-base-content/50">(mín. 2 caracteres)</span>
+                    </span>
                   </label>
-                  <input
-                    type="tel"
-                    [(ngModel)]="billingForm().phone"
-                    placeholder="Ej: +58 412 123 4567"
-                    class="input input-bordered w-full"
-                  />
+                  <div class="relative">
+                    <input
+                      type="text"
+                      formControlName="municipality"
+                      placeholder="Ej: Chacao"
+                      class="input input-bordered w-full"
+                      maxlength="100"
+                      [class.input-error]="billingAddressForm.get('municipality')?.invalid && billingAddressForm.get('municipality')?.touched"
+                    />
+                    <svg *ngIf="billingAddressForm.get('municipality')?.invalid && billingAddressForm.get('municipality')?.touched" class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                  </div>
                 </div>
-              </div>
 
-              <!-- Dirección 1 y 2 en la misma línea (solo en pantallas grandes) -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:col-span-2 lg:col-span-3">
-                <!-- Dirección 1 -->
+                <!-- Ciudad -->
                 <div class="form-control">
                   <label class="label">
-                    <span class="label-text">Dirección *</span>
+                    <span class="label-text" [class.text-error]="billingAddressForm.get('city')?.invalid && billingAddressForm.get('city')?.touched">
+                      Ciudad <span class="text-error">*</span> <span class="text-xs text-base-content/50">(mín. 2 caracteres)</span>
+                    </span>
                   </label>
-                  <input
-                    type="text"
-                    [(ngModel)]="billingForm().address_1"
-                    placeholder="Calle, número, edificio, etc."
-                    class="input input-bordered w-full"
-                    required
-                  />
+                  <div class="relative">
+                    <input
+                      type="text"
+                      formControlName="city"
+                      placeholder="Ej: Caracas"
+                      class="input input-bordered w-full"
+                      maxlength="100"
+                      [class.input-error]="billingAddressForm.get('city')?.invalid && billingAddressForm.get('city')?.touched"
+                    />
+                    <svg *ngIf="billingAddressForm.get('city')?.invalid && billingAddressForm.get('city')?.touched" class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                  </div>
                 </div>
 
-                <!-- Dirección 2 -->
+                <!-- Estado -->
                 <div class="form-control">
                   <label class="label">
-                    <span class="label-text">Dirección 2 (opcional)</span>
+                    <span class="label-text" [class.text-error]="billingAddressForm.get('state')?.invalid && billingAddressForm.get('state')?.touched">
+                      Estado <span class="text-error">*</span> <span class="text-xs text-base-content/50">(mín. 2 caracteres)</span>
+                    </span>
                   </label>
-                  <input
-                    type="text"
-                    [(ngModel)]="billingForm().address_2"
-                    placeholder="Piso, apartamento, oficina, etc."
-                    class="input input-bordered w-full"
-                  />
+                  <div class="relative">
+                    <input
+                      type="text"
+                      formControlName="state"
+                      placeholder="Ej: Miranda"
+                      class="input input-bordered w-full"
+                      maxlength="100"
+                      [class.input-error]="billingAddressForm.get('state')?.invalid && billingAddressForm.get('state')?.touched"
+                    />
+                    <svg *ngIf="billingAddressForm.get('state')?.invalid && billingAddressForm.get('state')?.touched" class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- Código Postal -->
+                <div class="form-control lg:col-span-1">
+                  <label class="label">
+                    <span class="label-text" [class.text-error]="billingAddressForm.get('postalCode')?.invalid && billingAddressForm.get('postalCode')?.touched">
+                      Código Postal <span class="text-error">*</span> <span class="text-xs text-base-content/50">(mín. 3 caracteres)</span>
+                    </span>
+                  </label>
+                  <div class="relative">
+                    <input
+                      type="text"
+                      formControlName="postalCode"
+                      placeholder="Ej: 1060"
+                      class="input input-bordered w-full"
+                      maxlength="15"
+                      [class.input-error]="billingAddressForm.get('postalCode')?.invalid && billingAddressForm.get('postalCode')?.touched"
+                    />
+                    <svg *ngIf="billingAddressForm.get('postalCode')?.invalid && billingAddressForm.get('postalCode')?.touched" class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-error" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- Descripción (opcional) -->
+                <div class="form-control lg:col-span-2">
+                  <label class="label">
+                    <span class="label-text">Descripción (opcional)</span>
+                  </label>
+                  <textarea
+                    formControlName="description"
+                    placeholder="Referencias adicionales sobre la dirección"
+                    class="textarea textarea-bordered w-full"
+                    maxlength="500"
+                    rows="2"
+                  ></textarea>
                 </div>
               </div>
-
-              <!-- Distrito -->
-              <div class="form-control">
-                <label class="label">
-                  <span class="label-text">Parroquia/Municipio *</span>
-                </label>
-                <input
-                  type="text"
-                  [(ngModel)]="billingForm().municipality"
-                  placeholder="Ej: Chacao"
-                  class="input input-bordered w-full"
-                  required
-                />
-              </div>
-
-              <!-- Ciudad -->
-              <div class="form-control">
-                <label class="label">
-                  <span class="label-text">Ciudad *</span>
-                </label>
-                <input
-                  type="text"
-                  [(ngModel)]="billingForm().city"
-                  placeholder="Ej: Caracas"
-                  class="input input-bordered w-full"
-                  required
-                />
-              </div>
-
-              <!-- Estado -->
-              <div class="form-control">
-                <label class="label">
-                  <span class="label-text">Estado *</span>
-                </label>
-                <input
-                  type="text"
-                  [(ngModel)]="billingForm().state"
-                  placeholder="Ej: Miranda"
-                  class="input input-bordered w-full"
-                  required
-                />
-              </div>
-
-              <!-- Código Postal -->
-              <div class="form-control lg:col-span-1">
-                <label class="label">
-                  <span class="label-text">Código Postal *</span>
-                </label>
-                <input
-                  type="text"
-                  [(ngModel)]="billingForm().postalCode"
-                  placeholder="Ej: 1060"
-                  class="input input-bordered w-full"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Vista cuando usa misma dirección -->
-          <div *ngIf="useSameAsShipping() && currentAddress()" class="bg-base-200 p-4 rounded-lg">
-            <div class="flex items-center gap-2 text-sm text-base-content/70">
-              <svg class="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-              </svg>
-              <span>Se usará la misma dirección de envío para la facturación</span>
-            </div>
+            </form>
           </div>
         </div>
       </div>
@@ -402,7 +454,7 @@
             <button 
               (click)="processOrder()" 
               class="btn btn-primary w-full"
-              [disabled]="!selectedDeliveryMethod() || (isDeliveryAddressRequired() && !currentAddress()) || !currentBillingAddress() || processingOrder()"
+              [disabled]="!selectedDeliveryMethod() || (isDeliveryAddressRequired() && !currentAddress()) || billingAddressForm.invalid || processingOrder()"
             >
               <span *ngIf="processingOrder()" class="loading loading-spinner loading-sm"></span>
               <span *ngIf="!processingOrder()">Procesar Pedido</span>
@@ -414,12 +466,15 @@
             <p *ngIf="selectedDeliveryMethod() && isDeliveryAddressRequired() && !currentAddress()" class="text-sm text-base-content/70 text-center mt-2">
               Agrega una dirección de entrega para continuar
             </p>
-            <p *ngIf="!currentBillingAddress()" class="text-sm text-base-content/70 text-center mt-2">
-              Agrega una dirección de facturación para continuar
+            <p *ngIf="billingAddressForm.invalid && billingAddressForm.touched" class="text-sm text-base-content/70 text-center mt-2">
+              Completa correctamente el formulario de facturación para continuar
             </p>
-            <p *ngIf="error()" class="text-sm text-error text-center mt-2">
-              {{ error() }}
-            </p>
+            <div *ngIf="error() as err" class="text-sm text-error text-center mt-2">
+              <p *ngIf="err.message">{{ err.message }}</p>
+              <ul *ngIf="err.errors && err.errors.length > 0" class="list-disc list-inside">
+                <li *ngFor="let errorMsg of err.errors">{{ errorMsg }}</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -441,7 +496,7 @@
   <div class="modal-box max-w-2xl" (click)="$event.stopPropagation()">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
-      <h3 class="text-xl font-light text-base-content">Seleccionar Dirección de Facturación</h3>
+      <h3 class="text-xl font-light text-base-content">Copiar Dirección Guardada</h3>
       <button class="btn btn-circle btn-ghost btn-sm" (click)="closeSelectBillingAddressModal()">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -453,10 +508,8 @@
     <div class="space-y-3">
       <div
         *ngFor="let address of userAddresses(); let i = index"
-        class="p-4 border border-base-300 rounded-lg cursor-pointer hover:bg-base-200 transition-colors"
-        [class.border-primary]="currentBillingAddress()?.id === address.id"
-        [class.bg-primary/5]="currentBillingAddress()?.id === address.id"
-        (click)="selectBillingAddress(address)"
+        class="p-4 border border-base-300 rounded-lg cursor-pointer hover:bg-base-200 transition-colors hover:border-primary"
+        (click)="copyAddressToBillingForm(address)"
       >
         <div class="flex items-start justify-between">
           <div class="flex-1">
@@ -469,32 +522,35 @@
               <span *ngIf="address.address_2">, {{ address.address_2 }}</span>
             </p>
             <p class="text-sm text-base-content/80">
-              {{ address.municipality }}, {{ address.city }}, {{ address.state }}
+              <span *ngIf="address.municipality">{{ address.municipality }}, </span>{{ address.city }}, {{ address.state }}
             </p>
             <p class="text-sm text-base-content/80">
               {{ address.country }} {{ address.postalCode }}
             </p>
+            <p *ngIf="address.phone" class="text-sm text-base-content/80 mt-1">
+              <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+              </svg>
+              {{ address.phone }}
+            </p>
           </div>
-          <div *ngIf="currentBillingAddress()?.id === address.id" class="ml-4">
-            <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+          <div class="ml-4">
+            <svg class="w-5 h-5 text-base-content/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
             </svg>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Add New Address Button -->
+    <!-- Info Message -->
     <div class="mt-6 pt-4 border-t border-base-300">
-      <button
-        (click)="closeSelectBillingAddressModal(); openAddAddressModal()"
-        class="btn btn-outline w-full"
-      >
-        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+      <div class="alert alert-info">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
         </svg>
-        Agregar Nueva Dirección
-      </button>
+        <span class="text-sm">Selecciona una dirección para copiar sus datos al formulario de facturación.</span>
+      </div>
     </div>
   </div>
 </div>

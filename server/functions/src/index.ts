@@ -18,6 +18,9 @@ import categoriesRouter, { onCategoryCreated, onCategoryDeleted, onCategoryUpdat
 import productsRouter, { onProductCreated, onProductDeleted, onProductUpdated } from "./routes/products.router";
 import authRouter from "./routes/auth.router";
 import ordersRouter from "./routes/orders.router";
+//IMPORT TRIGGERS
+import { onOrderCreated, onOrderUpdated, onOrderDeleted } from "./triggers/orders.triggers";
+import { onUserCreated, onUserDeleted } from "./triggers/users.triggers";
 //importamos la app de firebase
 import "./firebase-init";
 
@@ -60,6 +63,10 @@ export const api = onRequest(
 export { onProductCreated, onProductUpdated, onProductDeleted };
 //CATEGORIES TRIGGERS
 export { onCategoryCreated, onCategoryDeleted, onCategoryUpdated };
+//ORDERS TRIGGERS
+export { onOrderCreated, onOrderUpdated, onOrderDeleted };
+//USERS TRIGGERS
+export { onUserCreated, onUserDeleted };
 
 // import {onRequest} from "firebase-functions/https";
 // import * as logger from "firebase-functions/logger";

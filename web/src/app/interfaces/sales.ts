@@ -29,6 +29,7 @@ export interface OrderItem {
 export interface OrderTotals {
   subtotal: number;
   taxAmount: number;
+  taxPercentage: number;
   shippingCost: number;
   total: number;
   itemCount: number;
@@ -38,6 +39,22 @@ export interface CreateOrderResponse {
   success: boolean;
   orderId?: string;
   message?: string;
+}
+
+// Interfaz para una orden completa (desde Firestore)
+export interface Order {
+  id: string;
+  userId: string;
+  items: OrderItem[];
+  shippingAddress?: UserAddress | null;
+  billingAddress?: UserAddress | null;
+  deliveryMethod: DeliveryMethod;
+  paymentMethod: string;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  notes?: string;
+  totals: OrderTotals;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Importar UserAddress desde auth interfaces

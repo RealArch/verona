@@ -53,9 +53,13 @@ export const routes: Routes = [
         path: 'products/add',
         loadComponent: () => import('./pages/user/products/products-form/products-form.page').then(m => m.ProductFormPage)
       },
+      // {
+      //   path: 'payment-methods',
+      //   loadComponent: () => import('./pages/user/payment-methods/payment-methods.page').then(m => m.PaymentMethodsPage)
+      // },
       {
-        path: 'payment-methods',
-        loadComponent: () => import('./pages/user/payment-methods/payment-methods.page').then(m => m.PaymentMethodsPage)
+        path: 'orders',
+        loadComponent: () => import('./pages/user/orders/orders.page').then(m => m.OrdersPage)
       },
       {
         path: 'settings',
@@ -69,6 +73,7 @@ export const routes: Routes = [
     ]
 
   },
+
 
 
 

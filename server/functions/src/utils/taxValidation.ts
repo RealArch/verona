@@ -38,21 +38,50 @@ export async function getStoreDeliverySettings(): Promise<StoreDeliverySettings 
     }
 
     const data = settingsDoc.data();
+    console.log('Store settings data:', JSON.stringify(data, null, 2));
 
-    // Validar que tenga los campos necesarios
-    if (!data?.deliveryMethods || typeof data.deliveryMethods !== 'object') {
-      console.warn('Store settings does not have valid deliveryMethods object');
+    let storeEnabled = true; // Por defecto habilitado
+    let deliveryMethods: any = {};
+
+    // Verificar si hay una estructura deliveryMethods como objeto
+    if (data?.deliveryMethods && typeof data.deliveryMethods === 'object') {
+      console.log('Using deliveryMethods object structure');
+      console.log('deliveryMethods content:', JSON.stringify(data.deliveryMethods, null, 2));
+      storeEnabled = data.storeEnabled !== false; // Por defecto true si no existe
+      deliveryMethods = data.deliveryMethods;
+    }
+    // Verificar si deliveryMethods existe pero no es objeto (posible error de estructura)
+    else if (data?.deliveryMethods !== undefined && typeof data.deliveryMethods !== 'object') {
+      console.warn('deliveryMethods exists but is not an object:', typeof data.deliveryMethods, data.deliveryMethods);
+      return null;
+    }
+    // Verificar si los métodos están directamente en el root (estructura legacy)
+    else if (data?.pickupEnabled !== undefined || data?.homeDeliveryEnabled !== undefined ||
+             data?.arrangeWithSellerEnabled !== undefined || data?.shippingEnabled !== undefined) {
+      console.log('Using legacy structure with delivery methods at root level');
+      console.log('Root level methods found:', {
+        pickupEnabled: data.pickupEnabled,
+        homeDeliveryEnabled: data.homeDeliveryEnabled,
+        arrangeWithSellerEnabled: data.arrangeWithSellerEnabled,
+        shippingEnabled: data.shippingEnabled
+      });
+      storeEnabled = data.storeEnabled !== false;
+      deliveryMethods = data;
+    }
+    else {
+      console.warn('No valid delivery methods structure found in store settings');
+      console.warn('Available fields:', Object.keys(data || {}));
       return null;
     }
 
-    // Retornar configuración con storeEnabled como hermano de deliveryMethods
+    // Retornar configuración normalizada
     return {
-      storeEnabled: data.storeEnabled === true, // Control global de la tienda
+      storeEnabled: storeEnabled,
       deliveryMethods: {
-        arrangeWithSellerEnabled: data.deliveryMethods.arrangeWithSellerEnabled === true,
-        homeDeliveryEnabled: data.deliveryMethods.homeDeliveryEnabled === true,
-        pickupEnabled: data.deliveryMethods.pickupEnabled === true,
-        shippingEnabled: data.deliveryMethods.shippingEnabled === true
+        arrangeWithSellerEnabled: deliveryMethods.arrangeWithSellerEnabled === true,
+        homeDeliveryEnabled: deliveryMethods.homeDeliveryEnabled === true,
+        pickupEnabled: deliveryMethods.pickupEnabled === true,
+        shippingEnabled: deliveryMethods.shippingEnabled === true
       }
     };
   } catch (error) {

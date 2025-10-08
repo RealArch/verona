@@ -16,7 +16,9 @@ export const environment = {
         apiKey: "00f922c2b509c3ccb44dc0ac7bf56d26",
         indexes: {
             products: 'products_dev',
-            categories: 'categories_dev'
+            categories: 'categories_dev',
+            orders: 'orders_dev'
+
         }
     }
 };

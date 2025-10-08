@@ -10,58 +10,58 @@ const ordersRouter: Router = Router();
 
 // Esquema de validación para UserAddress (actualizado según frontend)
 const userAddressSchema = Joi.object({
-  id: Joi.string().optional(),
-  name: Joi.string().min(2).max(100).required(),
-  address_1: Joi.string().min(5).max(200).required(),
-  address_2: Joi.string().allow(null).allow('').optional(), // Puede venir vacío o null
-  description: Joi.string().allow(null).allow('').optional(), // Puede venir vacío o null
-  municipality: Joi.string().min(2).max(100).optional(),
-  city: Joi.string().min(2).max(100).required(),
-  state: Joi.string().min(2).max(100).required(),
-  postalCode: Joi.string().min(3).max(20).required(),
-  country: Joi.string().min(2).max(100).required(),
-  phone: Joi.string().min(7).max(20).optional(),
-  isDefault: Joi.boolean().optional()
+  id: Joi.string().max(50).optional().allow(null).allow(''), // ID opcional
+  name: Joi.string().min(2).max(100).trim().required(), // Nombre completo del destinatario
+  address_1: Joi.string().min(5).max(200).trim().required(), // Dirección principal
+  address_2: Joi.string().allow(null, '').max(200).trim().optional(), // Dirección secundaria (departamento, piso, etc.)
+  description: Joi.string().allow(null, '').max(500).trim().optional(), // Referencias adicionales para encontrar la dirección
+  municipality: Joi.string().min(2).max(100).trim().optional(), // Municipio o delegación
+  city: Joi.string().min(2).max(100).trim().required(), // Ciudad
+  state: Joi.string().min(2).max(100).trim().required(), // Estado, provincia o región
+  postalCode: Joi.string().min(3).max(15).trim().required(), // Código postal (hasta 15 caracteres para formatos internacionales)
+  country: Joi.string().min(2).max(100).trim().required(), // País
+  phone: Joi.string().min(7).max(20).trim(), // Teléfono de contacto
+  isDefault: Joi.boolean().optional() // Indica si es la dirección predeterminada
 });
 
 // Esquema de validación para OrderItem
 const orderItemSchema = Joi.object({
-  productId: Joi.string().required(),
-  variantId: Joi.string().optional(),
-  quantity: Joi.number().integer().min(1).required(),
-  unitPrice: Joi.number().min(0).required(),
-  totalPrice: Joi.number().min(0).required(),
-  productName: Joi.string().min(1).max(200).required(),
-  variantName: Joi.string().optional(),
-  variantColorHex: Joi.string().optional(),
-  productImage: Joi.string().optional()
+  productId: Joi.string().min(1).max(50).required(), // ID del producto
+  variantId: Joi.string().min(1).max(50).optional(), // ID de la variante (si aplica)
+  quantity: Joi.number().integer().min(1).max(1000).required(), // Cantidad (máximo 1000 unidades por producto)
+  unitPrice: Joi.number().min(0).max(9999999.99).precision(2).required(), // Precio unitario (hasta 7 dígitos)
+  totalPrice: Joi.number().min(0).max(9999999.99).precision(2).required(), // Total del item (cantidad × precio unitario)
+  productName: Joi.string().min(1).max(200).trim().required(), // Nombre del producto
+  variantName: Joi.string().allow(null, '').max(150).trim().optional(), // Nombre de la variante
+  variantColorHex: Joi.string().allow(null, '').pattern(/^#[0-9A-Fa-f]{6}$/).optional(), // Color en formato hexadecimal
+  productImage: Joi.string().allow(null, '').uri().max(500).optional() // URL de la imagen del producto
 });
 
 // Esquema de validación para OrderTotals
 const orderTotalsSchema = Joi.object({
-  subtotal: Joi.number().min(0).required(),
-  taxAmount: Joi.number().min(0).required(),
-  taxPercentage: Joi.number().min(0).max(100).required(), // Porcentaje de impuestos (0-100%)
-  shippingCost: Joi.number().min(0).required(),
-  total: Joi.number().min(0).required(),
-  itemCount: Joi.number().integer().min(1).required()
+  subtotal: Joi.number().min(0).max(9999999.99).precision(2).required(), // Subtotal antes de impuestos y envío
+  taxAmount: Joi.number().min(0).max(9999999.99).precision(2).required(), // Monto total de impuestos
+  taxPercentage: Joi.number().min(0).max(100).precision(2).required(), // Porcentaje de impuestos aplicado
+  shippingCost: Joi.number().min(0).max(999999.99).precision(2).required(), // Costo de envío
+  total: Joi.number().min(0).max(9999999.99).precision(2).required(), // Total final (subtotal + impuestos + envío)
+  itemCount: Joi.number().integer().min(1).max(10000).required() // Cantidad total de productos en la orden
 });
 
 // Esquema de validación para CreateOrderRequest
 // La dirección de envío es condicional según el método de entrega
 const createOrderSchema = Joi.object({
-  userId: Joi.string().required(),
-  items: Joi.array().items(orderItemSchema).min(1).required(),
+  userId: Joi.string().min(1).max(50).required(), // ID del usuario que realiza la orden
+  items: Joi.array().items(orderItemSchema).min(1).max(100).required(), // Lista de productos (máximo 100 productos diferentes)
   shippingAddress: Joi.alternatives().conditional('deliveryMethod', {
     is: Joi.valid('pickup', 'arrangeWithSeller'),
-    then: Joi.allow(null), // Puede venir null para estos métodos
-    otherwise: userAddressSchema.required() // Sí se requiere para 'shipping' y 'homeDelivery'
+    then: Joi.allow(null), // No requerida para pickup o acuerdo con vendedor
+    otherwise: userAddressSchema.required() // Requerida para shipping y homeDelivery
   }),
-  billingAddress: userAddressSchema.allow(null).optional(),
-  deliveryMethod: Joi.string().valid('pickup', 'homeDelivery', 'shipping', 'arrangeWithSeller').required(),
-  paymentMethod: Joi.string().min(1).max(50).required(),
-  notes: Joi.string().max(500).optional(),
-  totals: orderTotalsSchema.required()
+  billingAddress: userAddressSchema.allow(null).optional(), // Dirección de facturación (opcional)
+  deliveryMethod: Joi.string().valid('pickup', 'homeDelivery', 'shipping', 'arrangeWithSeller').required(), // Método de entrega
+  paymentMethod: Joi.string().min(1).max(50).trim().required(), // Método de pago (por ejemplo: "card", "cash", "transfer")
+  notes: Joi.string().allow(null, '').max(1000).trim().optional(), // Notas adicionales del cliente
+  totals: orderTotalsSchema.required() // Totales de la orden
 });
 
 // Ruta POST para crear una orden
@@ -84,12 +84,30 @@ ordersRouter.post('/createOrder', async (req: Request, res: Response) => {
 
     const orderData: CreateOrderRequest = value;
 
-    // Verificar que el usuario existe
+    // Obtener datos completos del usuario desde Firestore
     const userDoc = await admin.firestore().collection('users').doc(orderData.userId).get();
     if (!userDoc.exists) {
       return res.status(404).json({
         success: false,
         message: 'Usuario no encontrado'
+      } as CreateOrderResponse);
+    }
+
+    const userDataFromDB = userDoc.data();
+
+    // Construir objeto userData para guardar en la orden
+    const userData = {
+      uid: orderData.userId,
+      firstName: userDataFromDB?.firstName || '',
+      lastName: userDataFromDB?.lastName || '',
+      email: userDataFromDB?.email || ''
+    };
+
+    // Validar que los datos del usuario existan
+    if (!userData.firstName || !userData.lastName || !userData.email) {
+      return res.status(400).json({
+        success: false,
+        message: 'El usuario no tiene datos completos (firstName, lastName, email)'
       } as CreateOrderResponse);
     }
 
@@ -254,6 +272,7 @@ ordersRouter.post('/createOrder', async (req: Request, res: Response) => {
       // Todas las validaciones pasaron: crear la orden y actualizar stocks
       const orderDocument = {
         ...orderData,
+        userData, // Agregar userData obtenido de Firestore
         status: 'pending',
         createdAt: now, // Usar timestamp generado fuera de la transacción
         updatedAt: now, // Usar timestamp generado fuera de la transacción

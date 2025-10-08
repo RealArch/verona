@@ -84,12 +84,15 @@ export class Profile {
   isEditingProfile: boolean = false;
   showAddAddressModal: boolean = false;
   
-  // Stats del usuario
-  userStats = {
-    orders: 12,
-    wishlist: 8,
-    addresses: 3
-  };
+  // Stats del usuario - calculados dinámicamente
+  userStats = computed(() => {
+    const user = this.currentUser();
+    return {
+      orders: user.counters?.purchases || 0,
+      wishlist: user.counters?.wishlist || 0,
+      addresses: this.userAddresses().length
+    };
+  });
 
   constructor() {
     // Inicialización del componente
