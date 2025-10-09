@@ -21,7 +21,8 @@ export class ProductItemComponent {
 
   }
   navigateToProduct(product: Product): void {
-    this.router.navigate(['/product', product.slug, product.id]);
+ 
+  this.router.navigate(['/product', product.slug, product.objectID ?? product.id]);
   }
 
   toggleFavorite(productId: number): void {

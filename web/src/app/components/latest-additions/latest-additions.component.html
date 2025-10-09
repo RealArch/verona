@@ -11,7 +11,7 @@
     <div class="container mx-auto px-4 relative z-10">
 
         <!-- Header minimalista con glass -->
-        <div class="flex items-center justify-between mb-16">
+        <div class="flex items-center justify-between mb-8">
             <div class="text-left">
                 <h2 class="text-4xl md:text-5xl font-light text-base-content tracking-wide">
                     Últimos añadidos
@@ -44,8 +44,6 @@
         } @else if (products().length === 0) {
         <!-- Empty state -->
         <div class="flex flex-col items-center justify-center py-8 px-4">
-
-            
             <!-- Mensaje principal -->
             <div class="text-center max-w-md">
                 <h3 class="text-2xl font-light text-base-content mb-3">
@@ -54,15 +52,56 @@
                 <p class="text-base-content/60 text-sm leading-relaxed mb-6">
                     Estamos preparando algo especial. ¡Vuelve pronto para descubrir los más vendidos!
                 </p>
-                
-
             </div>
         </div>
         } @else {
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 xl:gap-6">
-            <!-- Producto -->
-            @for (product of products(); track product.id) {
-            <app-product-item [product]="product"></app-product-item>
+        <!-- Swiper -->
+        <div class="relative">
+            <swiper-container
+                slides-per-view="2"
+                space-between="12"
+                speed="500"
+                loop="false"
+                grab-cursor="true"
+                navigation="false"
+                breakpoints='{
+                    "640": {
+                        "slidesPerView": 3,
+                        "spaceBetween": 12
+                    },
+                    "768": {
+                        "slidesPerView": 4,
+                        "spaceBetween": 12
+                    },
+                    "1024": {
+                        "slidesPerView": 5,
+                        "spaceBetween": 24
+                    },
+                    "1280": {
+                        "slidesPerView": 6,
+                        "spaceBetween": 24
+                    }
+                }'
+            >
+                @for (product of products(); track product.id) {
+                <swiper-slide>
+                    <app-product-item [product]="product"></app-product-item>
+                </swiper-slide>
+                }
+            </swiper-container>
+
+            <!-- Custom Navigation Buttons -->
+            @if (shouldShowNav()) {
+            <button class="swiper-nav-button swiper-button-prev-custom absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hidden md:flex items-center justify-center cursor-pointer hover:bg-white transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+            <button class="swiper-nav-button swiper-button-next-custom absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hidden md:flex items-center justify-center cursor-pointer hover:bg-white transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
             }
         </div>
         }

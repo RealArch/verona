@@ -79,7 +79,7 @@
             </div>
 
             <!-- Product Info -->
-            <div class="space-y-6">
+            <div class="space-y-6 lg:sticky lg:top-24 lg:z-20 lg:self-start" style="align-self: flex-start;">
                 <!-- SKU -->
                 <!-- <div class="text-sm text-base-content/60">
                     SKU: {{ currentProduct()!.sku }}
@@ -215,14 +215,14 @@
             </div>
         </div>
 
-        <!-- Product Details Tabs -->
-        <div class="mt-12">
+    <!-- Product Details Tabs -->
+    <div class="mt-12" id="descripcion">
  
             <h2 class="text-2xl md:text-3xl font-light text-center mb-8 text-base-content">Descripción</h2>
 
             <div class="mt-6 bg-base-300/50 rounded-2xl p-8 lg:p-15 ">
                 <!-- Description Tab Content -->
-                <div class="prose prose-lg max-w-none w-full break-words [&_ul]:list-disc [&_ul]:pl-6 [&_li]:ml-0 [&_ol]:list-decimal [&_ol]:pl-6" [innerHTML]="currentProduct()?.description">
+                <div class="prose prose-lg max-w-none w-full [&_ul]:list-disc [&_ul]:pl-6 [&_li]:ml-0 [&_ol]:list-decimal [&_ol]:pl-6" style="word-break: normal; overflow-wrap: anywhere; hyphens: auto;" [innerHTML]="currentProduct()?.description">
 
                 </div>
 

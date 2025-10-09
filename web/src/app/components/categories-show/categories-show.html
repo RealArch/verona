@@ -23,26 +23,68 @@
         
         <!-- Categories Content -->
         @if (mainCategories().length > 0 && !loading()) {
-        <div class="relative">
-            <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2 lg:gap-4 px-4 py-4">
+        <div class="relative px-4">
+            <!-- Swiper Container -->
+            <swiper-container
+                class="py-30"
+                slides-per-view="4"
+                space-between="8"
+                speed="500"
+                loop="false"
+                grab-cursor="true"
+                navigation="false"
+                breakpoints='{
+                    "640": {
+                        "slidesPerView": 6,
+                        "spaceBetween": 8
+                    },
+                    "768": {
+                        "slidesPerView": 6,
+                        "spaceBetween": 12
+                    },
+                    "1024": {
+                        "slidesPerView": 8,
+                        "spaceBetween": 16
+                    },
+                    "1280": {
+                        "slidesPerView": 10,
+                        "spaceBetween": 16
+                    }
+                }'
+            >
                 @for( category of mainCategories(); track category.objectID){
-                <div
-                    class="grid place-items-center aspect-square cursor-pointer transition-all duration-300 hover:scale-105">
-                    <div
-                        class="relative w-full h-full grid place-items-center group overflow-hidden rounded-full shadow-lg">
-                        <img [src]="category.image?.url"
-                            alt="{{ category.name }}"
-                            class="w-full h-full object-cover rounded-full border-4 border-gray-200 transition-all duration-500 group-hover:scale-125 group-hover:shadow-xl group-hover:shadow-black/20 col-start-1 row-start-1" />
-                        <div class="absolute inset-0 rounded-full bg-primary/20 pointer-events-none"></div>
-                        <span
-                            class="col-start-1 row-start-1 self-center justify-self-center px-2 sm:px-2 md:px-3 py-1 sm:py-1 md:py-1.5 text-[0.7rem] sm:text-xs md:text-sm lg:text-xs xl:text-xs 2xl:text-xs font-medium text-white bg-primary/30 backdrop-blur-sm rounded-full shadow border border-white/30 transition-all duration-300 group-hover:bg-primary/50 group-hover:shadow-lg group-hover:scale-105"
-                            style="max-width:90%; font-size: clamp(0.6rem, 1.5vw, 0.8rem);">
-                            {{ category.name }}
-                        </span>
-                    </div> 
-                </div>
+                <swiper-slide class="pb-5" >
+                    <div class="grid place-items-center aspect-square cursor-pointer transition-all duration-300 hover:scale-105" (click)="goToCategorySearch(category.objectID)">
+                        <div class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg">
+                            <img [src]="category.image?.url"
+                                alt="{{ category.name }}"
+                                loading="lazy"
+                                class="absolute inset-0 w-full h-full object-cover rounded-full border-4 border-gray-200 transition-all duration-500 group-hover:scale-125 group-hover:shadow-xl group-hover:shadow-black/20" />
+                            <div class="absolute inset-0 rounded-full bg-primary/20 pointer-events-none"></div>
+                            <span
+                                class="relative z-10 px-2 sm:px-2 md:px-3 py-1 sm:py-1 md:py-1.5 text-[0.7rem] sm:text-xs md:text-sm lg:text-xs xl:text-xs 2xl:text-xs font-medium text-white bg-primary/30 backdrop-blur-sm rounded-full shadow border border-white/30 transition-all duration-300 group-hover:bg-primary/50 group-hover:shadow-lg group-hover:scale-105 whitespace-nowrap overflow-hidden text-ellipsis leading-none"
+                                style="max-width:90%; font-size: clamp(0.6rem, 1.5vw, 0.8rem);">
+                                {{ category.name }}
+                            </span>
+                        </div> 
+                    </div>
+                </swiper-slide>
                 }
-            </div>
+            </swiper-container>
+
+            <!-- Custom Navigation Buttons - Only visible on larger screens -->
+            @if (shouldShowNav()) {
+            <button class="swiper-nav-button swiper-button-prev-custom absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hidden md:flex items-center justify-center cursor-pointer hover:bg-white transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+            <button class="swiper-nav-button swiper-button-next-custom absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hidden md:flex items-center justify-center cursor-pointer hover:bg-white transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
+                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
+            }
         </div>
         }
         

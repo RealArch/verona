@@ -1,5 +1,5 @@
 import { Injectable, Injector, inject, runInInjectionContext } from '@angular/core';
-import { Firestore, collection, query, orderBy, limit, collectionData, doc, docData } from '@angular/fire/firestore';
+import { Firestore, collection, query, orderBy, limit, collectionData, doc, docData, where } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { algoliasearch, SearchClient } from 'algoliasearch';
 import { environment } from '../../../environments/environment.development';
@@ -43,6 +43,7 @@ export class ProductsService {
       const bestSellersQuery = query(
         this.productsRef,
         orderBy('totalSales', 'desc'),
+        where('status', '==', 'active'),
         limit(limitCount)
       );
 
@@ -59,6 +60,7 @@ export class ProductsService {
       const latestQuery = query(
         this.productsRef,
         orderBy('createdAt', 'desc'),
+        where('status', '==', 'active'),
         limit(limitCount)
       );
 
@@ -80,13 +82,14 @@ export class ProductsService {
     searchQuery: string = '',
     minPrice?: number,
     maxPrice?: number,
+    categoryIds?: string[],
     hitsPerPage: number = 20,
     page: number = 0
   ): Promise<{ hits: Product[]; nbHits: number; page: number; nbPages: number }> {
     try {
       // Build filters array
       const filters: string[] = [];
-
+      console.log(categoryIds)
       // Add price range filters if provided
       if (minPrice !== undefined && maxPrice !== undefined) {
         filters.push(`price:${minPrice} TO ${maxPrice}`);
@@ -98,6 +101,13 @@ export class ProductsService {
 
       // Add status filter to only show active products
       filters.push('status:active');
+
+      // Add categoryId filter if provided
+      if (categoryIds && categoryIds.length > 0) {
+        const categoriesFilter = categoryIds.map(id => `categoryId:'${id}'`).join(' OR ');
+        filters.push(`(${categoriesFilter})`);
+      }
+
       console.log('Filters applied:', filters);
       const index = this.client.searchSingleIndex({
         indexName: this.indexName,

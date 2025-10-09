@@ -12,6 +12,7 @@ interface SearchParams {
   minPrice?: number; // minimum price
   maxPrice?: number; // maximum price
   page?: number;     // pagination
+  categoryIds?: string[]; // category filter
 }
 
 @Component({
@@ -45,7 +46,8 @@ export class Search implements OnInit, OnDestroy {
     q: '',
     minPrice: 0,
     maxPrice: 10000,
-    page: 0
+    page: 0,
+    categoryIds: []
   };
 
   ngOnInit(): void {
@@ -106,6 +108,18 @@ export class Search implements OnInit, OnDestroy {
       }
     }
 
+    const categoryParam = params['categoryIds'] ?? params['categoryId'];
+    if (categoryParam) {
+      if (Array.isArray(categoryParam)) {
+        parsedParams.categoryIds = categoryParam.filter((id: string) => typeof id === 'string' && id.trim().length > 0);
+      } else if (typeof categoryParam === 'string') {
+        parsedParams.categoryIds = categoryParam
+          .split(',')
+          .map((id: string) => id.trim())
+          .filter(Boolean);
+      }
+    }
+
     return parsedParams;
   }
 
@@ -141,12 +155,23 @@ export class Search implements OnInit, OnDestroy {
       const searchQuery = params.q ?? this.defaultParams.q;
       const minPrice = params.minPrice ?? this.defaultParams.minPrice;
       const maxPrice = params.maxPrice ?? this.defaultParams.maxPrice;
+      const categoryIds = params.categoryIds ?? undefined;
+
+      console.log('Search params being sent:', {
+        searchQuery,
+        minPrice: minPrice > 0 ? minPrice : undefined,
+        maxPrice: maxPrice < this.defaultParams.maxPrice ? maxPrice : undefined,
+        categoryIds,
+        hitsPerPage: 20,
+        page
+      });
 
       // Call the search service
       const results = await this.productsService.search(
         searchQuery,
         minPrice > 0 ? minPrice : undefined,
         maxPrice < this.defaultParams.maxPrice ? maxPrice : undefined,
+        categoryIds,
         20, // hitsPerPage
         page
       );
@@ -206,6 +231,10 @@ export class Search implements OnInit, OnDestroy {
 
     if (updatedParams.maxPrice && updatedParams.maxPrice < this.defaultParams.maxPrice) {
       queryParams.maxPrice = updatedParams.maxPrice;
+    }
+
+    if (updatedParams.categoryIds && updatedParams.categoryIds.length > 0) {
+      queryParams.categoryId = updatedParams.categoryIds.join(',');
     }
 
     // Update URL which will trigger the search automatically

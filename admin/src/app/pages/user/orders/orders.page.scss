@@ -10,12 +10,12 @@ ion-content {
   margin: 0;
   border-radius: 12px;
   overflow: hidden;
-  
+
   ion-card-header {
     padding: 20px;
     background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 1));
   }
-  
+
   ion-card-content {
     padding: 0 20px 20px 20px;
   }
@@ -27,14 +27,90 @@ ion-content {
 }
 
 .ios-searchbar {
-  --background: rgba(255, 255, 255, 0.2);
-  --placeholder-color: rgba(255, 255, 255, 0.8);
-  --icon-color: rgba(255, 255, 255, 0.8);
-  --color: white;
-  --border-radius: 10px;
-  
+  --border-radius: 15px;
+}
+
+// Estilo de chip para el select
+ion-select {
+  --highlight-color-valid: transparent;
+}
+
+.chip-select {
+
+  --background: #e0e0e0;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --border-radius: 16px;
+  min-height: 32px;
+  max-width: fit-content;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    --background: #d0d0d0;
+  }
+
+  &::part(container) {
+    border-radius: 16px;
+  }
+
+  &::part(icon) {
+    display: none;
+  }
+}
+
+// Estilo de chip para botones de fecha
+.chip-button {
+  --background: #e0e0e0;
+  --background-hover: #d0d0d0;
+  --color: #333;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --border-radius: 16px;
+  border-radius: 16px;
+  box-shadow: none;
+
+  background: #e0e0e0;
+  height: 32px;
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: normal;
+
   &::part(native) {
-    backdrop-filter: blur(10px);
+    padding: 0 16px;
+  }
+}
+
+// Botón de reset
+.reset-button {
+  --color: #666;
+  --padding-start: 8px;
+  --padding-end: 8px;
+
+  ion-icon {
+    font-size: 20px;
+  }
+
+  &:hover {
+    --color: #333;
+  }
+}
+
+// Botón de refresh
+.refresh-search-btn {
+  --color: white;
+  --padding-start: 8px;
+  --padding-end: 8px;
+  margin-left: 8px;
+
+  ion-icon {
+    font-size: 20px;
+  }
+
+  &:hover {
+    --color: #0056b3;
   }
 }
 
@@ -43,12 +119,12 @@ ion-content {
   .ios-searchbar {
     max-width: 200px !important;
   }
-  
+
   .order-card {
     ion-card-header {
       padding: 16px;
     }
-    
+
     ion-card-content {
       padding: 0 16px 16px 16px;
     }
@@ -61,6 +137,7 @@ ion-content {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

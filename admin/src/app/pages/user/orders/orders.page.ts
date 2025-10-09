@@ -1,6 +1,7 @@
-import { Component, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { 
   IonContent, 
   IonHeader, 
@@ -15,10 +16,15 @@ import {
   IonInfiniteScroll,
   IonInfiniteScrollContent,
   IonModal,
-  IonButton
-} from '@ionic/angular/standalone';
+  IonButton, 
+  IonSelect, 
+  IonSelectOption, 
+  IonRow, 
+  IonCol, 
+  IonDatetime,
+  IonPopover, IonGrid } from '@ionic/angular/standalone';
 import { Orders } from 'src/app/services/orders';
-import { Order, OrderSearchFilters } from 'src/app/interfaces/order';
+import { Order, OrderSearchFilters, OrderStatus } from 'src/app/interfaces/order';
 import { addIcons } from 'ionicons';
 import { 
   receiptOutline, 
@@ -32,14 +38,21 @@ import {
   airplaneOutline,
   chatbubblesOutline,
   closeOutline,
-  chevronForwardOutline, documentTextOutline, callOutline, locationOutline } from 'ionicons/icons';
+  chevronForwardOutline, documentTextOutline, callOutline, locationOutline, chevronDownOutline, refreshOutline } from 'ionicons/icons';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
   selector: 'app-orders',
   templateUrl: './orders.page.html',
   styleUrls: ['./orders.page.scss'],
   standalone: true,
-  imports: [
+  imports: [IonGrid, 
+    IonPopover,
+    IonCol, 
+    IonRow, 
+    IonSelect, 
+    IonSelectOption, 
+    IonDatetime,
     IonModal,
     IonButton,
     IonInfiniteScrollContent,
@@ -58,27 +71,80 @@ import {
     FormsModule
   ]
 })
-export class OrdersPage implements OnInit {
-  @ViewChild(IonInfiniteScroll) infiniteScroll!: IonInfiniteScroll;
-  @ViewChild(IonModal) modal!: IonModal;
-
+export class OrdersPage implements OnInit, OnDestroy {
   private ordersService = inject(Orders);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private destroy$ = new Subject<void>();
+
+  @ViewChild(IonModal) modal!: IonModal;
+  @ViewChild(IonInfiniteScroll) infiniteScroll!: IonInfiniteScroll;
 
   orders: Order[] = [];
-  loading = true;
+  isLoading = false;
+  hasMore = true;
   searchQuery = '';
+  selectedOrder: Order | null = null;
   currentPage = 0;
   pageSize = 20;
-  hasMore = true;
-  totalOrders = 0;
-  selectedOrder: Order | null = null;
+
+  // Filter properties
+  selectedStatus: OrderStatus | '' = '';
+  statusOptions: { value: OrderStatus | '', label: string }[] = [
+    { value: '', label: 'Todos los estados' },
+    { value: 'pending', label: 'Pendiente' },
+    { value: 'confirmed', label: 'Confirmado' },
+    { value: 'preparing', label: 'Preparando' },
+    { value: 'ready', label: 'Listo para recoger' },
+    { value: 'delivered', label: 'Entregado' },
+    { value: 'cancelled', label: 'Cancelado' }
+  ];
+
+  selectedDeliveryMethod: string = '';
+  deliveryMethodOptions = [
+    { value: '', label: 'Todos los métodos' },
+    { value: 'pickup', label: 'Retiro en persona' },
+    { value: 'homeDelivery', label: 'Delivery' },
+    { value: 'shipping', label: 'Envío' },
+    { value: 'arrangeWithSeller', label: 'Acordar con vendedor' }
+  ];
+
+  dateFrom: string | undefined = undefined;
+  dateTo: string | undefined = undefined;
 
   constructor() {
-    addIcons({calendarOutline,receiptOutline,chevronForwardOutline,closeOutline,documentTextOutline,callOutline,cashOutline,locationOutline,chatbubblesOutline,personOutline,checkmarkCircle,timeOutline,bicycleOutline,carOutline,airplaneOutline});
+    addIcons({chevronDownOutline,refreshOutline,calendarOutline,receiptOutline,chevronForwardOutline,closeOutline,documentTextOutline,callOutline,cashOutline,locationOutline,chatbubblesOutline,personOutline,checkmarkCircle,timeOutline,bicycleOutline,carOutline,airplaneOutline});
   }
 
   async ngOnInit() {
-    await this.loadOrders(true);
+    // Initialize query params subscription
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => {
+        this.searchQuery = params['q'] || '';
+        this.selectedStatus = params['status'] || '';
+        this.selectedDeliveryMethod = params['deliveryMethod'] || '';
+        
+        // Convertir fechas de URL a formato ISO si existen
+        const dateFromParam = params['dateFrom'];
+        const dateToParam = params['dateTo'];
+        
+        this.dateFrom = dateFromParam ? this.convertToISODate(dateFromParam) : undefined;
+        this.dateTo = dateToParam ? this.convertToISODate(dateToParam) : undefined;
+        
+        console.log('URL params dates:', { dateFromParam, dateToParam });
+        console.log('Converted dates:', { dateFrom: this.dateFrom, dateTo: this.dateTo });
+        
+        this.currentPage = 0;
+        this.orders = [];
+        this.hasMore = true;
+        this.loadOrders();
+      });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   async loadOrders(reset: boolean = false) {
@@ -86,15 +152,23 @@ export class OrdersPage implements OnInit {
       this.currentPage = 0;
       this.orders = [];
       this.hasMore = true;
-      this.loading = true;
+      this.isLoading = true;
     }
 
     if (!this.hasMore && !reset) return;
 
     try {
       const filters: OrderSearchFilters = {
-        query: this.searchQuery
+        query: this.searchQuery,
+        status: this.selectedStatus ? [this.selectedStatus as OrderStatus] : undefined,
+        deliveryMethod: this.selectedDeliveryMethod ? [this.selectedDeliveryMethod as any] : undefined,
+        dateFrom: this.dateFrom ? new Date(this.dateFrom) : undefined,
+        dateTo: this.dateTo ? new Date(this.dateTo) : undefined
       };
+
+      console.log('Applied filters:', filters);
+      console.log('dateFrom string:', this.dateFrom, 'converted to:', filters.dateFrom);
+      console.log('dateTo string:', this.dateTo, 'converted to:', filters.dateTo);
 
       const result = await this.ordersService.searchOrders(
         this.currentPage,
@@ -108,19 +182,152 @@ export class OrdersPage implements OnInit {
         this.orders = [...this.orders, ...result.orders];
       }
 
-      this.totalOrders = result.total;
       this.hasMore = result.hasMore;
       this.currentPage++;
     } catch (error) {
       console.error('Error loading orders:', error);
     } finally {
-      this.loading = false;
+      this.isLoading = false;
     }
   }
 
   async onSearchChange(event: any) {
     this.searchQuery = event.detail.value || '';
-    await this.loadOrders(true);
+    this.updateQueryParams();
+  }
+
+  onStatusChange(event: any) {
+    this.selectedStatus = event.detail.value;
+    this.updateQueryParams();
+  }
+
+  onDeliveryMethodChange(event: any) {
+    this.selectedDeliveryMethod = event.detail.value;
+    this.updateQueryParams();
+  }
+
+  onDateFromChange(event: any) {
+    const value = event.detail.value;
+    console.log('Date from change:', value, typeof value);
+    this.dateFrom = value || undefined;
+    this.updateQueryParams();
+  }
+
+  onDateToChange(event: any) {
+    const value = event.detail.value;
+    console.log('Date to change:', value, typeof value);
+    this.dateTo = value || undefined;
+    this.updateQueryParams();
+  }
+
+  getSelectedStatusLabel(): string {
+    const option = this.statusOptions.find(opt => opt.value === this.selectedStatus);
+    return option ? option.label : 'Todos los estados';
+  }
+
+  getSelectedDeliveryMethodLabel(): string {
+    const option = this.deliveryMethodOptions.find(opt => opt.value === this.selectedDeliveryMethod);
+    return option ? option.label : 'Todos los métodos';
+  }
+
+  private updateQueryParams() {
+    const queryParams: any = {};
+    if (this.searchQuery) {
+      queryParams.q = this.searchQuery;
+    } else {
+      queryParams.q = null;
+    }
+    if (this.selectedStatus) {
+      queryParams.status = this.selectedStatus;
+    } else {
+      queryParams.status = null;
+    }
+    if (this.selectedDeliveryMethod) {
+      queryParams.deliveryMethod = this.selectedDeliveryMethod;
+    } else {
+      queryParams.deliveryMethod = null;
+    }
+    if (this.dateFrom) {
+      queryParams.dateFrom = this.dateFrom;
+    } else {
+      queryParams.dateFrom = null;
+    }
+    if (this.dateTo) {
+      queryParams.dateTo = this.dateTo;
+    } else {
+      queryParams.dateTo = null;
+    }
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams,
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  resetFilters() {
+    this.searchQuery = '';
+    this.selectedStatus = '';
+    this.selectedDeliveryMethod = '';
+    this.dateFrom = undefined;
+    this.dateTo = undefined;
+    this.updateQueryParams();
+  }
+
+  refreshSearch() {
+    // Forzar una búsqueda fresca agregando un timestamp único para evitar cache
+    this.currentPage = 0;
+    this.orders = [];
+    this.hasMore = true;
+    this.loadOrders(true);
+  }
+
+  hasActiveFilters(): boolean {
+    return !!(this.searchQuery || this.selectedStatus || this.selectedDeliveryMethod || this.dateFrom || this.dateTo);
+  }
+
+  getDateFromMillis(dateValue: string | number | undefined): Date {
+    if (!dateValue) return new Date();
+    
+    // Si es un string de ISO date
+    if (typeof dateValue === 'string') {
+      return new Date(dateValue);
+    }
+    
+    // Si es un número (milliseconds)
+    if (typeof dateValue === 'number') {
+      return new Date(dateValue);
+    }
+    
+    return new Date();
+  }
+
+  private convertToISODate(dateValue: string): string | undefined {
+    if (!dateValue) return undefined;
+    
+    try {
+      // Si ya es formato ISO (YYYY-MM-DD), devolverlo tal cual
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+        return dateValue;
+      }
+      
+      // Si es un timestamp en milliseconds, convertirlo
+      if (!isNaN(Number(dateValue))) {
+        const date = new Date(Number(dateValue));
+        return date.toISOString().split('T')[0]; // YYYY-MM-DD
+      }
+      
+      // Para otros formatos, intentar parsear y convertir
+      const date = new Date(dateValue);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().split('T')[0]; // YYYY-MM-DD
+      }
+      
+      return undefined;
+    } catch (error) {
+      console.error('Error converting date:', dateValue, error);
+      return undefined;
+    }
   }
 
   async loadMore(event: any) {
@@ -181,20 +388,37 @@ export class OrdersPage implements OnInit {
   }
 
   formatDate(date: any): string {
+    // Debug: log del tipo de dato que llega
+    console.log('formatDate input:', date, typeof date);
+
     let d: Date;
-    
+
     if (date && typeof date.toDate === 'function') {
       // Es un timestamp de Firestore
       d = date.toDate();
+      console.log('Firestore timestamp converted to:', d);
     } else if (typeof date === 'string') {
       d = new Date(date);
+      console.log('String converted to date:', d);
     } else if (date instanceof Date) {
       d = date;
+      console.log('Already a Date object:', d);
+    } else if (typeof date === 'number') {
+      // Si es un timestamp en milliseconds
+      d = new Date(date);
+      console.log('Number timestamp converted to:', d);
     } else {
-      // Fallback para fechas inválidas
+      // Fallback para fechas inválidas o null/undefined
+      console.log('Invalid date format, returning fallback');
       return 'Fecha no disponible';
     }
-    
+
+    // Verificar si la fecha es válida
+    if (isNaN(d.getTime())) {
+      console.log('Invalid date object, returning fallback');
+      return 'Fecha no disponible';
+    }
+
     return d.toLocaleDateString('es-ES', {
       day: '2-digit',
       month: 'short',

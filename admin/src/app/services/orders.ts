@@ -34,13 +34,18 @@ export class Orders {
       console.log(filters);
       // Filtro por fecha desde (createdAt >= dateFrom)
       if (filters?.dateFrom) {
-        const timestamp = Math.floor(filters.dateFrom.getTime() / 1000);
+        const timestamp = filters.dateFrom.getTime(); // Usar milliseconds directamente
+        console.log('Date from filter:', filters.dateFrom, 'timestamp (ms):', timestamp);
         filterStrings.push(`createdAt >= ${timestamp}`);
       }
 
       // Filtro por fecha hasta (createdAt <= dateTo)
       if (filters?.dateTo) {
-        const timestamp = Math.floor(filters.dateTo.getTime() / 1000);
+        // Para fecha "hasta", incluir todo el día (23:59:59.999)
+        const endOfDay = new Date(filters.dateTo);
+        endOfDay.setHours(23, 59, 59, 999);
+        const timestamp = endOfDay.getTime(); // Usar milliseconds directamente
+        console.log('Date to filter:', filters.dateTo, 'end of day:', endOfDay, 'timestamp (ms):', timestamp);
         filterStrings.push(`createdAt <= ${timestamp}`);
       }
 
@@ -60,6 +65,8 @@ export class Orders {
       const filtersString = filterStrings.length > 0 
         ? filterStrings.join(' AND ') 
         : '';
+
+      console.log('Algolia filters string:', filtersString);
 
       // Realizar la búsqueda en Algolia
       const { results } = await this.algoliaClient.search({

@@ -3,36 +3,113 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title class="font-bold">Ventas</ion-title>
-    <ion-searchbar
-      slot="end"
-      [(ngModel)]="searchQuery"
-      (ionInput)="onSearchChange($event)"
-      placeholder="Buscar ventas..."
-      [debounce]="500"
-      class="ios-searchbar"
-      style="max-width: 300px; padding: 8px 16px;">
-    </ion-searchbar>
+
+    <ion-row class="w--full">
+      <ion-col size="8" class="flex ">
+        <ion-title>Customers</ion-title>
+      </ion-col>
+      <ion-col size="4" class="py-0 flex justify-end items-center gap-2">
+        <ion-searchbar animated="true" mode="ios" [(ngModel)]="searchQuery" (ionInput)="onSearchChange($event)"
+          placeholder="Buscar ventas..." [debounce]="500" class="searchbar"
+          style="max-width: 320px; padding: 8px 16px;">
+        </ion-searchbar>
+        <ion-button fill="clear" size="small" (click)="refreshSearch()" class="refresh-search-btn">
+          <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </ion-col>
+    </ion-row>
+
+  </ion-toolbar>
+  <ion-toolbar color="light" class="px-5">
+    <ion-grid fixed>
+
+      <div class="flex gap-3 flex-wrap items-center">
+        <!-- Filtro de Estado -->
+        <ion-select mode="ios" #statusSelect [(ngModel)]="selectedStatus" (ionChange)="onStatusChange($event)"
+          interface="popover" class="chip-select" shape="round">
+          <ion-select-option *ngFor="let option of statusOptions" [value]="option.value">
+            {{ option.label }}
+          </ion-select-option>
+          <div slot="label" class="flex items-center gap-2">
+            <span class="text-gray-600">Estado:</span>
+            <ion-icon name="chevron-down-outline" class="text-sm"></ion-icon>
+          </div>
+        </ion-select>
+
+        <!-- Filtro de Método de Entrega -->
+        <ion-select mode="ios" [(ngModel)]="selectedDeliveryMethod" (ionChange)="onDeliveryMethodChange($event)"
+          interface="popover" class="chip-select" shape="round">
+          <ion-select-option *ngFor="let option of deliveryMethodOptions" [value]="option.value">
+            {{ option.label }}
+          </ion-select-option>
+          <div slot="label" class="flex items-center gap-2">
+            <span class="text-gray-600">Entrega:</span>
+            <ion-icon name="chevron-down-outline" class="text-sm"></ion-icon>
+          </div>
+        </ion-select>
+
+
+        <!-- Filtro de Fecha Desde -->
+        <ion-button fill="solid" shape="round" size="small" id="date-from-trigger" class="chip-button">
+          <div class="flex items-center gap-2">
+            <span class="text-gray-600">Desde:</span>
+            <span *ngIf="dateFrom">{{ dateFrom | date:'dd/MM/yy' }}</span>
+            <span *ngIf="!dateFrom">Todas</span>
+            <ion-icon name="chevron-down-outline" class="text-sm"></ion-icon>
+          </div>
+        </ion-button>
+        <ion-popover trigger="date-from-trigger" [keepContentsMounted]="true">
+          <ng-template>
+            <ion-datetime [value]="dateFrom" presentation="date" [max]="dateTo || undefined"
+              (ionChange)="onDateFromChange($event)">
+            </ion-datetime>
+          </ng-template>
+        </ion-popover>
+
+        <!-- Filtro de Fecha Hasta -->
+        <ion-button fill="solid" shape="round" size="small" id="date-to-trigger" class="chip-button">
+          <div class="flex items-center gap-2">
+            <span class="text-gray-600">Hasta:</span>
+            <span *ngIf="dateTo">{{ dateTo | date:'dd/MM/yy' }}</span>
+            <span *ngIf="!dateTo">Todas</span>
+            <ion-icon name="chevron-down-outline" class="text-sm"></ion-icon>
+          </div>
+        </ion-button>
+        <ion-popover trigger="date-to-trigger" [keepContentsMounted]="true">
+          <ng-template>
+            <ion-datetime [value]="dateTo" presentation="date" [min]="dateFrom || undefined"
+              (ionChange)="onDateToChange($event)">
+            </ion-datetime>
+          </ng-template>
+        </ion-popover>
+
+
+        <!-- Botón de Reset -->
+        <ion-button fill="clear" size="small" (click)="resetFilters()" class="reset-button" *ngIf="hasActiveFilters()">
+          <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </div>
+    </ion-grid>
+
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <div class="container mx-auto px-4 py-6 max-w-7xl">
-    
+  <div class="container mx-auto px-3 py-3 ">
+
 
 
     <!-- Loading inicial -->
-    <div *ngIf="loading && orders.length === 0" class="flex justify-center items-center py-20">
+    <div *ngIf="isLoading && orders.length === 0" class="flex justify-center items-center py-20">
       <ion-spinner name="crescent" color="primary"></ion-spinner>
     </div>
 
     <!-- Lista de órdenes -->
-    <div *ngIf="!loading || orders.length > 0" class="space-y-4">
-      <div 
-        *ngFor="let order of orders" 
+    <div *ngIf="!isLoading || orders.length > 0" class="space-y-4">
+      <div *ngFor="let order of orders"
         class="bg-white rounded shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer border border-gray-200 hover:border-primary"
         (click)="openOrderDetail(order)">
-        
+
         <div class="px-4 py-0">
           <div class="flex flex-wrap items-center justify-between gap-4">
             <!-- Order Info -->
@@ -60,7 +137,8 @@
             <!-- Order Total -->
             <div class="text-right">
               <p class="text-xs text-gray-500 mb-1">Total</p>
-              <p class="text-xl font-bold text-primary">{{ order?.totals?.total ? formatCurrency(order.totals.total) : '$0.00' }}</p>
+              <p class="text-xl font-bold text-primary">{{ order?.totals?.total ? formatCurrency(order.totals.total) :
+                '$0.00' }}</p>
             </div>
 
             <!-- Arrow Icon -->
@@ -73,7 +151,7 @@
     </div>
 
     <!-- No hay resultados -->
-    <div *ngIf="!loading && orders.length === 0" class="text-center py-20">
+    <div *ngIf="!isLoading && orders.length === 0" class="text-center py-20">
       <ion-icon name="receipt-outline" class="text-gray-300 text-6xl mb-4"></ion-icon>
       <h3 class="text-xl font-semibold text-gray-600 mb-2">No hay ventas</h3>
       <p class="text-gray-500">
@@ -82,13 +160,8 @@
     </div>
 
     <!-- Infinite Scroll -->
-    <ion-infinite-scroll
-      threshold="100px"
-      (ionInfinite)="loadMore($event)"
-      [disabled]="!hasMore">
-      <ion-infinite-scroll-content
-        loadingSpinner="crescent"
-        loadingText="Cargando más ventas...">
+    <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMore($event)" [disabled]="!hasMore">
+      <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Cargando más ventas...">
       </ion-infinite-scroll-content>
     </ion-infinite-scroll>
 
@@ -110,7 +183,7 @@
     </ion-header>
 
     <ion-content class="ion-padding">
-      
+
       <!-- Modal Header -->
       <div class="mb-6">
         <div class="flex items-center gap-3 mb-2">
@@ -133,33 +206,29 @@
           Artículos ({{ selectedOrder!.items.length }})
         </h4>
         <div class="space-y-3">
-          <div *ngFor="let item of selectedOrder!.items || []" class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-            
+          <div *ngFor="let item of selectedOrder!.items || []"
+            class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+
             <!-- Product Image -->
-            <img 
-              [src]="item.productImage || '/img/no-image.svg'" 
-              [alt]="item.productName"
-              class="w-16 h-16 object-cover rounded-md"
-              loading="lazy"
-            />
-            
+            <img [src]="item.productImage || '/img/no-image.svg'" [alt]="item.productName"
+              class="w-16 h-16 object-cover rounded-md" loading="lazy" />
+
             <!-- Product Details -->
             <div class="flex-1 min-w-0">
               <h5 class="font-medium text-gray-800">{{ item.productName }}</h5>
               <p *ngIf="item.variantName" class="text-sm text-gray-600 flex items-center gap-2">
                 {{ item.variantName }}
-                <span 
-                  *ngIf="item.variantColorHex" 
-                  class="w-4 h-4 rounded-full border border-gray-300 inline-block ml-1" 
+                <span *ngIf="item.variantColorHex" class="w-4 h-4 rounded-full border border-gray-300 inline-block ml-1"
                   [style.background-color]="item.variantColorHex">
                 </span>
               </p>
               <p class="text-sm text-gray-600">Cantidad: {{ item.quantity }}</p>
             </div>
-            
+
             <!-- Price -->
             <div class="text-right">
-              <p class="font-semibold text-gray-800">{{ item.totalPrice ? formatCurrency(item.totalPrice) : '$0.00' }}</p>
+              <p class="font-semibold text-gray-800">{{ item.totalPrice ? formatCurrency(item.totalPrice) : '$0.00' }}
+              </p>
               <p class="text-sm text-gray-600">{{ item.unitPrice ? formatCurrency(item.unitPrice) : '$0.00' }} c/u</p>
             </div>
           </div>
@@ -169,7 +238,7 @@
       <!-- Addresses and Summary -->
       <div class="bg-gray-50 rounded-lg p-4 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
+
           <!-- Billing Address -->
           <div>
             <h4 class="text-sm font-semibold text-gray-500 uppercase mb-2 flex items-center gap-2">
@@ -180,7 +249,8 @@
               <p class="font-medium text-gray-800">{{ selectedOrder!.billingAddress.name }}</p>
               <p class="text-gray-600">
                 {{ selectedOrder!.billingAddress.address_1 }}
-                <span *ngIf="selectedOrder!.billingAddress.address_2">, {{ selectedOrder!.billingAddress.address_2 }}</span>
+                <span *ngIf="selectedOrder!.billingAddress.address_2">, {{ selectedOrder!.billingAddress.address_2
+                  }}</span>
               </p>
               <p class="text-gray-600">
                 {{ selectedOrder!.billingAddress.city }}, {{ selectedOrder!.billingAddress.state }}
@@ -204,26 +274,32 @@
             <div class="space-y-1 text-sm">
               <div class="flex justify-between">
                 <span class="text-gray-600">Subtotal</span>
-                <span class="text-gray-800">{{ selectedOrder!.totals.subtotal ? formatCurrency(selectedOrder!.totals.subtotal) : '$0.00' }}</span>
+                <span class="text-gray-800">{{ selectedOrder!.totals.subtotal ?
+                  formatCurrency(selectedOrder!.totals.subtotal) : '$0.00' }}</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-gray-600">IGV ({{ selectedOrder!.totals.taxPercentage || 0 }}%)</span>
-                <span class="text-gray-800">{{ selectedOrder!.totals.taxAmount ? formatCurrency(selectedOrder!.totals.taxAmount) : '$0.00' }}</span>
+                <span class="text-gray-800">{{ selectedOrder!.totals.taxAmount ?
+                  formatCurrency(selectedOrder!.totals.taxAmount) : '$0.00' }}</span>
               </div>
               <div *ngIf="selectedOrder!.totals.shippingCost > 0" class="flex justify-between">
                 <span class="text-gray-600">Envío</span>
-                <span class="text-gray-800">{{ selectedOrder!.totals.shippingCost ? formatCurrency(selectedOrder!.totals.shippingCost) : '$0.00' }}</span>
+                <span class="text-gray-800">{{ selectedOrder!.totals.shippingCost ?
+                  formatCurrency(selectedOrder!.totals.shippingCost) : '$0.00' }}</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-gray-600">
-                  <ion-icon [name]="selectedOrder!.deliveryMethod ? getDeliveryMethodIcon(selectedOrder!.deliveryMethod) : 'help-circle'" class="text-base"></ion-icon>
+                  <ion-icon
+                    [name]="selectedOrder!.deliveryMethod ? getDeliveryMethodIcon(selectedOrder!.deliveryMethod) : 'help-circle'"
+                    class="text-base"></ion-icon>
                   {{ getDeliveryMethodLabel(selectedOrder!.deliveryMethod) }}
                 </span>
               </div>
               <div class="divider my-2"></div>
               <div class="flex justify-between font-semibold text-base">
                 <span class="text-gray-800">Total</span>
-                <span class="text-primary text-lg">{{ selectedOrder!.totals.total ? formatCurrency(selectedOrder!.totals.total) : '$0.00' }}</span>
+                <span class="text-primary text-lg">{{ selectedOrder!.totals.total ?
+                  formatCurrency(selectedOrder!.totals.total) : '$0.00' }}</span>
               </div>
             </div>
           </div>
@@ -239,7 +315,8 @@
             <p class="font-medium text-gray-800">{{ selectedOrder!.shippingAddress.name }}</p>
             <p class="text-gray-600">
               {{ selectedOrder!.shippingAddress.address_1 }}
-              <span *ngIf="selectedOrder!.shippingAddress.address_2">, {{ selectedOrder!.shippingAddress.address_2 }}</span>
+              <span *ngIf="selectedOrder!.shippingAddress.address_2">, {{ selectedOrder!.shippingAddress.address_2
+                }}</span>
             </p>
             <p class="text-gray-600">
               {{ selectedOrder!.shippingAddress.city }}, {{ selectedOrder!.shippingAddress.state }}

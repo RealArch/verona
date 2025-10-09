@@ -1,26 +1,43 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, CUSTOM_ELEMENTS_SCHEMA, ElementRef, effect } from '@angular/core';
 import { Product, ProductVariant } from '../../interfaces/products';
 import { Subject, takeUntil } from 'rxjs';
 import { ProductsService } from '../../services/products/products.service';
 import { Router } from '@angular/router';
 import { ProductItemComponent } from '../product-item/product-item.component';
+import { register } from 'swiper/element/bundle';
+
+// Register Swiper web components
+register();
 
 @Component({
   selector: 'app-latest-additions',
   imports: [ProductItemComponent],
   templateUrl: './latest-additions.component.html',
-  styleUrl: './latest-additions.component.scss'
+  styleUrl: './latest-additions.component.scss',
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class LatestAdditionsComponent implements OnInit, OnDestroy {
   // INJECTIONS
   private router = inject(Router);
   private productsService = inject(ProductsService);
+  private readonly elementRef = inject(ElementRef);
   
   // SIGNALS
   products = signal<Product[]>([]);
-  loading = signal<boolean>(false);
+  loading = signal<boolean>(true);
   
   private readonly destroy$ = new Subject<void>();
+  private swiperElement?: any;
+
+  constructor() {
+    // Effect to setup swiper when products are loaded
+    effect(() => {
+      if (this.products().length > 0 && !this.loading() && !this.swiperElement) {
+        this.setupCustomNavigation();
+      }
+    });
+  }
+
   ngOnInit(): void {
     this.loadLatestAdditions(10);
   }
@@ -45,6 +62,60 @@ export class LatestAdditionsComponent implements OnInit, OnDestroy {
           this.loading.set(false);
         }
       });
+  }
+
+  /**
+   * Setup custom navigation buttons for Swiper
+   */
+  private setupCustomNavigation(): void {
+    setTimeout(() => {
+      const swiperEl = this.elementRef.nativeElement.querySelector('swiper-container');
+      const prevButton = this.elementRef.nativeElement.querySelector('.swiper-button-prev-custom');
+      const nextButton = this.elementRef.nativeElement.querySelector('.swiper-button-next-custom');
+
+      if (swiperEl && prevButton && nextButton) {
+        this.swiperElement = swiperEl;
+        prevButton.addEventListener('click', () => swiperEl.swiper.slidePrev());
+        nextButton.addEventListener('click', () => swiperEl.swiper.slideNext());
+        swiperEl.addEventListener('slidechange', () => this.updateNavigationButtons());
+        this.updateNavigationButtons();
+      }
+    }, 0);
+  }
+
+  /**
+   * Update navigation button states based on swiper position
+   */
+  private updateNavigationButtons(): void {
+    if (!this.swiperElement) return;
+    const swiper = this.swiperElement.swiper;
+    const prevButton = this.elementRef.nativeElement.querySelector('.swiper-button-prev-custom');
+    const nextButton = this.elementRef.nativeElement.querySelector('.swiper-button-next-custom');
+
+    if (prevButton && nextButton) {
+      prevButton.disabled = swiper.isBeginning;
+      nextButton.disabled = swiper.isEnd;
+    }
+  }
+
+  /**
+   * Devuelve el número de slides visibles según el ancho de pantalla
+   */
+  getVisibleSlides(): number {
+    if (typeof window === 'undefined') return 2;
+    const width = window.innerWidth;
+    if (width >= 1280) return 6;
+    if (width >= 1024) return 5;
+    if (width >= 768) return 4;
+    if (width >= 640) return 3;
+    return 2;
+  }
+
+  /**
+   * Determina si hay overflow y se deben mostrar los navegadores
+   */
+  shouldShowNav(): boolean {
+    return this.products().length > this.getVisibleSlides();
   }
 
   ngOnDestroy(): void {

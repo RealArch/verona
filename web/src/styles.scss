@@ -1,7 +1,12 @@
 /* You can add global styles to this file, and also import other style files */
-
+@use 'swiper/css';
+@use 'swiper/css/navigation';
+@use 'swiper/css/pagination';
 @use "tailwindcss";
 @plugin "daisyui";
+
+/* Swiper styles */
+
 
 
 @plugin "daisyui/theme" {

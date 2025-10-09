@@ -59,6 +59,42 @@ ion-modal {
 
 }
 
+ion-popover {
+  --border-radius: 15px;
+}
+
+// Popovers específicos de ion-select
+ion-select::part(container) ion-popover {
+  --border-radius: 15px;
+}
+
+// También asegurar que cualquier popover tenga el radius
+.popover-content {
+  --border-radius: 15px;
+  border-radius: 15px;
+}
+
+// Todos los ion-select interfaces
+ion-select {
+  --border-radius: 15px;
+}
+
+// Interface alert para ion-select
+ion-alert {
+  --border-radius: 15px;
+}
+
+// Interface action-sheet para ion-select
+ion-action-sheet {
+  --border-radius: 15px;
+}
+
+// Cualquier modal o overlay que pueda usar ion-select
+ion-modal ion-select,
+ion-popover ion-select {
+  --border-radius: 15px;
+}
+
 ion-item.input {
 
   --border-radius: 15px;
