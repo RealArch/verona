@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-base-100 pt-20">
+<div class="bg-base-100 pt-20">
     <!-- Loading State -->
     @if (loading()) {
     <div class="container mx-auto px-4 py-8">
@@ -200,7 +200,7 @@
                                 d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                         </svg>
                         <div class="text-sm font-medium">Envío Gratis</div>
-                        <div class="text-xs text-base-content/60">Lima Metropolitana</div>
+                        <div class="text-xs text-base-content/60">Valencia Central</div>
                     </div>
                     <div class="bg-primary/10 rounded-lg p-4 text-center">
                         <svg class="w-6 h-6 mx-auto mb-2 text-primary" fill="none" stroke="currentColor"
@@ -235,7 +235,7 @@
     <div class="bg-base-200/30 py-12 mt-12">
         <div class="container mx-auto px-4">
             <h2 class="text-2xl md:text-3xl font-light text-center mb-8 text-base-content">Productos Relacionados</h2>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 <!-- Related Product Card -->
                 @for (product of relatedProducts(); track product.id) {
                  <app-product-item [product]="product"></app-product-item>

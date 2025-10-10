@@ -88,7 +88,7 @@ categoriesRouter.delete('/:id', async (req: Request, res: Response) => {
 });
 
 
-export const onCategoryCreated = onDocumentCreated({ document: "categories/{categoryId}", secrets: [algoliaAdminKey, algoliaAppId] },
+export const onCategoryCreated = onDocumentCreated({ document: "categories/{categoryId}", secrets: [algoliaAdminKey, algoliaAppId], memory: "2GiB", timeoutSeconds: 300 },
   async (event) => {
     const data = event.data?.data();
     if (!data) {
@@ -123,7 +123,7 @@ export const onCategoryCreated = onDocumentCreated({ document: "categories/{cate
     await batch.commit();
   })
 
-export const onCategoryUpdated = onDocumentUpdated({ document: "categories/{categoryId}", secrets: [algoliaAdminKey, algoliaAppId] },
+export const onCategoryUpdated = onDocumentUpdated({ document: "categories/{categoryId}", secrets: [algoliaAdminKey, algoliaAppId], memory: "2GiB", timeoutSeconds: 300 },
   async (event) => {
     const before = event.data?.before.data();
     const after = event.data?.after.data();

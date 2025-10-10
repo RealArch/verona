@@ -4,6 +4,7 @@ swiper-container {
   height: 100%;
   padding: 0.5rem 0;
   overflow: visible !important;
+  transition: opacity 0.3s ease;
 
   // Penetrar el Shadow DOM
   &::part(container) {
@@ -13,6 +14,10 @@ swiper-container {
   &::part(wrapper) {
     overflow: visible !important;
   }
+}
+
+.opacity-0 {
+  opacity: 0;
 }
 
 swiper-slide {

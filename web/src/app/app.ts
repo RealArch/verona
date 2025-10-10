@@ -15,12 +15,8 @@ export class App {
   shoppingCartService = inject(ShoppingCartService);
   
   constructor(){
-    this.loadCategories();
+    // Categories are now loaded automatically in the service constructor
     this.initializeShoppingCart();
-  }
-  
-  loadCategories() {
-    this.categoryService.loadCategories();
   }
   
   /**

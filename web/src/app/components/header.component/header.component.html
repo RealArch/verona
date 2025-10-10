@@ -136,14 +136,14 @@
                 class="mt-3 z-[1] card card-compact dropdown-content w-80 bg-base-100 shadow-xl border border-base-300">
                 <div class="card-body">
                     <span class="font-bold text-lg text-base-content">{{cartItemsCount().itemCount}} Items</span>
-                    <span class="text-info text-sm">Subtotal: ${{cartItemsCount().subtotal}}</span>
+                    <span class="text-primary text-sm">Subtotal: ${{cartItemsCount().subtotal}}</span>
                     <div class="card-actions">
                         <button class="btn btn-primary btn-block" (click)="closeDropdownAndNavigate('/shopping-cart')">
                             Ver Carrito
                         </button>
-                        <button class="btn btn-secondary btn-block" (click)="closeDropdownAndAction()">
+                        <!-- <button class="btn btn-secondary btn-block" (click)="closeDropdownAndAction()">
                             Checkout
-                        </button>
+                        </button> -->
                     </div>
                 </div>
             </div>

@@ -22,11 +22,13 @@
         }
         
         <!-- Categories Content -->
-        @if (mainCategories().length > 0 && !loading()) {
+        @if (mainCategories().length > 0) {
         <div class="relative px-4">
             <!-- Swiper Container -->
             <swiper-container
-                class="py-30"
+
+                [class.opacity-0]="!swiperVisible()"
+                class="py-30 opacity-0"
                 slides-per-view="4"
                 space-between="8"
                 speed="500"

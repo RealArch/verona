@@ -1,0 +1,73 @@
+<div class="min-h-screen bg-primary flex items-center justify-center px-4">
+  <div class="text-center max-w-md mx-auto">
+    
+    <!-- Icono de éxito -->
+    <div class="mb-8">
+      <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+        <svg class="w-12 h-12 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Mensaje principal -->
+    <h1 class="text-3xl md:text-4xl font-light text-white mb-6">
+      ¡Gracias por tu compra!
+    </h1>
+
+    <!-- ID de orden -->
+    @if (shortOrderId()) {
+      <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-6">
+        <p class="text-white/80 text-sm mb-1">Número de orden:</p>
+        <p class="text-white font-semibold text-lg">{{ shortOrderId() }}</p>
+      </div>
+    }
+
+    <!-- Mensaje específico para arrangeWithSeller -->
+    @if (isArrangeWithSeller()) {
+      <div class="bg-white/15 backdrop-blur-sm rounded-lg p-6 mb-8">
+        <h3 class="text-white font-semibold text-lg mb-3">
+          🤝 Coordinación de entrega
+        </h3>
+        <p class="text-white/90 text-sm leading-relaxed">
+          El equipo de Verona se contactará contigo pronto para coordinar la entrega de tu pedido. 
+          Mantente atento a nuestras comunicaciones.
+        </p>
+      </div>
+    }
+
+    <!-- Botones de acción -->
+    <div class="space-y-4">
+      
+      <!-- Botón Ver Compra -->
+      <button 
+        class="btn btn-outline border-white text-white hover:bg-white hover:text-primary w-full"
+        (click)="goToMyOrders()">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+        </svg>
+        Ver mi compra
+      </button>
+
+      <!-- Botón Seguir Comprando -->
+      <button 
+        class="btn bg-white text-primary hover:bg-white/90 border-0 w-full"
+        (click)="goToHome()">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9m-9 0h9"></path>
+        </svg>
+        Seguir comprando
+      </button>
+    </div>
+
+    <!-- Mensaje de confianza -->
+    <div class="mt-8 pt-6 border-t border-white/20">
+      <p class="text-white/70 text-xs">
+        Tu compra está protegida por Verona
+      </p>
+    </div>
+
+  </div>
+</div>

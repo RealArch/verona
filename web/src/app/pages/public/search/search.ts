@@ -1,6 +1,7 @@
 import { Component, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProductsService } from '../../../services/products/products.service';
+import { CategoriesService } from '../../../services/categories/categories.service';
 import { Product } from '../../../interfaces/products';
 import { Subject, takeUntil } from 'rxjs';
 import { ProductItemComponent } from '../../../components/product-item/product-item.component';
@@ -25,6 +26,7 @@ export class Search implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly productsService = inject(ProductsService);
+  private readonly categoriesService = inject(CategoriesService);
   private readonly destroy$ = new Subject<void>();
 
   // Signals for reactive state
@@ -127,7 +129,7 @@ export class Search implements OnInit, OnDestroy {
    * Reset products and perform initial search
    */
   private async resetAndSearch(params: SearchParams): Promise<void> {
-    this.allProducts.set([]);
+    // No limpiar allProducts aquí para evitar parpadeo
     this.currentPage.set(0);
     this.hasMoreResults.set(true);
     
@@ -181,8 +183,8 @@ export class Search implements OnInit, OnDestroy {
         const existingIds = new Set(this.allProducts().map(p => p.objectID || p.id));
         const newProducts = results.hits.filter(p => !existingIds.has(p.objectID || p.id));
         this.allProducts.set([...this.allProducts(), ...newProducts]);
-      } else {
-        // Replace all results for new search
+      } else if (!append) {
+        // Replace all results for a new search (page 0)
         this.allProducts.set(results.hits);
       }
 

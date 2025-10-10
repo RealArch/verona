@@ -31,7 +31,7 @@ productsRouter.get('/', async (req: Request, res: Response) => {
 
 
 export const onProductCreated = onDocumentCreated(
-    { document: "products/{productId}", secrets: [algoliaAdminKey, algoliaAppId] },
+    { document: "products/{productId}", secrets: [algoliaAdminKey, algoliaAppId], memory: "2GiB", timeoutSeconds: 300 },
     async (event) => {
         const data = event.data?.data();
         if (!data) {
@@ -99,7 +99,7 @@ export const onProductCreated = onDocumentCreated(
 );
 
 export const onProductUpdated = onDocumentUpdated(
-    { document: "products/{productId}", secrets: [algoliaAdminKey, algoliaAppId] },
+    { document: "products/{productId}", secrets: [algoliaAdminKey, algoliaAppId], memory: "2GiB", timeoutSeconds: 300 },
     async (event) => {
         const before = event.data?.before.data();
         const after = event.data?.after.data();

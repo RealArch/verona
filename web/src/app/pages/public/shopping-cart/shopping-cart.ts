@@ -75,6 +75,9 @@ export class ShoppingCart {
       
       if (currentCart) {
         this.initializeCart(currentCart.items);
+      } else {
+        this.enrichedItems.set([]);
+        this.selectedItems.set(new Set());
       }
     });
   }
@@ -82,6 +85,7 @@ export class ShoppingCart {
   private initializeCart(cartItems: CartItem[]): void {
     if (!cartItems.length) {
       this.enrichedItems.set([]);
+      this.selectedItems.set(new Set());
       return;
     }
 
@@ -94,7 +98,7 @@ export class ShoppingCart {
     }));
     
     this.enrichedItems.set(basicItems);
-    this.selectAll();
+    this.selectedItems.set(new Set()); // Start with nothing selected, but will select all after enrichment
 
     // Enrich in background
     this.enrichCartItems(cartItems).catch(console.error);
@@ -203,15 +207,22 @@ export class ShoppingCart {
   }
 
   toggleSelectAll(): void {
-    this.selectedItems.set(
-      this.allSelected() ? new Set() : new Set(this.enrichedItems().map(item => item.id))
+    const allItemIds = this.enrichedItems().map(item => item.id);
+    this.selectedItems.update(currentSelected => 
+      currentSelected.size === allItemIds.length ? new Set() : new Set(allItemIds)
     );
   }
 
   toggleItem(itemId: string): void {
-    const selected = new Set(this.selectedItems());
-    selected.has(itemId) ? selected.delete(itemId) : selected.add(itemId);
-    this.selectedItems.set(selected);
+    this.selectedItems.update(selected => {
+      const newSelected = new Set(selected);
+      if (newSelected.has(itemId)) {
+        newSelected.delete(itemId);
+      } else {
+        newSelected.add(itemId);
+      }
+      return newSelected;
+    });
   }
 
 

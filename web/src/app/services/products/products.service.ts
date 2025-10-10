@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { algoliasearch, SearchClient } from 'algoliasearch';
 import { environment } from '../../../environments/environment.development';
 import { Product } from '../../interfaces/products';
+import { CategoriesService } from '../categories/categories.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,6 +12,7 @@ import { Product } from '../../interfaces/products';
 export class ProductsService {
   private injector = inject(Injector);
   private firestore = inject(Firestore);
+  private categoriesService = inject(CategoriesService);
   readonly productsRef = collection(this.firestore, 'products');
   private client: SearchClient;
   private readonly indexName = environment.algolia.indexes.products;
@@ -89,22 +91,36 @@ export class ProductsService {
     try {
       // Build filters array
       const filters: string[] = [];
-      console.log(categoryIds)
+      
+      // Expand categoryIds to include all descendants
+      let expandedCategoryIds: string[] = [];
+      if (categoryIds && categoryIds.length > 0) {
+        // For each provided category, get all its descendants
+        const allDescendants = categoryIds.flatMap(categoryId => 
+          this.categoriesService.getAllDescendantIds(categoryId)
+        );
+        // Remove duplicates
+        expandedCategoryIds = [...new Set(allDescendants)];
+      }
+      
+      console.log('Original categoryIds:', categoryIds);
+      console.log('Expanded categoryIds:', expandedCategoryIds);
+      
       // Add price range filters if provided
       if (minPrice !== undefined && maxPrice !== undefined) {
-        filters.push(`price:${minPrice} TO ${maxPrice}`);
+        filters.push(`minPrice:${minPrice} TO ${maxPrice}`);
       } else if (minPrice !== undefined) {
-        filters.push(`price >= ${minPrice}`);
+        filters.push(`minPrice >= ${minPrice}`);
       } else if (maxPrice !== undefined) {
-        filters.push(`price <= ${maxPrice}`);
+        filters.push(`minPrice <= ${maxPrice}`);
       }
 
       // Add status filter to only show active products
       filters.push('status:active');
 
-      // Add categoryId filter if provided
-      if (categoryIds && categoryIds.length > 0) {
-        const categoriesFilter = categoryIds.map(id => `categoryId:'${id}'`).join(' OR ');
+      // Add categoryId filter if provided (using expanded list)
+      if (expandedCategoryIds && expandedCategoryIds.length > 0) {
+        const categoriesFilter = expandedCategoryIds.map(id => `categoryId:'${id}'`).join(' OR ');
         filters.push(`(${categoriesFilter})`);
       }
 

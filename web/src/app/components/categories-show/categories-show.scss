@@ -3,6 +3,17 @@ swiper-container {
   width: 100%;
   height: 100%;
   padding: 1rem 0;
+  transition: opacity 0.3s ease;
+
+  // Penetrar el Shadow DOM para permitir overflow visible
+  &::part(container) {
+    overflow: visible !important;
+  }
+
+}
+
+.opacity-0 {
+  opacity: 0;
 }
 
 swiper-slide {
@@ -10,9 +21,9 @@ swiper-slide {
   justify-content: center;
   align-items: center;
   height: auto !important;
-  
+
   // Mantener el aspecto cuadrado original
-  > div {
+  >div {
     width: 100%;
   }
 }
@@ -20,7 +31,7 @@ swiper-slide {
 // Custom navigation buttons
 .swiper-nav-button {
   transition: all 0.3s ease;
-  
+
   &:disabled {
     opacity: 0.3;
     cursor: not-allowed;
@@ -30,6 +41,7 @@ swiper-slide {
 
 // Hide navigation buttons on small screens
 @media (max-width: 768px) {
+
   .swiper-button-prev-custom,
   .swiper-button-next-custom {
     display: none !important;

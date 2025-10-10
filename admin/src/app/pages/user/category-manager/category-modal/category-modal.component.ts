@@ -71,6 +71,13 @@ export class CategoryModalComponent implements OnInit {
     const file = event.target.files[0];
     if (!file) return;
 
+    // Validar tipo de archivo
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Solo se permiten imágenes JPG, PNG o WEBP.');
+      return;
+    }
+
     this.imageUpload = {
       file,
       previewUrl: URL.createObjectURL(file),

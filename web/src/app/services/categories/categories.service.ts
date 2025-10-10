@@ -11,17 +11,35 @@ export class CategoriesService {
   private client: SearchClient;
   private readonly indexName = environment.algolia.indexes.categories;
   readonly categories = signal<Category[] | null>(null);
+  readonly categoriesLoading = signal<boolean>(false);
+  readonly categoriesLoaded = signal<boolean>(false);
+  
   constructor() {
     this.client = algoliasearch(
       environment.algolia.appId,
       environment.algolia.apiKey
     );
+    // Load categories immediately on service initialization
+    this.loadCategories();
   }
 
-  loadCategories() {
-    this.getAllCategories().then(categories => {
+  async loadCategories(): Promise<void> {
+    // Prevent multiple simultaneous loads
+    if (this.categoriesLoading() || this.categoriesLoaded()) {
+      return Promise.resolve();
+    }
+    
+    this.categoriesLoading.set(true);
+    try {
+      const categories = await this.getAllCategories();
       this.categories.set(categories);
-    });
+      this.categoriesLoaded.set(true);
+      console.log('Categories loaded successfully:', categories.length);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    } finally {
+      this.categoriesLoading.set(false);
+    }
   }
   /**
    * Get all categories from Algolia
@@ -57,6 +75,31 @@ export class CategoriesService {
       if (!currentId || currentId === 'root') break;
     }
     return path;
+  }
+
+  /**
+   * Get all descendant category IDs (children, grandchildren, etc.) for a given category
+   * @param categoryId The parent category ID
+   * @returns Array of all descendant category IDs including the parent
+   */
+  getAllDescendantIds(categoryId: string): string[] {
+    const categories = this.categories() ?? [];
+    const descendants: string[] = [categoryId]; // Include the parent category itself
+    
+    // Helper function to recursively find all children
+    const findChildren = (parentId: string) => {
+      const children = categories.filter((cat: Category) => cat.parentId === parentId);
+      children.forEach(child => {
+        if (child.objectID) {
+          descendants.push(child.objectID);
+          // Recursively find grandchildren
+          findChildren(child.objectID);
+        }
+      });
+    };
+    
+    findChildren(categoryId);
+    return descendants;
   }
 
   /**

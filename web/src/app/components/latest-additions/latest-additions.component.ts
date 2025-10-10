@@ -25,6 +25,7 @@ export class LatestAdditionsComponent implements OnInit, OnDestroy {
   // SIGNALS
   products = signal<Product[]>([]);
   loading = signal<boolean>(true);
+  swiperVisible = signal(false);
   
   private readonly destroy$ = new Subject<void>();
   private swiperElement?: any;
@@ -54,12 +55,14 @@ export class LatestAdditionsComponent implements OnInit, OnDestroy {
         next: (products) => {
           this.products.set(products);
           this.loading.set(false);
+          setTimeout(() => this.swiperVisible.set(true), 100);
           console.log(this.products());
         }, 
         error: (err) => {
           console.error('Error loading latest additions:', err);
           this.products.set([]);
           this.loading.set(false);
+          setTimeout(() => this.swiperVisible.set(true), 100);
         }
       });
   }

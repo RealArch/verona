@@ -42,6 +42,7 @@ export class CategoriesShow implements OnInit, AfterViewInit {
   mainCategories = signal<Category[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
+  swiperVisible = signal(false);
 
   private swiperElement?: any;
 
@@ -131,6 +132,9 @@ export class CategoriesShow implements OnInit, AfterViewInit {
 
     } finally {
       this.loading.set(false);
+      setTimeout(() => {
+        this.swiperVisible.set(true);
+      }, 100);
     }
   }
 

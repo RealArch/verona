@@ -1,8 +1,8 @@
-<div class="min-h-screen bg-base-300 pt-20">
+<div class="bg-base-300 pt-20 py-60">
   <div class="container mx-auto px-4 py-8">
     
     <!-- Header -->
-    <div class="text-center mb-8">
+    <div class="text-center b-8 pb-10">
       <h1 class="text-3xl lg:text-4xl font-light text-base-content mb-2">Carrito de Compras</h1>
       <p class="text-base-content/60">Revisa y gestiona tus productos seleccionados</p>
     </div>
@@ -247,7 +247,7 @@
               </div>
               
               <div class="flex items-center justify-between">
-                <span class="text-base-content/70">IGV ({{ (taxRate() * 100).toFixed(0) }}%):</span>
+                <span class="text-base-content/70">IVA ({{ (taxRate() * 100).toFixed(0) }}%):</span>
                 <span class="font-semibold">{{ totals().taxAmount | currency }}</span>
               </div>
               
@@ -271,7 +271,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                 </svg>
               }
-              Proceder al Checkout
+              Ir al Checkout
             </button>
 
             <!-- Continuar Comprando -->

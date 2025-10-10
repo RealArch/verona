@@ -32,6 +32,7 @@ export const routes: Routes = [
                 loadComponent: () => import('./pages/public/checkout/checkout').then(m => m.Checkout),
                 canActivate: [authGuard]
             },
+
             {
                 path: 'user',
                 loadComponent: () => import('./pages/user/user').then(m => m.User),
@@ -60,7 +61,12 @@ export const routes: Routes = [
     {
         path: 'auth/register',
         loadComponent: () => import('./pages/auth/register/register').then(m => m.Register)
-    }
+    },
+    {
+        path: 'success-sale',
+        loadComponent: () => import('./pages/public/checkout/success-sale/success-sale').then(m => m.SuccessSale),
+        canActivate: [authGuard]
+    },
     // /user/profile
 
 ];

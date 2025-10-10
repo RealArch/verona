@@ -11,6 +11,7 @@ import { AddAddress } from '../../../components/user/add-address/add-address';
 import { Sales } from '../../../services/sales/sales';
 import { CreateOrderRequest, DeliveryMethod } from '../../../interfaces/sales';
 import { SiteConfig } from '../../../services/site-config/site-config';
+import { ShoppingCartService } from '../../../services/shopping-cart/shopping-cart';
 
 // Tipo para los items del checkout
 type CheckoutItem = CartItem & { 
@@ -32,6 +33,7 @@ export class Checkout implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly siteConfig = inject(SiteConfig);
   private readonly fb = inject(FormBuilder);
+  private readonly cartService = inject(ShoppingCartService);
 
   // State signals
   checkoutItems = signal<CheckoutItem[]>([]);
@@ -357,9 +359,24 @@ export class Checkout implements OnInit {
 
       if (response.success && response.orderId) {
         console.log('Order created successfully:', response.orderId);
-        // Aquí podrías redirigir a una página de confirmación
-        // this.router.navigate(['/order-confirmation', response.orderId]);
-        alert(`Pedido procesado exitosamente. ID de orden: ${response.orderId}`);
+        
+        // Eliminar los items comprados del carrito
+        try {
+          const itemIds = items.map(item => item.id).filter(id => id);
+          await Promise.all(itemIds.map(itemId => this.cartService.removeFromCart(itemId)));
+        } catch (cartError) {
+          console.error('Error removing items from cart:', cartError);
+          // No fallar la orden por esto, solo loguear el error
+        }
+
+        // Redirigir a la página de éxito con información de la orden
+        this.router.navigate(['/success-sale'], {
+          state: {
+            orderId: response.orderId,
+            deliveryMethod: deliveryMethod,
+            total: totals.total
+          }
+        });
       } else {
         throw new Error(response.message || 'Error al procesar el pedido');
       }

@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { Title, Meta } from '@angular/platform-browser';
 import { ProductsService } from '../../../services/products/products.service';
 import { Product as ProductInterface, ProductVariant } from '../../../interfaces/products';
 import { Subject } from 'rxjs';
@@ -22,6 +23,8 @@ export class ProductComponent implements OnInit, OnDestroy {
   private readonly productsService = inject(ProductsService);
   private readonly categoriesService = inject(CategoriesService);
   private readonly cartService = inject(ShoppingCartService);
+  private readonly titleService = inject(Title);
+  private readonly metaService = inject(Meta);
   
   // Signals para el estado del componente
   currentProduct = signal<ProductInterface | null>(null);
@@ -120,6 +123,9 @@ export class ProductComponent implements OnInit, OnDestroy {
           this.loading.set(false);
           console.log('Producto cargado:', product);
 
+          // Update SEO metadata
+          this.updateMetaTags(product);
+
           //related products mock example, replace with real logic
           if (product) {
             this.relatedProducts.set([...this.relatedProducts(), product]);
@@ -145,6 +151,75 @@ export class ProductComponent implements OnInit, OnDestroy {
 
   getCategoryName(categoryId: string): string {
     return this.categoriesService.categories()?.find(cat => cat.objectID === categoryId)?.name ?? 'Categoría desconocida';
+  }
+
+  /**
+   * Update all SEO meta tags for the product page
+   */
+  private updateMetaTags(product: ProductInterface): void {
+    const productId = product.id || product.objectID;
+    const productUrl = `https://verona-ffbcd.web.app/product/${product.slug}/${productId}`;
+    const imageUrl = product.photos && product.photos.length > 0 
+      ? product.photos[0].large.url 
+      : 'https://verona-ffbcd.web.app/logos/logo.png';
+    
+    const price = product.price;
+    const currency = 'USD';
+    const availability = parseInt(product.stock) > 0 ? 'in stock' : 'out of stock';
+    const categoryName = this.getCategoryName(product.categoryId);
+    
+    // Title
+    const title = `${product.name} | Verona`;
+    this.titleService.setTitle(title);
+    
+    // Standard Meta Tags
+    this.metaService.updateTag({ name: 'description', content: product.description || `Compra ${product.name} en Verona. ${categoryName}.` });
+    this.metaService.updateTag({ name: 'keywords', content: `${product.name}, ${categoryName}, comprar online, Verona, Venezuela` });
+    this.metaService.updateTag({ name: 'author', content: 'Verona' });
+    
+    // Open Graph (Facebook, LinkedIn, etc.)
+    this.metaService.updateTag({ property: 'og:type', content: 'product' });
+    this.metaService.updateTag({ property: 'og:title', content: product.name });
+    this.metaService.updateTag({ property: 'og:description', content: product.description || `Compra ${product.name} en Verona.` });
+    this.metaService.updateTag({ property: 'og:image', content: imageUrl });
+    this.metaService.updateTag({ property: 'og:image:alt', content: product.name });
+    this.metaService.updateTag({ property: 'og:image:width', content: '1200' });
+    this.metaService.updateTag({ property: 'og:image:height', content: '630' });
+    this.metaService.updateTag({ property: 'og:url', content: productUrl });
+    this.metaService.updateTag({ property: 'og:site_name', content: 'Verona' });
+    this.metaService.updateTag({ property: 'og:locale', content: 'es_VE' });
+    
+    // Open Graph Product-specific
+    this.metaService.updateTag({ property: 'product:price:amount', content: price.toString() });
+    this.metaService.updateTag({ property: 'product:price:currency', content: currency });
+    this.metaService.updateTag({ property: 'product:availability', content: availability });
+    this.metaService.updateTag({ property: 'product:category', content: categoryName });
+    
+    // Twitter Card
+    this.metaService.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
+    this.metaService.updateTag({ name: 'twitter:title', content: product.name });
+    this.metaService.updateTag({ name: 'twitter:description', content: product.description || `Compra ${product.name} en Verona.` });
+    this.metaService.updateTag({ name: 'twitter:image', content: imageUrl });
+    this.metaService.updateTag({ name: 'twitter:image:alt', content: product.name });
+    
+    // Additional SEO tags
+    this.metaService.updateTag({ name: 'robots', content: 'index, follow' });
+    this.metaService.updateTag({ name: 'googlebot', content: 'index, follow' });
+    this.metaService.updateTag({ httpEquiv: 'Content-Type', content: 'text/html; charset=utf-8' });
+    
+    // Canonical URL
+    this.metaService.updateTag({ rel: 'canonical', href: productUrl });
+    
+    // Mobile optimization
+    this.metaService.updateTag({ name: 'viewport', content: 'width=device-width, initial-scale=1' });
+    this.metaService.updateTag({ name: 'theme-color', content: '#000000' });
+    
+    // Additional product structured data hints (JSON-LD would be ideal but requires script injection)
+    this.metaService.updateTag({ itemprop: 'name', content: product.name });
+    this.metaService.updateTag({ itemprop: 'description', content: product.description || '' });
+    this.metaService.updateTag({ itemprop: 'image', content: imageUrl });
+    this.metaService.updateTag({ itemprop: 'price', content: price.toString() });
+    this.metaService.updateTag({ itemprop: 'priceCurrency', content: currency });
   }
 
   // Métodos para manejar la funcionalidad

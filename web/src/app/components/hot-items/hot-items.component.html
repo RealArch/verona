@@ -19,21 +19,21 @@
                 <div class="w-24 h-px bg-gradient-to-r from-primary to-transparent mt-2"></div>
             </div>
 
-            <button
+            <!-- <button
                 class="btn btn-ghost btn-sm text-base-content/70 hover:text-primary hover:bg-primary/10 transition-all duration-300"
                 (click)="viewAllProducts()">
                 <span class="text-sm font-medium">Ver todos</span>
                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
-            </button>
+            </button> -->
         </div>
 
         <!-- Grid con más productos por fila y alturas consistentes -->
         @if (loading()) {
         <!-- Loading skeleton -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 xl:gap-6">
-            @for (item of [1,2,3,4,5,6,7,8,9,10]; track item) {
+        <div class="grid grid-cols-6 gap-3 xl:gap-6">
+            @for (item of [1,2,3,4,5,6]; track item) {
             <div class="animate-pulse">
                 <div class="bg-base-300 rounded-lg aspect-square mb-3"></div>
                 <div class="bg-base-300 rounded-md h-4 mb-2"></div>
@@ -57,7 +57,7 @@
         } @else {
         <!-- Swiper -->
         <div class="relative">
-            <swiper-container slides-per-view="2" space-between="12" speed="500" loop="false" grab-cursor="true"
+            <swiper-container [class.opacity-0]="!swiperVisible()" slides-per-view="2" space-between="12" speed="500" loop="false" grab-cursor="true" class="opacity-0"
                 navigation="false" breakpoints='{
                     "640": {
                         "slidesPerView": 3,
