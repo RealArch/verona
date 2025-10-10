@@ -1,5 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Title, Meta } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Auth } from '../../../services/auth/auth.services';
@@ -10,14 +11,26 @@ import { Auth } from '../../../services/auth/auth.services';
   templateUrl: './login.html',
   styleUrl: './login.scss'
 })
-export class Login {
+export class Login implements OnInit {
   private authService = inject(Auth);
+  private readonly titleService = inject(Title);
+  private readonly metaService = inject(Meta);
 
   // Signals para el formulario
   email = signal('');
   password = signal('');
   isLoading = signal(false);
   errorMessage = signal<string | null>(null);
+
+  ngOnInit(): void {
+    this.setupSEO();
+  }
+
+  private setupSEO(): void {
+    this.titleService.setTitle('Iniciar Sesión | Verona');
+    this.metaService.updateTag({ name: 'description', content: 'Inicia sesión en Verona para acceder a tu cuenta.' });
+    this.metaService.updateTag({ name: 'robots', content: 'noindex, nofollow' });
+  }
 
   /**
    * Maneja el envío del formulario de login

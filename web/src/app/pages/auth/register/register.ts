@@ -1,5 +1,6 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
+import { Title, Meta } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Auth } from '../../../services/auth/auth.services';
@@ -10,9 +11,11 @@ import { Auth } from '../../../services/auth/auth.services';
   templateUrl: './register.html',
   styleUrl: './register.scss'
 })
-export class Register {
+export class Register implements OnInit {
   private authService = inject(Auth);
   private router = inject(Router);
+  private readonly titleService = inject(Title);
+  private readonly metaService = inject(Meta);
 
   // Signals para el formulario
   firstName = signal('');
@@ -53,6 +56,16 @@ export class Register {
            this.passwordsMatch() &&
            this.acceptTerms();
   });
+
+  ngOnInit(): void {
+    this.setupSEO();
+  }
+
+  private setupSEO(): void {
+    this.titleService.setTitle('Crear Cuenta | Verona');
+    this.metaService.updateTag({ name: 'description', content: 'Crea tu cuenta en Verona y comienza a comprar.' });
+    this.metaService.updateTag({ name: 'robots', content: 'noindex, nofollow' });
+  }
 
   /**
    * Maneja el envío del formulario de registro

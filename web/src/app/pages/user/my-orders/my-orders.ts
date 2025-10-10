@@ -1,5 +1,6 @@
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Title, Meta } from '@angular/platform-browser';
 import { Unsubscribe } from '@angular/fire/firestore';
 import { Auth } from '../../../services/auth/auth.services';
 import { Sales } from '../../../services/sales/sales';
@@ -14,6 +15,8 @@ import { Order } from '../../../interfaces/sales';
 export class MyOrders implements OnInit, OnDestroy {
   private auth = inject(Auth);
   private sales = inject(Sales);
+  private readonly titleService = inject(Title);
+  private readonly metaService = inject(Meta);
   
   // Signals para manejar el estado
   orders = signal<Order[]>([]);
@@ -24,7 +27,14 @@ export class MyOrders implements OnInit, OnDestroy {
   private unsubscribe?: Unsubscribe;
 
   ngOnInit(): void {
+    this.setupSEO();
     this.loadOrders();
+  }
+
+  private setupSEO(): void {
+    this.titleService.setTitle('Mis Pedidos | Verona');
+    this.metaService.updateTag({ name: 'description', content: 'Consulta el historial de tus pedidos en Verona.' });
+    this.metaService.updateTag({ name: 'robots', content: 'noindex, nofollow' });
   }
 
   ngOnDestroy(): void {

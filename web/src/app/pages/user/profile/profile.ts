@@ -1,5 +1,6 @@
-import { Component, inject, computed, signal } from '@angular/core';
+import { Component, inject, computed, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Title, Meta } from '@angular/platform-browser';
 import { Auth } from '../../../services/auth/auth.services';
 import { UserProfile, UserAddress } from '../../../interfaces/auth';
 import { AddAddress } from '../../../components/user/add-address/add-address';
@@ -27,9 +28,10 @@ export interface UserPreferences {
   templateUrl: './profile.html',
   styleUrl: './profile.scss'
 })
-export class Profile {
-
-  private auth = inject(Auth);
+export class Profile implements OnInit {
+  private readonly auth = inject(Auth);
+  private readonly titleService = inject(Title);
+  private readonly metaService = inject(Meta);
 
   // Expose user initials from auth service
   userInitials = this.auth.userInitials;
@@ -83,6 +85,16 @@ export class Profile {
   activeSection: string = 'personal';
   isEditingProfile: boolean = false;
   showAddAddressModal: boolean = false;
+
+  ngOnInit(): void {
+    this.setupSEO();
+  }
+
+  private setupSEO(): void {
+    this.titleService.setTitle('Mi Perfil | Verona');
+    this.metaService.updateTag({ name: 'description', content: 'Gestiona tu perfil y configuración en Verona.' });
+    this.metaService.updateTag({ name: 'robots', content: 'noindex, nofollow' });
+  }
   
   // Stats del usuario - calculados dinámicamente
   userStats = computed(() => {

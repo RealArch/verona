@@ -1,5 +1,6 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { Title, Meta } from '@angular/platform-browser';
 import { DeliveryMethod } from '../../../../interfaces/sales';
 
 @Component({
@@ -10,6 +11,8 @@ import { DeliveryMethod } from '../../../../interfaces/sales';
 })
 export class SuccessSale implements OnInit {
   private readonly router = inject(Router);
+  private readonly titleService = inject(Title);
+  private readonly metaService = inject(Meta);
   
   orderId = signal<string>('');
   deliveryMethod = signal<DeliveryMethod | null>(null);
@@ -20,6 +23,7 @@ export class SuccessSale implements OnInit {
     });
   
   ngOnInit(): void {
+    this.setupSEO();
     // Obtener datos del estado de navegación
     const navigation = this.router.getCurrentNavigation();
     const state = navigation?.extras?.state || history.state;
@@ -31,6 +35,12 @@ export class SuccessSale implements OnInit {
     }
   }
   
+  private setupSEO(): void {
+    this.titleService.setTitle('Compra Exitosa | Verona');
+    this.metaService.updateTag({ name: 'description', content: 'Tu compra ha sido procesada exitosamente.' });
+    this.metaService.updateTag({ name: 'robots', content: 'noindex, nofollow' });
+  }
+
   goToHome(): void {
     this.router.navigate(['/']);
   }

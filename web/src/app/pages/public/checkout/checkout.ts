@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit, PLATFORM_ID, effect } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
+import { Title, Meta } from '@angular/platform-browser';
 import { Location, CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CartItem } from '../../../interfaces/shopping-cart';
@@ -34,6 +35,8 @@ export class Checkout implements OnInit {
   private readonly siteConfig = inject(SiteConfig);
   private readonly fb = inject(FormBuilder);
   private readonly cartService = inject(ShoppingCartService);
+  private readonly titleService = inject(Title);
+  private readonly metaService = inject(Meta);
 
   // State signals
   checkoutItems = signal<CheckoutItem[]>([]);
@@ -154,9 +157,16 @@ export class Checkout implements OnInit {
   });
 
   ngOnInit(): void {
+    this.setupSEO();
     this.loadCheckoutItems();
     // No seleccionar método por defecto inicialmente
     // this.selectedDeliveryMethod.set(methods[0].key);
+  }
+
+  private setupSEO(): void {
+    this.titleService.setTitle('Checkout | Verona');
+    this.metaService.updateTag({ name: 'description', content: 'Finaliza tu compra en Verona de forma segura.' });
+    this.metaService.updateTag({ name: 'robots', content: 'noindex, nofollow' });
   }
 
   constructor() {

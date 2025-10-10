@@ -1,5 +1,11 @@
 {
   "projects": {
     "default": "verona-ffbcd"
+  },
+  "targets": {},
+  "etags": {
+    "verona-ffbcd": {
+      "extensionInstances": {}
+    }
   }
 }

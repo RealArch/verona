@@ -1,4 +1,5 @@
-import { Component, inject, signal, computed, effect } from '@angular/core';
+import { Component, inject, signal, computed, effect, OnInit } from '@angular/core';
+import { Title, Meta } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { CurrencyPipe } from '@angular/common';
 import { Router } from '@angular/router';
@@ -25,11 +26,13 @@ type QuantityInput = { visible: boolean; value: number; saving: boolean };
   templateUrl: './shopping-cart.html',
   styleUrl: './shopping-cart.scss'
 })
-export class ShoppingCart {
+export class ShoppingCart implements OnInit {
   private readonly cartService = inject(ShoppingCartService);
   private readonly productsService = inject(ProductsService);
   private readonly siteConfig = inject(SiteConfig);
   private readonly router = inject(Router);
+  private readonly titleService = inject(Title);
+  private readonly metaService = inject(Meta);
 
   // State
   readonly selectedItems = signal<Set<string>>(new Set());
@@ -64,6 +67,8 @@ export class ShoppingCart {
   });
 
   constructor() {
+    this.setupSEO();
+
     effect(() => {
       const currentCart = this.cart();
       const isLoading = this.cartService.loading();
@@ -80,6 +85,14 @@ export class ShoppingCart {
         this.selectedItems.set(new Set());
       }
     });
+  }
+
+  ngOnInit(): void {}
+
+  private setupSEO(): void {
+    this.titleService.setTitle('Carrito de Compras | Verona');
+    this.metaService.updateTag({ name: 'description', content: 'Revisa tu carrito de compras en Verona.' });
+    this.metaService.updateTag({ name: 'robots', content: 'noindex, nofollow' });
   }
 
   private initializeCart(cartItems: CartItem[]): void {

@@ -124,7 +124,9 @@ export class ProductComponent implements OnInit, OnDestroy {
           console.log('Producto cargado:', product);
 
           // Update SEO metadata
-          this.updateMetaTags(product);
+          if (product) {
+            this.updateMetaTags(product);
+          }
 
           //related products mock example, replace with real logic
           if (product) {

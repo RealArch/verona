@@ -1,5 +1,6 @@
 import { Component, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Title, Meta } from '@angular/platform-browser';
 import { ProductsService } from '../../../services/products/products.service';
 import { CategoriesService } from '../../../services/categories/categories.service';
 import { Product } from '../../../interfaces/products';
@@ -27,6 +28,8 @@ export class Search implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly productsService = inject(ProductsService);
   private readonly categoriesService = inject(CategoriesService);
+  private readonly titleService = inject(Title);
+  private readonly metaService = inject(Meta);
   private readonly destroy$ = new Subject<void>();
 
   // Signals for reactive state
@@ -59,6 +62,7 @@ export class Search implements OnInit, OnDestroy {
       .subscribe(params => {
         const searchParams = this.parseSearchParams(params);
         this.searchParams.set(searchParams);
+        this.updateSEO(searchParams);
         this.resetAndSearch(searchParams);
       });
   }
@@ -123,6 +127,24 @@ export class Search implements OnInit, OnDestroy {
     }
 
     return parsedParams;
+  }
+
+  /**
+   * Update SEO meta tags based on search parameters
+   */
+  private updateSEO(params: SearchParams): void {
+    const query = params.q || '';
+    const title = query 
+      ? `Búsqueda: ${query} | Verona`
+      : 'Búsqueda de Productos | Verona';
+    
+    const description = query
+      ? `Resultados de búsqueda para "${query}" en Verona. Encuentra los mejores productos online en Venezuela.`
+      : 'Busca y encuentra los mejores productos en Verona. Compra online con envío a toda Venezuela.';
+
+    this.titleService.setTitle(title);
+    this.metaService.updateTag({ name: 'description', content: description });
+    this.metaService.updateTag({ name: 'robots', content: 'noindex, follow' }); // No indexar búsquedas
   }
 
   /**
