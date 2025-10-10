@@ -57,7 +57,12 @@
         } @else {
         <!-- Swiper -->
         <div class="relative">
-            <swiper-container [class.opacity-0]="!swiperVisible()" slides-per-view="2" space-between="12" speed="500" loop="false" grab-cursor="true" class="opacity-0"
+            <!-- Swiper Container - Only render in browser -->
+            @if (renderSwiper() && swiperVisible()) {
+            <swiper-container 
+                [class.opacity-0]="!swiperVisible()"
+                class="opacity-0 transition-opacity duration-500"
+                slides-per-view="2" space-between="12" speed="500" loop="false" grab-cursor="true"
                 navigation="false" breakpoints='{
                     "640": {
                         "slidesPerView": 3,
@@ -82,9 +87,19 @@
                 </swiper-slide>
                 }
             </swiper-container>
+            } @else {
+            <!-- Fallback grid for SSR -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-6">
+                @for (product of products().slice(0, 6); track product.id) {
+                <div>
+                    <app-product-item [product]="product"></app-product-item>
+                </div>
+                }
+            </div>
+            }
 
             <!-- Custom Navigation Buttons -->
-            @if (shouldShowNav()) {
+            @if (shouldShowNav() && swiperVisible()) {
             <button
                 class="swiper-nav-button swiper-button-prev-custom absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hidden md:flex items-center justify-center cursor-pointer hover:bg-white transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
                 <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">

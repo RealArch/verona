@@ -57,6 +57,7 @@ export class CategoriesShow implements OnInit, AfterViewInit {
 
   // Signals
   swiperVisible = signal(false);
+  renderSwiper = signal(false);
   
   // Computed signals from service
   allCategories = this.categoriesService.categories;
@@ -67,14 +68,20 @@ export class CategoriesShow implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     // Categories are loaded automatically by the service
-    setTimeout(() => {
-      this.swiperVisible.set(true);
-    }, 500);
+    // Only show swiper in browser environment
+    if (isPlatformBrowser(this.platformId)) {
+      this.renderSwiper.set(true);
+      requestAnimationFrame(() => {
+        this.swiperVisible.set(true);
+      });
+    }
   }
 
   ngAfterViewInit(): void {
-    // Setup custom navigation after view is initialized
-    this.setupCustomNavigation();
+    // Setup custom navigation after view is initialized - only in browser
+    if (isPlatformBrowser(this.platformId)) {
+      this.setupCustomNavigation();
+    }
   }
 
   /**
@@ -82,6 +89,8 @@ export class CategoriesShow implements OnInit, AfterViewInit {
    */
   private setupCustomNavigation(): void {
     setTimeout(() => {
+      if (!isPlatformBrowser(this.platformId)) return;
+      
       const swiperEl = this.elementRef.nativeElement.querySelector('swiper-container');
       const prevButton = this.elementRef.nativeElement.querySelector('.swiper-button-prev-custom');
       const nextButton = this.elementRef.nativeElement.querySelector('.swiper-button-next-custom');
@@ -91,11 +100,15 @@ export class CategoriesShow implements OnInit, AfterViewInit {
 
         // Navigation handlers
         prevButton.addEventListener('click', () => {
-          swiperEl.swiper.slidePrev();
+          if (swiperEl.swiper) {
+            swiperEl.swiper.slidePrev();
+          }
         });
 
         nextButton.addEventListener('click', () => {
-          swiperEl.swiper.slideNext();
+          if (swiperEl.swiper) {
+            swiperEl.swiper.slideNext();
+          }
         });
 
         // Update button states on slide change
@@ -122,9 +135,11 @@ export class CategoriesShow implements OnInit, AfterViewInit {
    * Update navigation button states based on swiper position
    */
   private updateNavigationButtons(): void {
-    if (!this.swiperElement) return;
+    if (!isPlatformBrowser(this.platformId) || !this.swiperElement) return;
 
     const swiper = this.swiperElement.swiper;
+    if (!swiper) return;
+
     const prevButton = this.elementRef.nativeElement.querySelector('.swiper-button-prev-custom');
     const nextButton = this.elementRef.nativeElement.querySelector('.swiper-button-next-custom');
 
