@@ -17,20 +17,20 @@ export class ProductItemComponent {
   router = inject(Router);
 
   ngOnInit(): void {
-  console.log(this.product);
-
+    // console.log(this.product);
   }
+  
   navigateToProduct(product: Product): void {
  
   this.router.navigate(['/product', product.slug, product.objectID ?? product.id]);
   }
 
   toggleFavorite(productId: number): void {
-    console.log('Toggle favorite for product:', productId);
+    // console.log('Toggle favorite for product:', productId);
   }
 
   addToCart(productId: number): void {
-    console.log('Add to cart product:', productId);
+    // console.log('Add to cart product:', productId);
   }
   getMinPrice(variants: ProductVariant[]): number {
     if (!variants || variants.length === 0) return 0;

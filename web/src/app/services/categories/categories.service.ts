@@ -34,7 +34,7 @@ export class CategoriesService {
       const categories = await this.getAllCategories();
       this.categories.set(categories);
       this.categoriesLoaded.set(true);
-      console.log('Categories loaded successfully:', categories.length);
+      // console.log('Categories loaded successfully:', categories.length);
     } catch (error) {
       console.error('Error loading categories:', error);
     } finally {

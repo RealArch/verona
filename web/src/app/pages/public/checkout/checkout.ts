@@ -179,10 +179,10 @@ export class Checkout implements OnInit {
         this.initialTaxPercentage.set(settings.taxPercentage || 0);
         this.initialDeliveryMethods.set(this.siteConfig.getEnabledDeliveryMethods());
         this.settingsCaptured.set(true);
-        console.log('Settings captured:', { 
-          taxPercentage: settings.taxPercentage, 
-          deliveryMethods: this.siteConfig.getEnabledDeliveryMethods() 
-        });
+        // console.log('Settings captured:', { 
+        //   taxPercentage: settings.taxPercentage, 
+        //   deliveryMethods: this.siteConfig.getEnabledDeliveryMethods() 
+        // });
       }
     });
   }
@@ -190,7 +190,7 @@ export class Checkout implements OnInit {
   private loadCheckoutItems(): void {
     // Only access history in browser environment
     if (!isPlatformBrowser(this.platformId)) {
-      console.log('SSR: Skipping checkout items load');
+      // console.log('SSR: Skipping checkout items load');
       return;
     }
 
@@ -201,7 +201,7 @@ export class Checkout implements OnInit {
       
       if (state?.selectedItems && Array.isArray(state.selectedItems)) {
         this.checkoutItems.set(state.selectedItems);
-        console.log('Checkout items loaded:', state.selectedItems);
+        // console.log('Checkout items loaded:', state.selectedItems);
       } else {
         // Si no hay items seleccionados, redirigir al carrito
         console.warn('No checkout items found, redirecting to cart');
@@ -361,14 +361,14 @@ export class Checkout implements OnInit {
         totals: totals
       };
 
-      console.log('Order data being sent:', orderData);
-      console.log('Billing address phone:', billingAddress.phone, 'Type:', typeof billingAddress.phone); // Debug phone
+      // console.log('Order data being sent:', orderData);
+      // console.log('Billing address phone:', billingAddress.phone, 'Type:', typeof billingAddress.phone); // Debug phone
 
       // Enviar la orden al backend
       const response = await this.sales.createOrder(orderData);
 
       if (response.success && response.orderId) {
-        console.log('Order created successfully:', response.orderId);
+        // console.log('Order created successfully:', response.orderId);
         
         // Eliminar los items comprados del carrito
         try {

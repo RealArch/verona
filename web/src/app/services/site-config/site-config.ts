@@ -31,7 +31,7 @@ export class SiteConfig {
         if (docSnap.exists()) {
           const data = docSnap.data() as StoreSettings;
           this.storeSettings.set(data);
-          console.log('Store settings loaded:', data);
+          // console.log('Store settings loaded:', data);
         } else {
           console.warn('Store settings document does not exist');
           // Configuración por defecto si no existe

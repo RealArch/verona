@@ -23,7 +23,7 @@ export const appConfig: ApplicationConfig = {
     provideAuth(() => {
       const auth = getAuth(getApp());
       if (environment.useEmulators) {
-        console.log("using auth emulator");
+        // console.log("using auth emulator");
         connectAuthEmulator(auth, 'http://localhost:9099');
       }
       return auth;
@@ -32,7 +32,7 @@ export const appConfig: ApplicationConfig = {
     provideFirestore(() => {
       const firestore = getFirestore(getApp());
       if (environment.useEmulators) {
-        console.log("using firestore emulator");
+        // console.log("using firestore emulator");
         connectFirestoreEmulator(firestore, 'localhost', 8080);
       }
       return firestore;
@@ -41,7 +41,7 @@ export const appConfig: ApplicationConfig = {
     provideStorage(() => {
       const storage = getStorage(getApp());
       if (environment.useEmulators) {
-        console.log("using storage emulator");
+        // console.log("using storage emulator");
         connectStorageEmulator(storage, 'localhost', 9199);
       }
       return storage;
