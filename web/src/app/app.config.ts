@@ -15,7 +15,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-    provideRouter(routes, withRouterConfig({ onSameUrlNavigation: 'reload' })),
+    provideRouter(routes),
     provideClientHydration(withEventReplay()),
     provideHttpClient(withFetch()),
     provideFirebaseApp(() => initializeApp(environment.firebase)),

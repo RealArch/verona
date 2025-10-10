@@ -36,24 +36,40 @@ export class CategoriesShow implements OnInit, AfterViewInit {
 
   /**
    * Determina si hay overflow y se deben mostrar los navegadores
+   * Usa el signal de forma segura
    */
   shouldShowNav(): boolean {
-    return this.mainCategories().length > this.getVisibleSlides();
+    const categories = this.mainCategories;
+    return categories && categories.length > this.getVisibleSlides();
+  }
+
+  /**
+   * Get main categories (parentId === 'root') from all categories
+   */
+  get mainCategories(): Category[] {
+    const allCats = this.allCategories();
+    if (!allCats) return [];
+    return allCats.filter(cat => cat.parentId === 'root');
   }
   // INJECTIONS
   private readonly categoriesService = inject(CategoriesService);
   private readonly elementRef = inject(ElementRef);
 
   // Signals
-  mainCategories = signal<Category[]>([]);
-  loading = signal(false);
-  error = signal<string | null>(null);
   swiperVisible = signal(false);
+  
+  // Computed signals from service
+  allCategories = this.categoriesService.categories;
+  loading = this.categoriesService.categoriesLoading;
+  categoriesLoaded = this.categoriesService.categoriesLoaded;
 
   private swiperElement?: any;
 
   ngOnInit(): void {
-    this.loadMainCategories();
+    // Categories are loaded automatically by the service
+    setTimeout(() => {
+      this.swiperVisible.set(true);
+    }, 500);
   }
 
   ngAfterViewInit(): void {
@@ -119,35 +135,46 @@ export class CategoriesShow implements OnInit, AfterViewInit {
   }
 
   /**
-   * Load all main categories from Algolia
-   * Handles loading state and error management
-   */
-  async loadMainCategories(): Promise<void> {
-    try {
-      this.loading.set(true);
-      this.error.set(null);
-
-  const categories = await this.categoriesService.getAllMainCategories();
-  this.mainCategories.set(categories);
-
-    } catch (error) {
-      this.error.set('Error al cargar las categorías principales');
-      console.error('Failed to load main categories:', error);
-      this.mainCategories.set([]);
-
-    } finally {
-      this.loading.set(false);
-      setTimeout(() => {
-        this.swiperVisible.set(true);
-      }, 100);
-    }
-  }
-
-  /**
    * Refresh categories data
    * Can be called from template for manual refresh
    */
   async refreshCategories(): Promise<void> {
-    await this.loadMainCategories();
+    await this.categoriesService.loadCategories();
+  }
+
+  /**
+   * Handle image loading errors
+   * Sets a fallback image when the category image fails to load
+   */
+  onImageError(event: Event): void {
+    const imgElement = event.target as HTMLImageElement;
+    imgElement.src = '/img/no-image.svg';
+    console.error('Failed to load category image:', imgElement.getAttribute('data-original-src'));
+  }
+
+  /**
+   * Get image URL safely from category data using the signal
+   * Returns the category image URL or a default placeholder
+   */
+  getImageUrl(category: Category): string {
+    if (!category?.image?.url) {
+      return '/img/no-image.svg';
+    }
+    return category.image.url;
+  }
+
+  /**
+   * Check if categories are loaded and available
+   */
+  get hasCategories(): boolean {
+    const categories = this.mainCategories;
+    return categories && categories.length > 0;
+  }
+
+  /**
+   * Get categories safely from signal
+   */
+  get categories(): Category[] {
+    return this.mainCategories || [];
   }
 }
