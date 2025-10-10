@@ -103,8 +103,6 @@ export class ProductsService {
         expandedCategoryIds = [...new Set(allDescendants)];
       }
       
-      console.log('Original categoryIds:', categoryIds);
-      console.log('Expanded categoryIds:', expandedCategoryIds);
       
       // Add price range filters if provided
       if (minPrice !== undefined && maxPrice !== undefined) {
@@ -124,7 +122,6 @@ export class ProductsService {
         filters.push(`(${categoriesFilter})`);
       }
 
-      console.log('Filters applied:', filters);
       const index = this.client.searchSingleIndex({
         indexName: this.indexName,
         searchParams: {

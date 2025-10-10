@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal, CUSTOM_ELEMENTS_SCHEMA, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, inject, signal, CUSTOM_ELEMENTS_SCHEMA, ElementRef, AfterViewInit, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { CategoriesService } from '../../services/categories/categories.service';
 import { Category } from '../../interfaces/categories';
 import { register } from 'swiper/element/bundle';
@@ -16,10 +17,15 @@ register();
 })
 export class CategoriesShow implements OnInit, AfterViewInit {
   private readonly router = inject(Router);
+  private readonly platformId = inject(PLATFORM_ID);
   /**
    * Devuelve el número de slides visibles según el ancho de pantalla
    */
   getVisibleSlides(): number {
+    // SSR-safe: no window on server
+    if (!isPlatformBrowser(this.platformId)) {
+      return 6; // sensible default for prerender
+    }
     const width = window.innerWidth;
     if (width >= 1280) return 10;
     if (width >= 1024) return 8;
@@ -121,9 +127,8 @@ export class CategoriesShow implements OnInit, AfterViewInit {
       this.loading.set(true);
       this.error.set(null);
 
-      const categories = await this.categoriesService.getAllMainCategories();
-      this.mainCategories.set(categories);
-      console.log(this.mainCategories())
+  const categories = await this.categoriesService.getAllMainCategories();
+  this.mainCategories.set(categories);
 
     } catch (error) {
       this.error.set('Error al cargar las categorías principales');

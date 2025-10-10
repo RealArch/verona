@@ -1,4 +1,5 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
 import { DeliveryMethod } from '../../../../interfaces/sales';
@@ -13,6 +14,7 @@ export class SuccessSale implements OnInit {
   private readonly router = inject(Router);
   private readonly titleService = inject(Title);
   private readonly metaService = inject(Meta);
+  private readonly platformId = inject(PLATFORM_ID);
   
   orderId = signal<string>('');
   deliveryMethod = signal<DeliveryMethod | null>(null);
@@ -26,7 +28,7 @@ export class SuccessSale implements OnInit {
     this.setupSEO();
     // Obtener datos del estado de navegación
     const navigation = this.router.getCurrentNavigation();
-    const state = navigation?.extras?.state || history.state;
+    const state = navigation?.extras?.state || (isPlatformBrowser(this.platformId) ? history.state : undefined);
     
     if (state) {
       this.orderId.set(state['orderId'] || '');

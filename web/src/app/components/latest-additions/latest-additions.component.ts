@@ -56,7 +56,7 @@ export class LatestAdditionsComponent implements OnInit, OnDestroy {
           this.products.set(products);
           this.loading.set(false);
           setTimeout(() => this.swiperVisible.set(true), 100);
-          console.log(this.products());
+          // products loaded
         }, 
         error: (err) => {
           console.error('Error loading latest additions:', err);

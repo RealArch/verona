@@ -1,4 +1,5 @@
-import { Component, inject, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, HostListener, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
 import { ProductsService } from '../../../services/products/products.service';
@@ -27,6 +28,7 @@ export class Search implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly productsService = inject(ProductsService);
+  private readonly platformId = inject(PLATFORM_ID);
   private readonly categoriesService = inject(CategoriesService);
   private readonly titleService = inject(Title);
   private readonly metaService = inject(Meta);
@@ -181,14 +183,16 @@ export class Search implements OnInit, OnDestroy {
       const maxPrice = params.maxPrice ?? this.defaultParams.maxPrice;
       const categoryIds = params.categoryIds ?? undefined;
 
-      console.log('Search params being sent:', {
-        searchQuery,
-        minPrice: minPrice > 0 ? minPrice : undefined,
-        maxPrice: maxPrice < this.defaultParams.maxPrice ? maxPrice : undefined,
-        categoryIds,
-        hitsPerPage: 20,
-        page
-      });
+      if (isPlatformBrowser(this.platformId)) {
+        console.log('Search params being sent:', {
+          searchQuery,
+          minPrice: minPrice > 0 ? minPrice : undefined,
+          maxPrice: maxPrice < this.defaultParams.maxPrice ? maxPrice : undefined,
+          categoryIds,
+          hitsPerPage: 20,
+          page
+        });
+      }
 
       // Call the search service
       const results = await this.productsService.search(

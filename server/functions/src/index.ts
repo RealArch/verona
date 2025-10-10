@@ -10,6 +10,7 @@
 import { setGlobalOptions } from "firebase-functions";
 // import { onProductCreated } from "./productImageTrigger";
 import express from "express";
+import cors from "cors";
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 //IMPORT RUTAS
@@ -29,6 +30,12 @@ const algoliaAdminKey = defineSecret("ALGOLIA_ADMIN_KEY");
 const algoliaAppId = defineSecret("ALGOLIA_APP_ID");
 
 const app = express();
+
+// Configurar CORS para permitir todas las conexiones
+app.use(cors({
+    origin: true, // Permite todos los orígenes
+    credentials: true // Permite cookies y headers de autenticación
+}));
 
 // Middleware para hacer los secrets disponibles en req
 app.use((req: any, res, next) => {
