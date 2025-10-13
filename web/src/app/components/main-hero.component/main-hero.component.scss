@@ -27,7 +27,7 @@ header {
     aspect-ratio: 16 / 6;
     box-sizing: content-box;
     /* Suma 20px extra al alto de la relación de aspecto */
-    padding-bottom: 81px;
+    // padding-bottom: 81px;
     /* El alto final será el de la relación de aspecto más 20px extra */
     max-width: 100%;
     overflow: hidden;
@@ -35,11 +35,14 @@ header {
 
     @media (max-width: 768px) {
         aspect-ratio: 1 / 1;
+        
     }
 
     @media (max-width: 640px) {
+        aspect-ratio: 1 / 1;
         .img-box {
             border-radius: 0px;
+        height: 100%;
 
         }
     }

@@ -23,6 +23,9 @@ export interface CartItem {
   variantSku?: string;
   variantColorHex?: string;
   
+  // Disponibilidad
+  available?: boolean;           // Si el producto/variante está disponible
+  
   // Metadatos
   addedAt: Timestamp;           // Cuándo se agregó al carrito
   updatedAt: Timestamp;         // Última actualización

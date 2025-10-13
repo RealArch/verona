@@ -1,6 +1,6 @@
 <div class="bg-base-300 pt-20 py-60">
   <div class="container mx-auto px-4 py-8">
-    
+
     <!-- Header -->
     <div class="text-center b-8 pb-10">
       <h1 class="text-3xl lg:text-4xl font-light text-base-content mb-2">Carrito de Compras</h1>
@@ -9,288 +9,300 @@
 
     <!-- Loading State -->
     @if (initializing()) {
-      <div class="flex justify-center items-center min-h-96">
-        <div class="flex flex-col items-center gap-4">
-          <div class="loading loading-spinner loading-lg text-primary"></div>
-          <p class="text-base-content/70">Cargando carrito...</p>
-        </div>
+    <div class="flex justify-center items-center min-h-96">
+      <div class="flex flex-col items-center gap-4">
+        <div class="loading loading-spinner loading-lg text-primary"></div>
+        <p class="text-base-content/70">Cargando carrito...</p>
       </div>
+    </div>
     }
 
     <!-- Empty Cart State -->
     @else if (!cart() || !cart()!.items.length || !enrichedItems().length) {
-      <div class="text-center py-16">
-        <div class="bg-base-200/50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
-          <svg class="w-12 h-12 text-base-content/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9m-9 0h9"></path>
-          </svg>
-        </div>
-        <h2 class="text-2xl font-light text-base-content mb-4">Tu carrito está vacío</h2>
-        <p class="text-base-content/60 mb-8">¡Explora nuestros productos y encuentra algo que te guste!</p>
-        <button class="btn btn-primary btn-lg" onclick="window.location.href='/'">
-          Continuar Comprando
-        </button>
+    <div class="text-center py-16">
+      <div class="bg-base-200/50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
+        <svg class="w-12 h-12 text-base-content/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9m-9 0h9"></path>
+        </svg>
       </div>
+      <h2 class="text-2xl font-light text-base-content mb-4">Tu carrito está vacío</h2>
+      <p class="text-base-content/60 mb-8">¡Explora nuestros productos y encuentra algo que te guste!</p>
+      <button class="btn btn-primary btn-lg" onclick="window.location.href='/'">
+        Continuar Comprando
+      </button>
+    </div>
     }
 
     <!-- Cart Content -->
     @else {
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        <!-- Items del Carrito -->
-        <div class="lg:col-span-2 space-y-6">
-          
-          <!-- Control de Selección -->
-          <div class="bg-base-200 rounded-2xl p-4 flex items-center justify-between">
-            <label class="flex items-center gap-3 cursor-pointer">
-              <input 
-                type="checkbox" 
-                class="checkbox checkbox-primary" 
-                [checked]="allSelected()"
-                [indeterminate]="selectedItems().size > 0 && !allSelected()"
-                (change)="toggleSelectAll()"
-              >
-              <span class="font-medium text-base-content">
-                @if (allSelected()) {
-                  Todos seleccionados ({{ enrichedItems().length }})
-                } @else if (selectedItems().size > 0) {
-                  {{ selectedItems().size }} de {{ enrichedItems().length }} seleccionados
-                } @else {
-                  Seleccionar todos ({{ enrichedItems().length }})
-                }
-              </span>
-            </label>
-            
-            @if (selectedItems().size > 0) {
-              <button 
-                class="btn btn-outline btn-sm text-error border-error hover:bg-error hover:border-error hover:text-white"
-                (click)="clearSelected()"
-                [disabled]="updating()">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-                Eliminar Seleccionados
-              </button>
-            }
-          </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          <!-- Lista de Items -->
-          <div class="space-y-4">
-            @for (enrichedItem of enrichedItems(); track enrichedItem.id) {
-              <div class="bg-base-200 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
-                <div class="flex items-start gap-4">
-                  
-                  <!-- Checkbox -->
-                  <div class="flex items-start pt-2">
-                    <input 
-                      type="checkbox" 
-                      class="checkbox checkbox-primary" 
-                      [checked]="selectedItems().has(enrichedItem.id)"
-                      (change)="toggleItem(enrichedItem.id)"
-                    >
-                  </div>
+      <!-- Items del Carrito -->
+      <div class="lg:col-span-2 space-y-6">
 
-                  <!-- Imagen del Producto -->
-                  <div class="w-28 h-28 flex-shrink-0 cursor-pointer rounded-lg border border-base-300 overflow-hidden hover:border-primary transition-colors"
-                       (click)="navigateToProduct(enrichedItem)">
-                    <img class="w-full h-full object-cover"
-                         [src]="enrichedItem.productImage"
-                         [alt]="enrichedItem.productName">
-                  </div>
+        <!-- Control de Selección -->
+        <div class="bg-base-200 rounded-2xl p-4 flex items-center justify-between">
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" class="checkbox checkbox-primary" [checked]="allSelected()"
+              [indeterminate]="selectedItems().size > 0 && !allSelected()" (change)="toggleSelectAll()">
+            <span class="font-medium text-base-content">
+              @if (allSelected()) {
+              Todos seleccionados ({{ enrichedItems().length }})
+              } @else if (selectedItems().size > 0) {
+              {{ selectedItems().size }} de {{ enrichedItems().length }} seleccionados
+              } @else {
+              Seleccionar todos ({{ enrichedItems().length }})
+              }
+            </span>
+          </label>
 
-                  <!-- Información del Producto -->
+          @if (selectedItems().size > 0) {
+          <button
+            class="btn btn-outline btn-sm text-error border-error hover:bg-error hover:border-error hover:text-white"
+            (click)="clearSelected()" [disabled]="updating()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+              </path>
+            </svg>
+            Eliminar Seleccionados
+          </button>
+          }
+        </div>
+
+        <!-- Lista de Items -->
+        <div class="space-y-4">
+          @for (enrichedItem of enrichedItems(); track enrichedItem.id) {
+          <div class="bg-base-200 backdrop-blur-xl rounded-2xl overflow-hidden">
+            <div class="flex items-start gap-4 p-6">
+
+              <!-- Checkbox -->
+              <div class="flex items-start pt-2">
+                <input type="checkbox" class="checkbox checkbox-primary"
+                  [checked]="selectedItems().has(enrichedItem.id) && enrichedItem.available !== false"
+                  [disabled]="enrichedItem.available === false" (change)="toggleItem(enrichedItem.id)">
+              </div>
+
+              <!-- Imagen del Producto -->
+              <div class="w-28 h-28 flex-shrink-0 rounded-lg border border-base-300 overflow-hidden transition-colors"
+                [class.cursor-pointer]="enrichedItem.available !== false"
+                [class.hover:border-primary]="enrichedItem.available !== false"
+                [class.opacity-50]="enrichedItem.available === false"
+                [class.cursor-not-allowed]="enrichedItem.available === false"
+                (click)="enrichedItem.available !== false && navigateToProduct(enrichedItem)">
+                <img class="w-full h-full object-cover" [src]="enrichedItem.productImage"
+                  [alt]="enrichedItem.productName" (error)="$event.target.src='/img/no-image.svg'">
+              </div>
+
+              <!-- Información del Producto -->
+              <div class="flex-grow min-w-0">
+
+                <!-- Alerta de No Disponible -->
+
+
+                <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+
+                  <!-- Detalles del Producto -->
                   <div class="flex-grow min-w-0">
-                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                      
-                      <!-- Detalles del Producto -->
-                      <div class="flex-grow min-w-0">
-                        <h3 class="text-lg font-semibold text-base-content mb-1 cursor-pointer hover:text-primary transition-colors duration-300"
-                            (click)="navigateToProduct(enrichedItem)">
-                          {{ enrichedItem.productName }}
-                        </h3>
-                        
-                        @if (enrichedItem.variantName) {
-                          <div class="flex items-center gap-2 mb-2">
-                            @if (enrichedItem.variantColorHex) {
-                              <div class="w-4 h-4 rounded-full border border-base-300" 
-                                   [style.background-color]="enrichedItem.variantColorHex"></div>
-                            }
-                            <span class="text-sm text-base-content/70">{{ enrichedItem.variantName }}</span>
-                          </div>
+                    <h3 class="text-lg font-semibold text-base-content mb-1 transition-colors duration-300"
+                      [class.cursor-pointer]="enrichedItem.available !== false"
+                      [class.hover:text-primary]="enrichedItem.available !== false"
+                      [class.opacity-50]="enrichedItem.available === false"
+                      [class.cursor-not-allowed]="enrichedItem.available === false"
+                      (click)="enrichedItem.available !== false && navigateToProduct(enrichedItem)">
+                      {{ enrichedItem.productName }}
+                    </h3>
+
+                    @if (enrichedItem.variantName) {
+                    <div class="flex items-center gap-2 mb-2">
+                      @if (enrichedItem.variantColorHex) {
+                      <div class="w-4 h-4 rounded-full border border-base-300"
+                        [style.background-color]="enrichedItem.variantColorHex"></div>
+                      }
+                      <span class="text-sm text-base-content/70">{{ enrichedItem.variantName }}</span>
+                    </div>
+                    }
+
+                    <div class="text-sm text-base-content/60">
+                      SKU: {{ enrichedItem.productSku }}{{ enrichedItem.variantSku ? ' - ' + enrichedItem.variantSku :
+                      '' }}
+                    </div>
+                  </div>
+
+                  <!-- Controles y Precio -->
+                  <div class="flex flex-col items-end gap-3">
+
+                    <!-- Precio Unitario -->
+                    <div class="text-right flex ">
+                      <div class="text-lg font-semibold text-primary">
+                        {{ enrichedItem.unitPrice | currency }}
+                      </div>
+                      <div class="text-xs text-base-content/60 mt-1 ml-1">C/U</div>
+                    </div>
+
+                    <!-- Control de Cantidad -->
+                    <div class="flex flex-col gap-2">
+
+                      <!-- Stock Info and Quantity Control -->
+                      <div class="flex items-center justify-between gap-4">
+                        <!-- Máximo disponible -->
+                        @if (enrichedItem.isStockLoaded) {
+                        <span class="text-xs text-base-content/60">
+                          Máximo: {{ enrichedItem.availableStock }}
+                        </span>
+                        } @else {
+                        <span class="text-xs text-base-content/40">
+                          Cargando stock...
+                        </span>
                         }
 
-                        <div class="text-sm text-base-content/60">
-                          SKU: {{ enrichedItem.productSku }}{{ enrichedItem.variantSku ? ' - ' + enrichedItem.variantSku : '' }}
+                        <!-- Quantity Input with Plus/Minus Buttons -->
+                        <div class="flex items-center gap-1 relative">
+                          <!-- Decrease Button -->
+                          <button class="btn btn-sm btn-circle btn-outline" (click)="decreaseQuantity(enrichedItem.id)"
+                            [disabled]="isItemUpdating(enrichedItem.id) || enrichedItem.quantity <= 1 || enrichedItem.available === false">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                            </svg>
+                          </button>
+
+                          <!-- Quantity Input -->
+                          <input type="number" class="input input-bordered input-sm w-16 text-center"
+                            [value]="enrichedItem.quantity"
+                            (blur)="onQuantityInputChange(enrichedItem.id, $any($event.target).value)"
+                            (keydown.enter)="onQuantityInputChange(enrichedItem.id, $any($event.target).value)"
+                            [min]="1" [max]="enrichedItem.availableStock"
+                            [disabled]="isItemUpdating(enrichedItem.id) || enrichedItem.available === false">
+
+                          <!-- Increase Button -->
+                          <button class="btn btn-sm btn-circle btn-outline" (click)="increaseQuantity(enrichedItem.id)"
+                            [disabled]="isItemUpdating(enrichedItem.id) || enrichedItem.quantity >= enrichedItem.availableStock || enrichedItem.available === false">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+                              </path>
+                            </svg>
+                          </button>
+
+                          <!-- Loading Spinner -->
+                          @if (isItemUpdating(enrichedItem.id)) {
+                          <div class="absolute inset-0 flex items-center justify-center bg-base-100/80 rounded">
+                            <span class="loading loading-spinner loading-sm"></span>
+                          </div>
+                          }
                         </div>
                       </div>
 
-                      <!-- Controles y Precio -->
-                      <div class="flex flex-col items-end gap-3">
-                        
-                        <!-- Precio Unitario -->
-                        <div class="text-right flex ">
-                          <div class="text-lg font-semibold text-primary">
-                            {{ enrichedItem.unitPrice | currency }}
-                          </div>
-                          <div class="text-xs text-base-content/60 mt-1 ml-1">Por unidad</div>
-                        </div>
+                      <!-- Stock Limit Indicator -->
+                      @if (enrichedItem.quantity >= enrichedItem.availableStock) {
+                      <span class="text-xs text-warning">
+                        ({{ enrichedItem.availableStock }} máx.)
+                      </span>
+                      }
+                    </div>
 
-                        <!-- Control de Cantidad -->
-                        <div class="flex flex-col gap-2">
-                          
-                          <!-- Stock Info and Quantity Control -->
-                          <div class="flex items-center justify-between gap-4">
-                            <!-- Máximo disponible -->
-                            @if (enrichedItem.isStockLoaded) {
-                              <span class="text-xs text-base-content/60">
-                                Máximo: {{ enrichedItem.availableStock }}
-                              </span>
-                            } @else {
-                              <span class="text-xs text-base-content/40">
-                                Cargando stock...
-                              </span>
-                            }
-                            
-                            <!-- Quantity Input with Plus/Minus Buttons -->  
-                            <div class="flex items-center gap-1 relative">
-                              <!-- Decrease Button -->
-                              <button 
-                                class="btn btn-sm btn-circle btn-outline"
-                                (click)="decreaseQuantity(enrichedItem.id)"
-                                [disabled]="isItemUpdating(enrichedItem.id) || enrichedItem.quantity <= 1">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-                                </svg>
-                              </button>
-                              
-                              <!-- Quantity Input -->
-                              <input 
-                                type="number" 
-                                class="input input-bordered input-sm w-16 text-center"
-                                [value]="enrichedItem.quantity"
-                                (blur)="onQuantityInputChange(enrichedItem.id, $any($event.target).value)"
-                                (keydown.enter)="onQuantityInputChange(enrichedItem.id, $any($event.target).value)"
-                                [min]="1"
-                                [max]="enrichedItem.availableStock"
-                                [disabled]="isItemUpdating(enrichedItem.id)">
-                              
-                              <!-- Increase Button -->
-                              <button 
-                                class="btn btn-sm btn-circle btn-outline"
-                                (click)="increaseQuantity(enrichedItem.id)"
-                                [disabled]="isItemUpdating(enrichedItem.id) || enrichedItem.quantity >= enrichedItem.availableStock">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                </svg>
-                              </button>
-                              
-                              <!-- Loading Spinner -->
-                              @if (isItemUpdating(enrichedItem.id)) {
-                                <div class="absolute inset-0 flex items-center justify-center bg-base-100/80 rounded">
-                                  <span class="loading loading-spinner loading-sm"></span>
-                                </div>
-                              }
-                            </div>
-                          </div>
-                          
-                          <!-- Stock Limit Indicator -->
-                          @if (enrichedItem.quantity >= enrichedItem.availableStock) {
-                            <span class="text-xs text-warning">
-                              ({{ enrichedItem.availableStock }} máx.)
-                            </span>
-                          }
-                        </div>
-
-                        <!-- Precio Total -->
-                        <!-- <div class="text-right">
+                    <!-- Precio Total -->
+                    <!-- <div class="text-right">
                           <div class="text-xl font-bold text-primary">
                             {{ enrichedItem.totalPrice | currency }}
                           </div>
                           <div class="text-xs text-base-content/60">total</div>
                         </div> -->
 
-                        <!-- Botón Eliminar -->
-                        <button 
-                          class="btn btn-ghost btn-xs text-error hover:bg-error/20"
-                          (click)="removeItem(enrichedItem.id)"
-                          [disabled]="updating()">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                          </svg>
-                          Eliminar
-                        </button>
-                      </div>
-                    </div>
+                    <!-- Botón Eliminar -->
+                    <button class="btn btn-ghost btn-xs text-error hover:bg-error/20"
+                      (click)="removeItem(enrichedItem.id)" [disabled]="updating()">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                        </path>
+                      </svg>
+                      Eliminar
+                    </button>
                   </div>
                 </div>
               </div>
+            </div>
+            @if (enrichedItem.available === false) {
+
+            <div class="flex py-2 bg-[#a9abab] px-5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5 text-red" fill="none"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span class="text-sm ml-5">Este producto ya no está disponible</span>
+            </div>
             }
           </div>
-        </div>
 
-        <!-- Resumen del Carrito -->
-        <div class="lg:col-span-1">
-          <div class="bg-base-200 backdrop-blur-xl rounded-2xl border border-white/10 p-6 sticky top-28">
-            <h2 class="text-2xl font-light text-base-content mb-6">Resumen del Pedido</h2>
-            
-            <!-- Items Seleccionados -->
-            <div class="space-y-4 mb-6">
-              <div class="flex items-center justify-between">
-                <span class="text-base-content/70">Items seleccionados:</span>
-                <span class="font-medium">{{ totals().itemCount }}</span>
-              </div>
-              
-              <div class="flex items-center justify-between">
-                <span class="text-base-content/70">Subtotal:</span>
-                <span class="font-semibold">{{ totals().subtotal | currency }}</span>
-              </div>
-              
-              <div class="flex items-center justify-between">
-                <span class="text-base-content/70">IVA ({{ (taxRate() * 100).toFixed(0) }}%):</span>
-                <span class="font-semibold">{{ totals().taxAmount | currency }}</span>
-              </div>
-              
-              <div class="divider my-4"></div>
-              
-              <div class="flex items-center justify-between text-lg">
-                <span class="font-semibold text-base-content">Total:</span>
-                <span class="font-bold text-primary text-xl">{{ totals().total | currency }}</span>
-              </div>
+          }
+        </div>
+      </div>
+
+      <!-- Resumen del Carrito -->
+      <div class="lg:col-span-1">
+        <div class="bg-base-200 backdrop-blur-xl rounded-2xl border border-white/10 p-6 sticky top-28">
+          <h2 class="text-2xl font-light text-base-content mb-6">Resumen del Pedido</h2>
+
+          <!-- Items Seleccionados -->
+          <div class="space-y-4 mb-6">
+            <div class="flex items-center justify-between">
+              <span class="text-base-content/70">Items seleccionados:</span>
+              <span class="font-medium">{{ totals().itemCount }}</span>
             </div>
 
-            <!-- Botón de Checkout -->
-            <button 
-              class="btn btn-primary btn-lg w-full mb-4"
-              [disabled]="selectedItems().size === 0 || updating()"
-              (click)="proceedToCheckout()">
-              @if (updating()) {
-                <span class="loading loading-spinner loading-sm"></span>
-              } @else {
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                </svg>
-              }
-              Ir al Checkout
-            </button>
+            <div class="flex items-center justify-between">
+              <span class="text-base-content/70">Subtotal:</span>
+              <span class="font-semibold">{{ totals().subtotal | currency }}</span>
+            </div>
 
-            <!-- Continuar Comprando -->
-            <button class="btn btn-outline w-full" onclick="window.location.href='/'">
-              Continuar Comprando
-            </button>
+            <div class="flex items-center justify-between">
+              <span class="text-base-content/70">IVA ({{ (taxRate() * 100).toFixed(0) }}%):</span>
+              <span class="font-semibold">{{ totals().taxAmount | currency }}</span>
+            </div>
 
-            <!-- Información de Seguridad -->
-            <div class="mt-6 p-4 bg-base-200/30 rounded-xl">
-              <div class="flex items-center gap-2 text-sm text-base-content/70">
-                <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                </svg>
-                Compra 100% segura y protegida
-              </div>
+            <div class="divider my-4"></div>
+
+            <div class="flex items-center justify-between text-lg">
+              <span class="font-semibold text-base-content">Total:</span>
+              <span class="font-bold text-primary text-xl">{{ totals().total | currency }}</span>
+            </div>
+          </div>
+
+          <!-- Botón de Checkout -->
+          <button class="btn btn-primary btn-lg w-full mb-4" [disabled]="selectedItems().size === 0 || updating()"
+            (click)="proceedToCheckout()">
+            @if (updating()) {
+            <span class="loading loading-spinner loading-sm"></span>
+            } @else {
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+            </svg>
+            }
+            Ir al Checkout
+          </button>
+
+          <!-- Continuar Comprando -->
+          <button class="btn btn-outline w-full" onclick="window.location.href='/'">
+            Continuar Comprando
+          </button>
+
+          <!-- Información de Seguridad -->
+          <div class="mt-6 p-4 bg-base-200/30 rounded-xl">
+            <div class="flex items-center gap-2 text-sm text-base-content/70">
+              <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                </path>
+              </svg>
+              Compra 100% segura y protegida
             </div>
           </div>
         </div>
       </div>
+    </div>
     }
   </div>
 </div>

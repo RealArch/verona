@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, ElementRef, ViewChild, inject, signal } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -16,6 +16,9 @@ export class HeaderComponent {
   private readonly authService = inject(Auth);
   shoppingCartService = inject(ShoppingCartService);
   cartItemsCount = this.shoppingCartService.cartSummary;
+  isMobileSearchActive = signal(false);
+
+  @ViewChild('mobileSearchInput') mobileSearchInput?: ElementRef<HTMLInputElement>;
 
   // Auth signals - accessible throughout the component
   isAuthenticated = this.authService.isAuthenticated;
@@ -38,13 +41,10 @@ export class HeaderComponent {
       // Navigate to search page without query (show all products)
       this.router.navigate(['/search']);
     }
-  }
 
-  /**
-   * Navigate to search page (for mobile button)
-   */
-  navigateToSearch(): void {
-    this.router.navigate(['/search']);
+    if (this.isMobileSearchActive()) {
+      this.closeMobileSearch();
+    }
   }
 
   /**
@@ -71,6 +71,17 @@ export class HeaderComponent {
       event.preventDefault();
       this.performSearch();
     }
+  }
+
+  openMobileSearch(): void {
+    this.isMobileSearchActive.set(true);
+    setTimeout(() => {
+      this.mobileSearchInput?.nativeElement.focus();
+    }, 0);
+  }
+
+  closeMobileSearch(): void {
+    this.isMobileSearchActive.set(false);
   }
 
   /**

@@ -73,6 +73,10 @@ export const routes: Routes = [
     ]
 
   },
+  {
+    path: 'main-header-images',
+    loadComponent: () => import('./pages/user/settings/main-header-images/main-header-images.page').then( m => m.MainHeaderImagesPage)
+  },
 
 
 

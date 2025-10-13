@@ -1,0 +1,115 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Imágenes de Portada</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="closeModal()">
+        <ion-icon slot="icon-only" name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  
+  <!-- Imagen para pantallas grandes (16:6) -->
+  <div class="mb-6">
+    <h3 class="text-base font-semibold text-gray-800 mb-2">Pantallas Grandes (Desktop)</h3>
+    
+    <div class="relative w-full rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 hover:border-primary transition cursor-pointer overflow-hidden"
+         style="padding-bottom: 37.5%;" 
+         (click)="largeScreenFileInput.click()"
+         (dragenter)="onDragEnter($event, 'large')"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave($event, 'large')"
+         (drop)="onDrop($event, 'large')"
+         [class.border-primary]="isDraggingLarge"
+         [class.bg-primary-50]="isDraggingLarge">
+      <div class="absolute inset-0">
+        <ng-container *ngIf="!largeScreenImage; else showLargeImage">
+          <div class="h-full w-full flex flex-col items-center justify-center text-gray-400">
+            <ion-icon name="image-outline" class="text-4xl"></ion-icon>
+            <span class="mt-2 text-sm text-center">Haz clic o arrastra para subir foto de portada<br><span class='text-xs text-gray-500'>Recomendado: 1536x677px</span></span>
+          </div>
+        </ng-container>
+        <ng-template #showLargeImage>
+          <img [src]="largeScreenImage?.safePreviewUrl || largeScreenImage?.previewUrl" class="w-full h-full object-cover" alt="Vista previa portada desktop" />
+          <div *ngIf="largeScreenImage!.uploading" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white">
+            <ion-spinner color="light" class="mb-4"></ion-spinner>
+            <div class="w-3/4 bg-gray-200 rounded-full h-2 mb-2">
+              <div class="bg-primary h-2 rounded-full transition-all duration-300" [style.width.%]="largeScreenImage!.progress"></div>
+            </div>
+            <span class="text-sm font-medium">{{ largeScreenImage!.progress.toFixed(0) }}%</span>
+          </div>
+          <ion-button *ngIf="!largeScreenImage!.uploading" 
+                     color="danger" 
+                     size="small" 
+                     class="absolute top-2 right-2 rounded-full" 
+                     (click)="removeLargeScreenImage($event)">
+            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ng-template>
+      </div>
+    </div>
+    <input type="file" 
+           hidden 
+           #largeScreenFileInput 
+           (change)="onLargeScreenFileSelected($event)" 
+           accept="image/jpeg,image/png,image/webp,image/jpg" />
+  </div>
+
+  <!-- Imagen para pantallas pequeñas (1:1) -->
+  <div>
+    <h3 class="text-base font-semibold text-gray-800 mb-2">Pantallas Pequeñas (Móvil)</h3>
+    
+    <div class="relative mx-auto rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 hover:border-primary transition cursor-pointer overflow-hidden" 
+         style="width: 220px; height: 220px;" 
+         (click)="smallScreenFileInput.click()"
+         (dragenter)="onDragEnter($event, 'small')"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave($event, 'small')"
+         (drop)="onDrop($event, 'small')"
+         [class.border-primary]="isDraggingSmall"
+         [class.bg-primary-50]="isDraggingSmall">
+      <div class="absolute inset-0">
+        <ng-container *ngIf="!smallScreenImage; else showSmallImage">
+          <div class="h-full w-full flex flex-col items-center justify-center text-gray-400 px-4">
+            <ion-icon name="image-outline" class="text-4xl"></ion-icon>
+            <span class="mt-2 text-sm text-center">Haz clic o arrastra para subir foto de portada<br><span class='text-xs text-gray-500'>Recomendado: 660x660px</span></span>
+          </div>
+        </ng-container>
+        <ng-template #showSmallImage>
+          <img [src]="smallScreenImage?.safePreviewUrl || smallScreenImage?.previewUrl" class="w-full h-full object-cover" alt="Vista previa portada móvil" />
+          <div *ngIf="smallScreenImage!.uploading" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white">
+            <ion-spinner color="light" class="mb-4"></ion-spinner>
+            <div class="w-3/4 bg-gray-200 rounded-full h-2 mb-2">
+              <div class="bg-primary h-2 rounded-full transition-all duration-300" [style.width.%]="smallScreenImage!.progress"></div>
+            </div>
+            <span class="text-sm font-medium">{{ smallScreenImage!.progress.toFixed(0) }}%</span>
+          </div>
+          <ion-button *ngIf="!smallScreenImage!.uploading" 
+                     color="danger" 
+                     size="small" 
+                     class="absolute top-2 right-2 rounded-full" 
+                     (click)="removeSmallScreenImage($event)">
+            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ng-template>
+      </div>
+    </div>
+    <input type="file" 
+           hidden 
+           #smallScreenFileInput 
+           (change)="onSmallScreenFileSelected($event)" 
+           accept="image/jpeg,image/png,image/webp,image/jpg" />
+  </div>
+
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-button expand="block" color="primary" (click)="saveImages()" [disabled]="!canSave || isSaving">
+      <ion-spinner *ngIf="isSaving" slot="start"></ion-spinner>
+      {{ isSaving ? 'Guardando...' : 'Guardar' }}
+    </ion-button>
+  </ion-toolbar>
+</ion-footer>

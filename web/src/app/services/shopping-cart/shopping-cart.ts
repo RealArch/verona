@@ -2,8 +2,10 @@ import { Injectable, inject, signal, computed, Injector, runInInjectionContext }
 import { Firestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, collection } from '@angular/fire/firestore';
 import { Auth, User } from '@angular/fire/auth';
 import { authState } from '@angular/fire/auth';
+import { firstValueFrom } from 'rxjs';
 import { ShoppingCart as IShoppingCart, CartItem, AddToCartRequest, CartSummary } from '../../interfaces/shopping-cart';
 import { Product, ProductVariant } from '../../interfaces/products';
+import { ProductsService } from '../products/products.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +14,7 @@ export class ShoppingCartService {
   private readonly firestore = inject(Firestore);
   private readonly auth = inject(Auth);
   private readonly injector = inject(Injector);
+  private readonly productsService = inject(ProductsService);
 
   // Signals para el estado del carrito
   private readonly _cart = signal<IShoppingCart | null>(null);
@@ -124,7 +127,10 @@ export class ShoppingCartService {
     const cartSnap = await getDoc(cartRef);
 
     if (cartSnap.exists()) {
-      this._cart.set(cartSnap.data() as IShoppingCart);
+      const cart = cartSnap.data() as IShoppingCart;
+      // Verificar disponibilidad de items
+      const validatedCart = await this.validateCartItems(cart);
+      this._cart.set(validatedCart);
     } else {
       // Crear carrito vacío para el usuario
       const emptyCart = this.createEmptyCart(userId);
@@ -151,7 +157,11 @@ export class ShoppingCartService {
     const localCart = localStorage.getItem(this.getLocalStorageKey());
     if (localCart) {
       try {
-        this._cart.set(JSON.parse(localCart));
+        const cart = JSON.parse(localCart) as IShoppingCart;
+        // Verificar disponibilidad de items de forma asíncrona
+        this.validateCartItems(cart).then((validatedCart: IShoppingCart) => {
+          this._cart.set(validatedCart);
+        });
       } catch (error) {
         console.error('Error parsing local cart:', error);
         // Si hay error, crear carrito vacío
@@ -178,6 +188,56 @@ export class ShoppingCartService {
     } catch (error) {
       console.error('Error saving to localStorage:', error);
     }
+  }
+
+  /**
+   * Valida la disponibilidad de todos los items del carrito
+   */
+  private async validateCartItems(cart: IShoppingCart): Promise<IShoppingCart> {
+    if (!cart.items || cart.items.length === 0) {
+      return cart;
+    }
+
+    const validatedItems = await Promise.all(
+      cart.items.map(async (item) => {
+        try {
+          // Obtener el producto desde Firestore
+          const productObservable = await this.productsService.getProduct(item.productId);
+          const product = await firstValueFrom(productObservable);
+
+          if (!product || product.status !== 'active') {
+            // Producto no existe o no está activo
+            return { ...item, available: false };
+          }
+
+          // Si hay variante, verificar que exista y tenga stock
+          if (item.variantId) {
+            const variant = product.variants?.find(v => v.id === item.variantId);
+            if (!variant || variant.stock < 1) {
+              return { ...item, available: false };
+            }
+            return { ...item, available: true };
+          }
+
+          // Si no hay variante, verificar stock del producto
+          const productStock = parseInt(product.stock);
+          if (productStock < 1) {
+            return { ...item, available: false };
+          }
+
+          return { ...item, available: true };
+        } catch (error) {
+          console.error(`Error validating item ${item.id}:`, error);
+          // En caso de error, marcar como no disponible por seguridad
+          return { ...item, available: false };
+        }
+      })
+    );
+
+    return {
+      ...cart,
+      items: validatedItems
+    };
   }
 
   /**

@@ -1,11 +1,12 @@
 import { Component, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonToggle, IonButtons, IonMenuButton, IonListHeader, IonGrid, IonIcon, IonPopover, IonButton, IonInput } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonToggle, IonButtons, IonMenuButton, IonListHeader, IonGrid, IonIcon, IonPopover, IonButton, IonInput, IonSpinner, IonImg, ModalController } from '@ionic/angular/standalone';
 import { SettingsService } from 'src/app/services/settings.service';
 import { Popups } from 'src/app/services/popups';
 import { addIcons } from 'ionicons';
-import { home, bicycle, airplane, chatbubbles, calculator, createOutline } from 'ionicons/icons';
+import { home, bicycle, airplane, chatbubbles, calculator, createOutline, imageOutline, trashOutline } from 'ionicons/icons';
+import { MainHeaderImagesPage } from './main-header-images/main-header-images.page';
 
 @Component({
   selector: 'app-settings',
@@ -17,6 +18,7 @@ import { home, bicycle, airplane, chatbubbles, calculator, createOutline } from 
 export class SettingsPage implements OnInit {
   private settingsService = inject(SettingsService);
   private popups = inject(Popups);
+  private modalController = inject(ModalController);
 
   // Signals para todos los settings
   storeEnabled = computed(() => this.settingsService.storeEnabled());
@@ -31,7 +33,7 @@ export class SettingsPage implements OnInit {
   tempTaxPercentage: number = 0;
 
   constructor() {
-    addIcons({ home, bicycle, airplane, chatbubbles, calculator, createOutline });
+    addIcons({ home, bicycle, airplane, chatbubbles, calculator, createOutline, imageOutline, trashOutline });
   }
 
   ngOnInit() {
@@ -179,5 +181,11 @@ export class SettingsPage implements OnInit {
     }
   }
 
-}
+  async openHeaderImagesModal() {
+    const modal = await this.modalController.create({
+      component: MainHeaderImagesPage
+    });
+    await modal.present();
+  }
 
+}

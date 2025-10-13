@@ -63,7 +63,8 @@ export class ShoppingCart implements OnInit {
 
   readonly allSelected = computed(() => {
     const items = this.enrichedItems();
-    return items.length > 0 && items.every(item => this.selectedItems().has(item.id));
+    const availableItems = items.filter(item => item.available !== false);
+    return availableItems.length > 0 && availableItems.every(item => this.selectedItems().has(item.id));
   });
 
   constructor() {
@@ -216,17 +217,33 @@ export class ShoppingCart implements OnInit {
 
   // Selection
   selectAll(): void {
-    this.selectedItems.set(new Set(this.enrichedItems().map(item => item.id)));
+    const availableItems = this.enrichedItems().filter(item => item.available !== false);
+    this.selectedItems.set(new Set(availableItems.map(item => item.id)));
   }
 
   toggleSelectAll(): void {
-    const allItemIds = this.enrichedItems().map(item => item.id);
-    this.selectedItems.update(currentSelected => 
-      currentSelected.size === allItemIds.length ? new Set() : new Set(allItemIds)
-    );
+    const availableItems = this.enrichedItems().filter(item => item.available !== false);
+    const availableItemIds = availableItems.map(item => item.id);
+    const selectedAvailableCount = availableItemIds.filter(id => this.selectedItems().has(id)).length;
+    
+    this.selectedItems.update(currentSelected => {
+      if (selectedAvailableCount === availableItemIds.length) {
+        // Deseleccionar todos los disponibles, pero mantener los no disponibles fuera
+        const newSelected = new Set(currentSelected);
+        availableItemIds.forEach(id => newSelected.delete(id));
+        return newSelected;
+      } else {
+        // Seleccionar todos los disponibles
+        return new Set(availableItemIds);
+      }
+    });
   }
 
   toggleItem(itemId: string): void {
+    const item = this.enrichedItems().find(i => i.id === itemId);
+    // No permitir seleccionar items no disponibles
+    if (item?.available === false) return;
+    
     this.selectedItems.update(selected => {
       const newSelected = new Set(selected);
       if (newSelected.has(itemId)) {
