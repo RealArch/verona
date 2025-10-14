@@ -79,8 +79,6 @@ export class MainHeaderImagesPage implements OnDestroy {
   private readonly progressSmall = signal(0);
   private readonly pendingLarge = signal<PendingUpload | null>(null);
   private readonly pendingSmall = signal<PendingUpload | null>(null);
-  private readonly dragOverLarge = signal(false);
-  private readonly dragOverSmall = signal(false);
   private readonly isSaving = signal(false);
 
   // Exposed read-only selectors for the template.
@@ -90,8 +88,6 @@ export class MainHeaderImagesPage implements OnDestroy {
   readonly smallIsUploading = computed(() => this.uploadingSmall());
   readonly largeProgressValue = computed(() => this.progressLarge());
   readonly smallProgressValue = computed(() => this.progressSmall());
-  readonly largeDragOver = computed(() => this.dragOverLarge());
-  readonly smallDragOver = computed(() => this.dragOverSmall());
   readonly saving = computed(() => this.isSaving());
   readonly hasPendingChanges = computed(() => Boolean(this.pendingLarge() || this.pendingSmall()));
   readonly largePendingData = computed(() => this.pendingLarge());
@@ -166,28 +162,6 @@ export class MainHeaderImagesPage implements OnDestroy {
     }
   }
 
-  async onDrop(event: DragEvent, slot: ScreenType): Promise<void> {
-    event.preventDefault();
-    event.stopPropagation();
-    this.setDragState(slot, false);
-    const file = this.extractFileFromDrop(event);
-    if (file) {
-      await this.processFile(slot, file);
-    } else {
-      await this.popups.presentToast('bottom', 'warning', 'No se detecto ningun archivo de imagen.');
-    }
-  }
-
-  onDragOver(event: DragEvent, slot: ScreenType): void {
-    event.preventDefault();
-    this.setDragState(slot, true);
-  }
-
-  onDragLeave(event: DragEvent, slot: ScreenType): void {
-    event.preventDefault();
-    this.setDragState(slot, false);
-  }
-
   async save(): Promise<void> {
     if (!this.hasPendingChanges()) {
       await this.popups.presentToast('bottom', 'medium', 'No hay cambios por guardar.');
@@ -244,17 +218,18 @@ export class MainHeaderImagesPage implements OnDestroy {
       return;
     }
 
-    this.registerTransientPreview(slot, URL.createObjectURL(file));
     state.uploading.set(true);
     state.progress.set(0);
 
-    const uploadReadyFile = await this.ensureFileHasContent(slot, file);
-    if (uploadReadyFile !== file) {
-      this.registerTransientPreview(slot, URL.createObjectURL(uploadReadyFile));
-    }
-
     try {
-  const upload = await this.settingsService.updateHeaderImage(uploadReadyFile, slot, (progress) => state.progress.set(progress));
+      // Convert the file to a blob and then back to a file to ensure it's readable.
+      // This fixes issues with drag-and-drop for certain file types like webp.
+      const blob = await file.arrayBuffer().then(buffer => new Blob([buffer], { type: file.type }));
+      const uploadReadyFile = new File([blob], file.name, { type: file.type });
+
+      this.registerTransientPreview(slot, URL.createObjectURL(uploadReadyFile));
+
+      const upload = await this.settingsService.updateHeaderImage(uploadReadyFile, slot, (progress) => state.progress.set(progress));
       const inferredType = upload.type ?? uploadReadyFile.type ?? this.resolveMimeForPending(uploadReadyFile);
       const pending: PendingUpload = {
         path: upload.path,
@@ -267,7 +242,8 @@ export class MainHeaderImagesPage implements OnDestroy {
       state.preview.set(upload.url);
     } catch (error) {
       console.error('[MainHeaderImagesPage] processFile upload error', error);
-      await this.popups.presentToast('bottom', 'danger', 'No se pudo subir la imagen. Intenta nuevamente.');
+      const errorMessage = error instanceof Error ? error.message : 'No se pudo subir la imagen. Intenta nuevamente.';
+      await this.popups.presentToast('bottom', 'danger', errorMessage);
       this.revertPreviewToStored(slot);
       state.pending.set(null);
     } finally {
@@ -292,62 +268,62 @@ export class MainHeaderImagesPage implements OnDestroy {
         };
   }
 
-  private setDragState(slot: ScreenType, value: boolean): void {
-    const state = slot === 'large' ? this.dragOverLarge : this.dragOverSmall;
-    state.set(value);
-  }
-
-  private extractFileFromDrop(event: DragEvent): File | null {
-    const dataTransfer = event.dataTransfer;
-    if (!dataTransfer) {
-      return null;
-    }
-
-    if (dataTransfer.items && dataTransfer.items.length > 0) {
-      for (const item of Array.from(dataTransfer.items)) {
-        if (item.kind === 'file') {
-          const candidate = item.getAsFile();
-          if (candidate) {
-            return candidate;
-          }
-        }
-      }
-    }
-
-    if (dataTransfer.files && dataTransfer.files.length > 0) {
-      return dataTransfer.files[0];
-    }
-
-    return null;
-  }
-
   private async ensureFileHasContent(slot: ScreenType, file: File): Promise<File> {
+    // Si el archivo ya tiene contenido, lo retornamos directamente
     if (file.size > 0) {
       return file;
     }
 
-    const previewUrl = this.transientPreviews[slot];
-    if (!previewUrl) {
-      return file;
-    }
+    console.warn('[MainHeaderImagesPage] File has 0 size, attempting to read content', { 
+      name: file.name, 
+      type: file.type 
+    });
 
+    // Intentar leer el archivo usando FileReader
     try {
-      const response = await fetch(previewUrl);
-      const blob = await response.blob();
-      if (!blob || blob.size === 0) {
-        return file;
+      const buffer = await this.readFileAsArrayBuffer(file);
+      
+      if (!buffer || buffer.byteLength === 0) {
+        throw new Error('El archivo no contiene datos después de leerlo.');
       }
 
-      const type = this.normalizeAllowedType(blob.type || this.resolveMimeForPending(file));
+      const type = this.normalizeAllowedType(file.type || this.resolveMimeForPending(file));
       const name = file.name?.trim().length
         ? file.name
         : `header-${slot}-${Date.now()}.${this.getExtensionFromMime(type)}`;
 
-      return new File([blob], name, { type });
+      console.log('[MainHeaderImagesPage] Successfully read file content', { 
+        size: buffer.byteLength, 
+        type, 
+        name 
+      });
+
+      return new File([buffer], name, { type });
     } catch (error) {
-      console.warn('[MainHeaderImagesPage] ensureFileHasContent fallo', error);
-      return file;
+      console.error('[MainHeaderImagesPage] ensureFileHasContent failed to read file', error);
+      throw new Error('No se pudo leer el contenido del archivo. Por favor, intenta nuevamente.');
     }
+  }
+
+  private async readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
+    return new Promise<ArrayBuffer>((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = (event) => {
+        const result = event.target?.result;
+        if (result instanceof ArrayBuffer) {
+          resolve(result);
+        } else {
+          reject(new Error('FileReader no retornó un ArrayBuffer'));
+        }
+      };
+      
+      reader.onerror = () => {
+        reject(new Error(`Error al leer el archivo: ${reader.error?.message || 'desconocido'}`));
+      };
+      
+      reader.readAsArrayBuffer(file);
+    });
   }
 
   private isAllowedImage(file: File): boolean {

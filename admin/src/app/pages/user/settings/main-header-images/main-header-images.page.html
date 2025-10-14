@@ -22,10 +22,6 @@
 				class="drop-zone hero"
 				role="button"
 				tabindex="0"
-				[class.drag-over]="largeDragOver()"
-				(dragover)="onDragOver($event, 'large')"
-				(dragleave)="onDragLeave($event, 'large')"
-				(drop)="onDrop($event, 'large')"
 				(click)="onZoneClick('large')"
 				(keyup)="onZoneKeyUp($event, 'large')"
 			>
@@ -35,7 +31,7 @@
 				<ng-template #largePlaceholder>
 					<div class="placeholder-message">
 						<ion-icon name="cloud-upload-outline"></ion-icon>
-						<span>Haz click o arrastra una imagen para seleccionarla.</span>
+						<span>Haz click para seleccionar una imagen.</span>
 					</div>
 				</ng-template>
 
@@ -45,7 +41,7 @@
 				</div>
 			</div>
 
-			<p class="selection-note">Haz clic o arrastra una imagen (PNG, JPG o WEBP) para seleccionarla.</p>
+			<p class="selection-note">Haz clic para seleccionar una imagen (PNG, JPG o WEBP).</p>
 
 
 
@@ -65,10 +61,6 @@
 				class="drop-zone mobile"
 				role="button"
 				tabindex="0"
-				[class.drag-over]="smallDragOver()"
-				(dragover)="onDragOver($event, 'small')"
-				(dragleave)="onDragLeave($event, 'small')"
-				(drop)="onDrop($event, 'small')"
 				(click)="onZoneClick('small')"
 				(keyup)="onZoneKeyUp($event, 'small')"
 			>
@@ -78,7 +70,7 @@
 				<ng-template #smallPlaceholder>
 					<div class="placeholder-message">
 						<ion-icon name="cloud-upload-outline"></ion-icon>
-						<span>Haz click o arrastra una imagen para seleccionarla.</span>
+						<span>Haz click para seleccionar una imagen.</span>
 					</div>
 				</ng-template>
 
@@ -88,7 +80,7 @@
 				</div>
 			</div>
 
-			<p class="selection-note">Haz clic o arrastra una imagen (PNG, JPG o WEBP) para seleccionarla.</p>
+			<p class="selection-note">Haz clic para seleccionar una imagen (PNG, JPG o WEBP).</p>
 
 			
 

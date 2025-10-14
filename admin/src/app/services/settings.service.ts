@@ -256,21 +256,42 @@ export class SettingsService {
   }
 
   private async normalizeUploadFile(file: File, screenType: 'large' | 'small', timestamp: number): Promise<{ file: File; name: string; type: string }> {
+    console.log('[SettingsService] normalizeUploadFile inicio', { 
+      name: file.name, 
+      type: file.type, 
+      size: file.size 
+    });
+
     const resolvedType = this.resolveMimeType(file);
     const resolvedName = this.buildFallbackFileName(file, screenType, resolvedType, timestamp);
 
+    // Si el archivo ya tiene contenido y está bien formado, lo retornamos
     if (file.size > 0 && file.name && file.type && file.type === resolvedType) {
+      console.log('[SettingsService] File is valid, using as-is');
       return { file, name: resolvedName, type: resolvedType };
     }
 
+    // Si el archivo tiene contenido pero necesita normalización de tipo/nombre
+    if (file.size > 0) {
+      console.log('[SettingsService] File needs normalization (name/type)');
+      const normalizedFile = new File([file], resolvedName, { type: resolvedType });
+      return { file: normalizedFile, name: resolvedName, type: resolvedType };
+    }
+
+    // Si el archivo está vacío, intentamos leerlo
+    console.warn('[SettingsService] File is empty (0 bytes), attempting to read content');
+
     const buffer = await this.readFileAsArrayBuffer(file).catch((error) => {
-      console.warn('[SettingsService] readFileAsArrayBuffer fallo', { error, name: file.name, type: file.type, size: file.size });
+      console.error('[SettingsService] readFileAsArrayBuffer failed', { error, name: file.name, type: file.type, size: file.size });
       return null;
     });
 
     if (!buffer || buffer.byteLength === 0) {
+      console.error('[SettingsService] Buffer is empty or null after reading');
       throw new Error('El archivo recibido para subir esta vacio (0 bytes).');
     }
+
+    console.log('[SettingsService] Successfully read file buffer', { byteLength: buffer.byteLength });
 
     const normalizedFile = new File([buffer], resolvedName, { type: resolvedType });
     return { file: normalizedFile, name: resolvedName, type: resolvedType };
