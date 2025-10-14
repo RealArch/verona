@@ -1,0 +1,115 @@
+<ion-header>
+	<ion-toolbar>
+		<ion-title>Imagenes del hero principal</ion-title>
+		<ion-buttons slot="end">
+			<ion-button fill="clear" color="medium" (click)="close()" [disabled]="saving()">
+				<ion-icon slot="icon-only" name="close-outline"></ion-icon>
+			</ion-button>
+		</ion-buttons>
+	</ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+	<div class="image-layout">
+		<section class="image-slot hero">
+			<header class="slot-header">
+				<h2>{{ slotConfig.large.title }}</h2>
+				<p>Formato {{ slotConfig.large.ratio }} - Recomendacion {{ slotConfig.large.recommendation }}</p>
+				<p class="slot-subtitle">{{ slotConfig.large.description }}. Formatos admitidos: PNG, JPG, WEBP.</p>
+			</header>
+
+			<div
+				class="drop-zone hero"
+				role="button"
+				tabindex="0"
+				[class.drag-over]="largeDragOver()"
+				(dragover)="onDragOver($event, 'large')"
+				(dragleave)="onDragLeave($event, 'large')"
+				(drop)="onDrop($event, 'large')"
+				(click)="onZoneClick('large')"
+				(keyup)="onZoneKeyUp($event, 'large')"
+			>
+				<div class="preview" *ngIf="largePreview(); else largePlaceholder">
+					<img [src]="largePreview()!" alt="Previsualizacion hero para pantallas grandes" />
+				</div>
+				<ng-template #largePlaceholder>
+					<div class="placeholder-message">
+						<ion-icon name="cloud-upload-outline"></ion-icon>
+						<span>Haz click o arrastra una imagen para seleccionarla.</span>
+					</div>
+				</ng-template>
+
+				<div class="uploading" *ngIf="largeIsUploading()">
+					<ion-spinner name="crescent"></ion-spinner>
+					<span>{{ largeProgressValue() | number: '1.0-0' }}%</span>
+				</div>
+			</div>
+
+			<p class="selection-note">Haz clic o arrastra una imagen (PNG, JPG o WEBP) para seleccionarla.</p>
+
+
+
+			<ion-progress-bar *ngIf="largeIsUploading()" [value]="largeProgressValue() / 100"></ion-progress-bar>
+
+			<input #largeFileInput type="file" accept="image/*" hidden (change)="onFileChange($event, 'large')" />
+		</section>
+
+		<section class="image-slot mobile">
+			<header class="slot-header">
+				<h2>{{ slotConfig.small.title }}</h2>
+				<p>Formato {{ slotConfig.small.ratio }} - Recomendacion {{ slotConfig.small.recommendation }}</p>
+				<p class="slot-subtitle">{{ slotConfig.small.description }}. Formatos admitidos: PNG, JPG, WEBP.</p>
+			</header>
+
+			<div
+				class="drop-zone mobile"
+				role="button"
+				tabindex="0"
+				[class.drag-over]="smallDragOver()"
+				(dragover)="onDragOver($event, 'small')"
+				(dragleave)="onDragLeave($event, 'small')"
+				(drop)="onDrop($event, 'small')"
+				(click)="onZoneClick('small')"
+				(keyup)="onZoneKeyUp($event, 'small')"
+			>
+				<div class="preview" *ngIf="smallPreview(); else smallPlaceholder">
+					<img [src]="smallPreview()!" alt="Previsualizacion hero para pantallas pequenas" />
+				</div>
+				<ng-template #smallPlaceholder>
+					<div class="placeholder-message">
+						<ion-icon name="cloud-upload-outline"></ion-icon>
+						<span>Haz click o arrastra una imagen para seleccionarla.</span>
+					</div>
+				</ng-template>
+
+				<div class="uploading" *ngIf="smallIsUploading()">
+					<ion-spinner name="crescent"></ion-spinner>
+					<span>{{ smallProgressValue() | number: '1.0-0' }}%</span>
+				</div>
+			</div>
+
+			<p class="selection-note">Haz clic o arrastra una imagen (PNG, JPG o WEBP) para seleccionarla.</p>
+
+			
+
+			<ion-progress-bar *ngIf="smallIsUploading()" [value]="smallProgressValue() / 100"></ion-progress-bar>
+
+			<input #smallFileInput type="file" accept="image/*" hidden (change)="onFileChange($event, 'small')" />
+		</section>
+	</div>
+</ion-content>
+
+<ion-footer>
+    
+	<ion-toolbar>
+		<ion-buttons slot="end">
+			<ion-button fill="outline" color="medium" (click)="close()" [disabled]="saving()">
+				Cancelar
+			</ion-button>
+			<ion-button color="primary" (click)="save()" [disabled]="!hasPendingChanges() || saving()">
+				<ion-spinner slot="start" *ngIf="saving()" name="crescent"></ion-spinner>
+				Guardar
+			</ion-button>
+		</ion-buttons>
+	</ion-toolbar>
+</ion-footer>

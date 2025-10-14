@@ -16,7 +16,7 @@ export class SettingsService {
   private storage = inject(Storage);
   private authService = inject(AuthService);
   private readonly settingsDocRef = this.runInContext(() => doc(this.firestore, 'store/settings'));
-  
+
   private _storeEnabled = signal<boolean>(true);
   private _pickupEnabled = signal<boolean>(true);
   private _deliveryEnabled = signal<boolean>(true);
@@ -58,9 +58,9 @@ export class SettingsService {
     try {
       const settingsDoc = await this.runInContext(() => getDoc(this.settingsDocRef));
       const data = settingsDoc.exists() ? settingsDoc.data() as StoreSettings : this.defaultSettings;
-      
+
       this.updateSignals(data);
-      
+
       if (!settingsDoc.exists()) {
         await this.saveSettings(this.defaultSettings);
       }
@@ -105,14 +105,14 @@ export class SettingsService {
   async updateSetting(key: SettingKey, enabled: boolean): Promise<void> {
     try {
       const settings = this.getCurrentSettings();
-      
+
       if (key === 'storeEnabled') {
         settings.storeEnabled = enabled;
         this._storeEnabled.set(enabled);
       } else {
         const deliveryKey = key === 'deliveryEnabled' ? 'homeDeliveryEnabled' : key;
         settings.deliveryMethods[deliveryKey as keyof typeof settings.deliveryMethods] = enabled;
-        
+
         const signalMap = {
           pickupEnabled: this._pickupEnabled,
           deliveryEnabled: this._deliveryEnabled,
@@ -121,7 +121,7 @@ export class SettingsService {
         };
         signalMap[key]?.set(enabled);
       }
-      
+
       await this.saveSettings(settings);
     } catch (error) {
       console.error(`Error updating ${key}:`, error);
@@ -162,24 +162,22 @@ export class SettingsService {
     }
   }
 
-  async updateHeaderImage(file: File, screenType: 'large' | 'small', onProgress?: (progress: number) => void): Promise<{ url: string; path: string }> {
+  async updateHeaderImage(file: File, screenType: 'large' | 'small', onProgress?: (progress: number) => void): Promise<{ url: string; path: string; type: string; name: string }> {
     try {
       console.log('[SettingsService] updateHeaderImage inicio', { screenType, name: file.name, size: file.size, type: file.type });
-
-      if (file.size === 0) {
-        throw new Error('El archivo recibido para subir está vacío (0 bytes).');
-      }
 
       const user = this.authService.user$;
       const userId = (await firstValueFrom(user))?.uid;
       if (!userId) throw new Error('User not authenticated');
 
-      // Subir a temp primero
-      const tempPath = `temp/${userId}/${Date.now()}_${file.name}`;
+      const timestamp = Date.now();
+      const normalized = await this.normalizeUploadFile(file, screenType, timestamp);
+
+      const tempPath = `temp/${userId}/${timestamp}_${normalized.name}`;
       const storageRef = this.runInContext(() => ref(this.storage, tempPath));
 
-      return new Promise<{ path: string, url: string }>((resolve, reject) => {
-        const uploadTask = this.runInContext(() => uploadBytesResumable(storageRef, file));
+      return new Promise<{ path: string, url: string, type: string, name: string }>((resolve, reject) => {
+        const uploadTask = this.runInContext(() => uploadBytesResumable(storageRef, normalized.file, { contentType: normalized.type }));
 
         console.log('[SettingsService] Upload creado', { tempPath });
 
@@ -200,7 +198,7 @@ export class SettingsService {
               console.log('[SettingsService] Upload completado, obteniendo URL');
               const downloadUrl = await this.runInContext(() => getDownloadURL(uploadTask.snapshot.ref));
               console.log('[SettingsService] URL obtenida', { downloadUrl });
-              resolve({ path: tempPath, url: downloadUrl });
+              resolve({ path: tempPath, url: downloadUrl, type: normalized.type, name: normalized.name });
             } catch (error) {
               console.error('[SettingsService] Error obteniendo URL de descarga', error);
               reject(error);
@@ -220,7 +218,7 @@ export class SettingsService {
       if (largeScreenData) {
         const finalPath = `img/settings/header-large.${this.getExtensionFromType(largeScreenData.type)}`;
         const finalUrl = await this.moveImage(largeScreenData.path, finalPath);
-        
+
         const headerImage: HeaderImage = {
           path: finalPath,
           url: finalUrl,
@@ -228,14 +226,14 @@ export class SettingsService {
           processing: false,
           name: largeScreenData.name
         };
-        
+
         this._largeScreenImage.set(headerImage);
       }
-      
+
       if (smallScreenData) {
         const finalPath = `img/settings/header-small.${this.getExtensionFromType(smallScreenData.type)}`;
         const finalUrl = await this.moveImage(smallScreenData.path, finalPath);
-        
+
         const headerImage: HeaderImage = {
           path: finalPath,
           url: finalUrl,
@@ -243,7 +241,7 @@ export class SettingsService {
           processing: false,
           name: smallScreenData.name
         };
-        
+
         this._smallScreenImage.set(headerImage);
       }
 
@@ -257,26 +255,87 @@ export class SettingsService {
     }
   }
 
+  private async normalizeUploadFile(file: File, screenType: 'large' | 'small', timestamp: number): Promise<{ file: File; name: string; type: string }> {
+    const resolvedType = this.resolveMimeType(file);
+    const resolvedName = this.buildFallbackFileName(file, screenType, resolvedType, timestamp);
+
+    if (file.size > 0 && file.name && file.type && file.type === resolvedType) {
+      return { file, name: resolvedName, type: resolvedType };
+    }
+
+    const buffer = await this.readFileAsArrayBuffer(file).catch((error) => {
+      console.warn('[SettingsService] readFileAsArrayBuffer fallo', { error, name: file.name, type: file.type, size: file.size });
+      return null;
+    });
+
+    if (!buffer || buffer.byteLength === 0) {
+      throw new Error('El archivo recibido para subir esta vacio (0 bytes).');
+    }
+
+    const normalizedFile = new File([buffer], resolvedName, { type: resolvedType });
+    return { file: normalizedFile, name: resolvedName, type: resolvedType };
+  }
+
+  private resolveMimeType(file: File): string {
+    if (file.type && file.type.trim().length > 0) {
+      return file.type;
+    }
+    return this.inferMimeFromName(file.name ?? '');
+  }
+
+  private inferMimeFromName(name: string): string {
+    const lower = name.toLowerCase();
+    if (lower.endsWith('.webp')) return 'image/webp';
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.gif')) return 'image/gif';
+    if (lower.endsWith('.bmp')) return 'image/bmp';
+    if (lower.endsWith('.svg')) return 'image/svg+xml';
+    if (lower.endsWith('.avif')) return 'image/avif';
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.jfif')) return 'image/jpeg';
+    return 'image/jpeg';
+  }
+
+  private buildFallbackFileName(file: File, screenType: 'large' | 'small', type: string, timestamp: number): string {
+    const trimmed = file.name?.trim();
+    if (trimmed) {
+      return trimmed;
+    }
+    const extension = this.getExtensionFromType(type);
+    return `header-${screenType}-${timestamp}.${extension}`;
+  }
+
+  private async readFileAsArrayBuffer(file: File): Promise<ArrayBuffer> {
+    if (typeof file.arrayBuffer === 'function') {
+      return file.arrayBuffer();
+    }
+    return await new Promise<ArrayBuffer>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as ArrayBuffer);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
   private async moveImage(tempPath: string, finalPath: string): Promise<string> {
     try {
       // Obtener referencia a la imagen temporal
       const tempRef = this.runInContext(() => ref(this.storage, tempPath));
-      
+
       // Descargar la imagen temporal
       const tempUrl = await this.runInContext(() => getDownloadURL(tempRef));
       const response = await fetch(tempUrl);
       const blob = await response.blob();
-      
+
       // Subir a la ubicación final
       const finalRef = this.runInContext(() => ref(this.storage, finalPath));
       await this.runInContext(() => uploadBytesResumable(finalRef, blob));
-      
+
       // Obtener URL final
       const finalUrl = await this.runInContext(() => getDownloadURL(finalRef));
-      
+
       // Eliminar imagen temporal
       await this.runInContext(() => deleteObject(tempRef));
-      
+
       return finalUrl;
     } catch (error) {
       console.error('Error moving image:', error);
@@ -292,7 +351,11 @@ export class SettingsService {
     const extensions: { [key: string]: string } = {
       'image/jpeg': 'jpg',
       'image/png': 'png',
-      'image/webp': 'webp'
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+      'image/bmp': 'bmp',
+      'image/svg+xml': 'svg',
+      'image/avif': 'avif'
     };
     return extensions[type] || 'jpg';
   }

@@ -20,6 +20,10 @@ h3 {
 p {
   margin: 0;
 }
+ion-input{
+  --padding-end: 10px;
+  --padding-start: 10px;
+}
 
 // Estilo para el popover de impuestos
 ion-popover {
@@ -32,14 +36,14 @@ ion-popover {
   }
 }
 
-::ng-deep {
-  .tax-popover {
-    --width: 320px !important;
-    --max-height: 80vh !important;
+// ::ng-deep {
+//   .tax-popover {
+//     --width: 320px !important;
+//     --max-height: 80vh !important;
     
-    .popover-content {
-      overflow: visible !important;
-      max-height: 80vh !important;
-    }
-  }
-}
+//     .popover-content {
+//       overflow: visible !important;
+//       max-height: 80vh !important;
+//     }
+//   }
+// }
