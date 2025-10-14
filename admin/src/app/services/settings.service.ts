@@ -164,6 +164,12 @@ export class SettingsService {
 
   async updateHeaderImage(file: File, screenType: 'large' | 'small', onProgress?: (progress: number) => void): Promise<{ url: string; path: string }> {
     try {
+      console.log('[SettingsService] updateHeaderImage inicio', { screenType, name: file.name, size: file.size, type: file.type });
+
+      if (file.size === 0) {
+        throw new Error('El archivo recibido para subir está vacío (0 bytes).');
+      }
+
       const user = this.authService.user$;
       const userId = (await firstValueFrom(user))?.uid;
       if (!userId) throw new Error('User not authenticated');
@@ -175,9 +181,12 @@ export class SettingsService {
       return new Promise<{ path: string, url: string }>((resolve, reject) => {
         const uploadTask = this.runInContext(() => uploadBytesResumable(storageRef, file));
 
+        console.log('[SettingsService] Upload creado', { tempPath });
+
         uploadTask.on('state_changed',
           (snapshot) => {
             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log('[SettingsService] Progreso upload', { screenType, progress, bytesTransferred: snapshot.bytesTransferred, totalBytes: snapshot.totalBytes });
             if (onProgress) {
               onProgress(progress);
             }
@@ -188,9 +197,12 @@ export class SettingsService {
           },
           async () => {
             try {
+              console.log('[SettingsService] Upload completado, obteniendo URL');
               const downloadUrl = await this.runInContext(() => getDownloadURL(uploadTask.snapshot.ref));
+              console.log('[SettingsService] URL obtenida', { downloadUrl });
               resolve({ path: tempPath, url: downloadUrl });
             } catch (error) {
+              console.error('[SettingsService] Error obteniendo URL de descarga', error);
               reject(error);
             }
           }
