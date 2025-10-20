@@ -58,7 +58,10 @@ export class CategoriesService {
       slug: this.slugify(category.name!),
       path,
       createdAt: now,
-      updatedAt: now
+      updatedAt: now,
+      counters:{
+        products: 0,
+      }
     });
     // Actualizar el path con el id propio
     await updateDoc(docRef, { path: [...path, docRef.id] });

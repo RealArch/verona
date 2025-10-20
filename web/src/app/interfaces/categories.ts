@@ -7,11 +7,11 @@ export interface Category {
     image: CategoryPhoto | null;
     name: string;
     order: number;
-    parentId: string;
+    parentId: string; // 'root' or category id
     path: string[];
     processing: boolean;
     slug: string;
-    updatedAt: Timestamp | null
+    updatedAt: Timestamp | null | string;
 }
 
 export interface CategoryPhoto {

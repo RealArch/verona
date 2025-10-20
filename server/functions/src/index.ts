@@ -15,11 +15,13 @@ import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 //IMPORT RUTAS
 import adminRouter from "./routes/admin.router";
-import categoriesRouter, { onCategoryCreated, onCategoryDeleted, onCategoryUpdated } from "./routes/categories.router";
-import productsRouter, { onProductCreated, onProductDeleted, onProductUpdated } from "./routes/products.router";
+import categoriesRouter from "./routes/categories.router";
+import productsRouter from "./routes/products.router";
 import authRouter from "./routes/auth.router";
 import ordersRouter from "./routes/orders.router";
 //IMPORT TRIGGERS
+import { onCategoryCreated, onCategoryDeleted, onCategoryUpdated } from "./triggers/categories.triggers";
+import { onProductCreated, onProductDeleted, onProductUpdated } from "./triggers/products.triggers";
 import { onOrderCreated, onOrderUpdated, onOrderDeleted } from "./triggers/orders.triggers";
 import { onUserCreated, onUserDeleted } from "./triggers/users.triggers";
 //importamos la app de firebase

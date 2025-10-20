@@ -7,15 +7,18 @@ export interface CategoryImage {
 }
 
 export interface Category {
-  id?: string;
-  name: string;
-  slug: string; // Para URLs amigables
-  description?: string; // Descripción para SEO y para el usuario
-  image?: CategoryImage; // Objeto completo de la imagen de la categoría
-  parentId: string; // "root" para categorías principales, o ID de la categoría padre
-  path: string[];
-  order: number;
-  createdAt: Date;
-  updatedAt: Date;
-  children?: Category[]; // Para anidar las subcategorías
+    objectID?: string;
+    id?: string;
+    createdAt?: string;
+    image: CategoryImage | null;
+    name: string;
+    order: number;
+    parentId: string; // 'root' or category id
+    counters:{
+      products: number;
+    }
+    path: string[];
+    processing: boolean;
+    slug: string;
+    updatedAt: Date;
 }

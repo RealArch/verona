@@ -8,9 +8,9 @@
         <!-- Loading State -->
         @if (loading()) {
         <div class="relative px-4">
-            <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2 md:gap-4" style="padding: 1rem 0;">
-                @for (item of [1,2,3,4,5,6,7,8,9,10]; track item) {
-                <div class="pb-5">
+            <div class="flex gap-2 md:gap-4 overflow-hidden" style="padding: 1rem 0;">
+                @for (item of [1,2,3,4,5,6]; track item) {
+                <div class="flex-shrink-0 pb-5" style="width: 120px;">
                     <div class="grid place-items-center aspect-square">
                         <div class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg bg-base-300 animate-pulse">
                             <div class="absolute inset-0 rounded-full bg-primary/20 pointer-events-none"></div>
@@ -20,10 +20,8 @@
                 }
             </div>
         </div>
-        }
-        
-        <!-- Categories Content -->
-        @if (mainCategories.length > 0) {
+        } @else if (mainCategories.length > 0) {
+              <!-- Categories Content -->
         <div class="relative px-4">
             <!-- Swiper Container - Only render in browser -->
             @if (swiperVisible()) {
@@ -118,10 +116,7 @@
             </button>
             }
         </div>
-        }
-        
-        <!-- Empty State -->
-        @if (mainCategories.length === 0 && !loading()) {
+        } @else if (mainCategories.length === 0) {
         <!-- Empty state -->
         <div class="flex flex-col items-center justify-center py-8 px-4">
 

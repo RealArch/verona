@@ -1,9 +1,9 @@
 export interface CategoryImage {
-    name?: string;
-    path: string;
-    processing: boolean;
-    type: string;
-    url: string;
+  name?: string;
+  path: string;
+  processing: boolean;
+  type: string;
+  url: string;
 }
 
 export interface Category {
@@ -13,6 +13,9 @@ export interface Category {
   description?: string; // Descripción para SEO y para el usuario
   image?: CategoryImage; // Objeto completo de la imagen de la categoría
   parentId: string; // "root" para categorías principales, o ID de la categoría padre
+  counters: {
+    products: number;
+  }
   path: string[];
   order: number;
   createdAt: Date;
