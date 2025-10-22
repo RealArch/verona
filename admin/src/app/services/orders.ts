@@ -1,19 +1,37 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
+import { Firestore, doc, updateDoc, serverTimestamp } from '@angular/fire/firestore';
 import { algoliasearch } from 'algoliasearch';
 import { environment } from 'src/environments/environment';
-import { Order, OrderSearchFilters, OrderSearchResult } from '../interfaces/order';
+import { Order, OrderSearchFilters, OrderSearchResult, OrderStatus } from '../interfaces/order';
 
 @Injectable({
   providedIn: 'root'
 })
 export class Orders {
   private algoliaClient: any;
+  private firestore: Firestore = inject(Firestore);
+  private injector: Injector = inject(Injector);
 
   constructor() {
     this.algoliaClient = algoliasearch(
       environment.algolia.appId,
       environment.algolia.apiKey
     );
+  }
+
+  async updateOrderStatus(orderId: string, status: OrderStatus): Promise<void> {
+    return runInInjectionContext(this.injector, async () => {
+      try {
+        const orderDoc = doc(this.firestore, `orders/${orderId}`);
+        await updateDoc(orderDoc, {
+          status,
+          updatedAt: serverTimestamp()
+        });
+      } catch (error) {
+        console.error('Error updating order status:', error);
+        throw error;
+      }
+    });
   }
 
   /**

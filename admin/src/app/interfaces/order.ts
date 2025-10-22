@@ -71,6 +71,7 @@ export type OrderStatus =
   | 'ready'        // Lista para entrega/envío
   | 'shipped'      // Enviada
   | 'delivered'    // Entregada
+  | 'completed'    // Completada
   | 'cancelled'    // Cancelada
   | 'refunded';    // Reembolsada
 

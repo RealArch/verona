@@ -1,5 +1,5 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -13,8 +13,11 @@ import { Auth } from '../../../services/auth/auth.services';
 })
 export class Login implements OnInit {
   private authService = inject(Auth);
+  private readonly route = inject(ActivatedRoute);
   private readonly titleService = inject(Title);
   private readonly metaService = inject(Meta);
+  
+  returnUrl: string = '/';
 
   // Signals para el formulario
   email = signal('');
@@ -24,6 +27,11 @@ export class Login implements OnInit {
 
   ngOnInit(): void {
     this.setupSEO();
+    
+    // Capturar la URL de retorno de los query params
+    this.route.queryParams.subscribe(params => {
+      this.returnUrl = params['returnUrl'] || '/';
+    });
   }
 
   private setupSEO(): void {
@@ -45,7 +53,8 @@ export class Login implements OnInit {
     this.errorMessage.set(null);
 
     try {
-      await this.authService.login(this.email(), this.password());
+      // Pasar returnUrl solo si existe en los query params, si no el servicio usará la URL anterior
+      await this.authService.login(this.email(), this.password(), this.returnUrl !== '/' ? this.returnUrl : undefined);
       // La redirección se maneja automáticamente en el servicio
     } catch (error: any) {
       this.handleLoginError(error);

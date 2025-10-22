@@ -1,1 +1,246 @@
-<p class="text-center mt-40">Sección en construcción</p>
+<div class="container mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-light mb-2">Mi Lista de Deseos</h1>
+    <p class="text-base-content/70">Productos que has guardado para más tarde</p>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="flex flex-col items-center justify-center py-16">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+      <p class="text-base-content/70 mt-4">Cargando lista de deseos...</p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @else if (wishlistItems().length === 0) {
+    <div class="text-center py-16">
+      <div class="bg-base-200/50 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
+        <svg class="w-12 h-12 text-base-content/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+          </path>
+        </svg>
+      </div>
+      <h2 class="text-2xl font-light text-base-content mb-4">Tu lista de deseos está vacía</h2>
+      <p class="text-base-content/60 mb-8">Guarda tus productos favoritos para encontrarlos fácilmente más tarde</p>
+      <button class="btn btn-primary btn-lg" onclick="window.location.href='/'">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        Explorar Productos
+      </button>
+    </div>
+  }
+
+  <!-- Wishlist Content -->
+  @else {
+    <!-- Stats Bar -->
+    <div class="bg-base-200 rounded-2xl p-4 mb-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-6">
+          <div>
+            <p class="text-sm text-base-content/70">Total de productos</p>
+            <p class="text-2xl font-semibold text-primary">{{ totalItems() }}</p>
+          </div>
+          <div class="hidden sm:block w-px h-12 bg-base-300"></div>
+          <div class="hidden sm:block">
+            <p class="text-sm text-base-content/70">Valor estimado</p>
+            <p class="text-2xl font-semibold text-primary">{{ totalValue() | currency }}</p>
+          </div>
+        </div>
+        
+        <button 
+          class="btn btn-outline btn-sm text-error border-error hover:bg-error hover:border-error hover:text-white"
+          (click)="openClearConfirmModal()">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+            </path>
+          </svg>
+          Vaciar Lista
+        </button>
+      </div>
+    </div>
+
+    <!-- Wishlist Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      @for (item of wishlistItems(); track item.productId + (item.variantId || '')) {
+        <div class="card bg-base-200 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
+          <!-- Product Image -->
+          <figure class="relative aspect-square overflow-hidden cursor-pointer" (click)="navigateToProduct(item)">
+            <img 
+              [src]="item.productImage || '/img/no-image.svg'" 
+              [alt]="item.productName"
+              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              (error)="$event.target.src='/img/no-image.svg'"
+            />
+            
+            <!-- Overlay on hover -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <!-- Quick Actions Overlay -->
+            <div class="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <!-- <button 
+                class="btn btn-circle btn-primary btn-sm shadow-lg"
+                [disabled]="movingToCart() === item.productId"
+                (click)="moveToCart(item); $event.stopPropagation()"
+                title="Agregar al carrito">
+                @if (movingToCart() === item.productId) {
+                  <span class="loading loading-spinner loading-xs"></span>
+                } @else {
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9m-9 0h9"></path>
+                  </svg>
+                }
+              </button> -->
+              
+              <button 
+                class="btn btn-circle btn-error btn-sm shadow-lg"
+                [disabled]="removingItem() === item.productId"
+                (click)="removeItem(item); $event.stopPropagation()"
+                title="Eliminar de la lista">
+                @if (removingItem() === item.productId) {
+                  <span class="loading loading-spinner loading-xs"></span>
+                } @else {
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                    </path>
+                  </svg>
+                }
+              </button>
+            </div>
+            
+            <!-- Date Badge -->
+            <!-- <div class="absolute top-2 right-2 badge badge-sm bg-base-100/80 backdrop-blur-sm border-none">
+              {{ item.addedAt | date:'dd/MM' }}
+            </div> -->
+          </figure>
+
+          <!-- Card Body -->
+          <div class="card-body p-4">
+            <!-- Product Name -->
+            <h3 class="card-title text-base font-semibold line-clamp-2 min-h-[3rem] cursor-pointer hover:text-primary transition-colors" 
+                (click)="navigateToProduct(item)">
+              {{ item.productName }}
+            </h3>
+
+            <!-- Variant Info -->
+            @if (item.variantName) {
+              <div class="flex items-center gap-2 text-sm text-base-content/70">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                </svg>
+                <span class="line-clamp-1">{{ item.variantName }}</span>
+              </div>
+            }
+
+            <!-- Price -->
+            <div class="mt-2">
+              <p class="text-2xl font-bold text-primary">
+                {{ (item.variantPrice || item.productPrice) | currency }}
+              </p>
+            </div>
+
+            <!-- Actions -->
+            <!-- <div class="card-actions mt-4 gap-2">
+              <button 
+                class="btn btn-primary btn-sm flex-1"
+                [disabled]="movingToCart() === item.productId"
+                (click)="moveToCart(item)">
+                @if (movingToCart() === item.productId) {
+                  <span class="loading loading-spinner loading-xs"></span>
+                  Agregando...
+                } 
+                @else {
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9m-9 0h9"></path>
+                  </svg>
+                  Al Carrito
+                }
+              </button>
+              
+              <button 
+                class="btn btn-ghost btn-sm btn-square"
+                [disabled]="removingItem() === item.productId"
+                (click)="removeItem(item)"
+                title="Eliminar">
+                @if (removingItem() === item.productId) {
+                  <span class="loading loading-spinner loading-xs"></span>
+                } @else {
+                  <svg class="w-5 h-5 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                    </path>
+                  </svg>
+                }
+              </button>
+            </div> -->
+          
+        </div>
+        </div>
+      }
+    </div>
+
+    <!-- Continue Shopping -->
+    <div class="mt-12 text-center">
+      <button class="btn btn-outline btn-lg" onclick="window.location.href='/'">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        Continuar Comprando
+      </button>
+    </div>
+  }
+</div>
+
+<!-- Modal de Confirmación para Vaciar Lista -->
+@if (showClearConfirmModal()) {
+  <div class="modal modal-open" (click)="closeClearConfirmModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <!-- Icon -->
+      <div class="flex justify-center mb-4">
+        <div class="bg-error/10 rounded-full p-4">
+          <svg class="w-12 h-12 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+            </path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Title & Message -->
+      <h3 class="font-bold text-xl text-center mb-2">¿Vaciar lista de deseos?</h3>
+      <p class="text-center text-base-content/70 mb-6">
+        Se eliminarán todos los productos de tu lista de deseos. Esta acción no se puede deshacer.
+      </p>
+
+      <!-- Stats -->
+      <div class="bg-base-200 rounded-lg p-4 mb-6">
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-base-content/70">Productos a eliminar:</span>
+          <span class="font-semibold text-lg text-error">{{ totalItems() }}</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="modal-action">
+        <button class="btn btn-ghost" (click)="closeClearConfirmModal()">
+          Cancelar
+        </button>
+        <button class="btn btn-error" (click)="confirmClearWishlist()">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+            </path>
+          </svg>
+          Sí, Vaciar Lista
+        </button>
+      </div>
+    </div>
+  </div>
+}

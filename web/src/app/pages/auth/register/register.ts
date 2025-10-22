@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -14,8 +14,11 @@ import { Auth } from '../../../services/auth/auth.services';
 export class Register implements OnInit {
   private authService = inject(Auth);
   private router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly titleService = inject(Title);
   private readonly metaService = inject(Meta);
+  
+  returnUrl: string = '/';
 
   // Signals para el formulario
   firstName = signal('');
@@ -59,6 +62,11 @@ export class Register implements OnInit {
 
   ngOnInit(): void {
     this.setupSEO();
+    
+    // Capturar la URL de retorno de los query params
+    this.route.queryParams.subscribe(params => {
+      this.returnUrl = params['returnUrl'] || '/';
+    });
   }
 
   private setupSEO(): void {
@@ -86,7 +94,14 @@ export class Register implements OnInit {
     this.successMessage.set(null);
 
     try {
-      const credential = await this.authService.register(this.email(), this.password(), this.firstName(), this.lastName());
+      // Pasar returnUrl solo si existe en los query params, si no el servicio usará la URL anterior
+      const credential = await this.authService.register(
+        this.email(), 
+        this.password(), 
+        this.firstName(), 
+        this.lastName(), 
+        this.returnUrl !== '/' ? this.returnUrl : undefined
+      );
       
       // Opcional: Actualizar el perfil del usuario con nombre y apellido
       // await updateProfile(credential.user, {
@@ -95,10 +110,9 @@ export class Register implements OnInit {
 
       this.successMessage.set('¡Cuenta creada exitosamente! Redirigiendo...');
       
-      // Redirigir después de un breve delay
-      setTimeout(() => {
-        this.router.navigate(['/']);
-      }, 1500);
+      // No necesitamos redirigir manualmente aquí porque el servicio ya lo hace
+      // Pero si queremos mostrar el mensaje de éxito brevemente:
+      // El servicio redirige automáticamente después del login
 
     } catch (error: any) {
       this.handleRegisterError(error);

@@ -1,6 +1,7 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, CUSTOM_ELEMENTS_SCHEMA, PLATFORM_ID, ElementRef, AfterViewInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
+import { isPlatformBrowser } from '@angular/common';
 import { ProductsService } from '../../../services/products/products.service';
 import { Product as ProductInterface, ProductVariant } from '../../../interfaces/products';
 import { Subject } from 'rxjs';
@@ -9,22 +10,30 @@ import { CurrencyPipe } from '@angular/common';
 import { CategoriesService } from '../../../services/categories/categories.service';
 import { ProductItemComponent } from '../../../components/product-item/product-item.component';
 import { ShoppingCartService } from '../../../services/shopping-cart/shopping-cart';
+import { Wishlist } from '../../../services/wishlist';
+import { register } from 'swiper/element/bundle';
+
+register();
 
 @Component({
   selector: 'app-product',
   imports: [CurrencyPipe, ProductItemComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './product.html',
   styleUrl: './product.scss'
 })
-export class ProductComponent implements OnInit, OnDestroy {
+export class ProductComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private readonly destroy$ = new Subject<void>();
   private readonly route = inject(ActivatedRoute);
   private readonly productsService = inject(ProductsService);
   private readonly categoriesService = inject(CategoriesService);
   private readonly cartService = inject(ShoppingCartService);
+  private readonly wishlistService = inject(Wishlist);
   private readonly titleService = inject(Title);
   private readonly metaService = inject(Meta);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly elementRef = inject(ElementRef);
   
   // Signals para el estado del componente
   currentProduct = signal<ProductInterface | null>(null);
@@ -36,6 +45,11 @@ export class ProductComponent implements OnInit, OnDestroy {
   activeTab = signal<string>('description');
   currentImageIndex = signal<number>(0);
   addingToCart = signal<boolean>(false);
+  addingToWishlist = signal<boolean>(false);
+  swiperVisible = signal(false);
+  
+  private mainSwiperElement?: any;
+  private thumbsSwiperElement?: any;
 
   // Computed signals para valores derivados
   mainImage = computed(() => {
@@ -86,6 +100,19 @@ export class ProductComponent implements OnInit, OnDestroy {
     return 'Agregar al Carrito';
   });
 
+  // Computed para verificar si está en wishlist
+  isInWishlist = computed(() => {
+    const product = this.currentProduct();
+    const variant = this.selectedVariant();
+    
+    if (!product) return false;
+    
+    const productId = product.id || product.objectID || '';
+    const variantId = variant?.id;
+    
+    return this.wishlistService.isInWishlist(productId, variantId);
+  });
+
   ngOnInit(): void {
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
       const productId = params['id'];
@@ -93,11 +120,103 @@ export class ProductComponent implements OnInit, OnDestroy {
         this.loadProduct(productId);
       }
     });
+    
+    if (isPlatformBrowser(this.platformId)) {
+      requestAnimationFrame(() => {
+        this.swiperVisible.set(true);
+      });
+    }
+  }
+
+  ngAfterViewInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.setupSwipers();
+    }
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private setupSwipers(): void {
+    // Intentar múltiples veces si no está listo
+    const attemptSetup = (attempts = 0) => {
+      if (attempts > 10) {
+        console.warn('No se pudieron configurar los swipers después de múltiples intentos');
+        return;
+      }
+
+      const mainSwiper = this.elementRef.nativeElement.querySelector('#main-swiper');
+      const thumbsSwiper = this.elementRef.nativeElement.querySelector('#thumbs-swiper');
+      const prevButton = this.elementRef.nativeElement.querySelector('.swiper-thumb-prev');
+      const nextButton = this.elementRef.nativeElement.querySelector('.swiper-thumb-next');
+      
+      // Si no están listos, intentar de nuevo
+      if (!mainSwiper?.swiper || !thumbsSwiper?.swiper) {
+        setTimeout(() => attemptSetup(attempts + 1), 100);
+        return;
+      }
+
+      if (mainSwiper && thumbsSwiper) {
+        this.mainSwiperElement = mainSwiper;
+        this.thumbsSwiperElement = thumbsSwiper;
+        
+        // Link thumbs to main swiper
+        if (mainSwiper.swiper && thumbsSwiper.swiper) {
+          mainSwiper.swiper.params.thumbs = { swiper: thumbsSwiper.swiper };
+          mainSwiper.swiper.thumbs.init();
+          mainSwiper.swiper.thumbs.update();
+          
+          // Update current image index when main swiper changes
+          mainSwiper.addEventListener('slidechange', () => {
+            if (mainSwiper.swiper) {
+              this.currentImageIndex.set(mainSwiper.swiper.activeIndex);
+            }
+          });
+          
+          // Also listen to slideChangeTransitionEnd for more reliable updates
+          mainSwiper.addEventListener('slidechangetransitionend', () => {
+            if (mainSwiper.swiper) {
+              this.currentImageIndex.set(mainSwiper.swiper.activeIndex);
+            }
+          });
+        }
+
+        // Setup custom navigation for thumbs
+        if (prevButton && nextButton && thumbsSwiper.swiper) {
+          const updateButtonStates = () => {
+            if (thumbsSwiper.swiper) {
+              prevButton.disabled = thumbsSwiper.swiper.isBeginning;
+              nextButton.disabled = thumbsSwiper.swiper.isEnd;
+            }
+          };
+
+          prevButton.addEventListener('click', () => {
+            thumbsSwiper.swiper?.slidePrev();
+            setTimeout(updateButtonStates, 50);
+          });
+
+          nextButton.addEventListener('click', () => {
+            thumbsSwiper.swiper?.slideNext();
+            setTimeout(updateButtonStates, 50);
+          });
+
+          // Update button states on slide change
+          thumbsSwiper.addEventListener('slidechange', updateButtonStates);
+          
+          // Update on progress change for smooth updates
+          thumbsSwiper.addEventListener('progress', updateButtonStates);
+
+          // Initial state
+          updateButtonStates();
+        }
+        
+        console.log('Swipers configurados correctamente');
+      }
+    };
+
+    setTimeout(() => attemptSetup(), 100);
   }
 
   /**
@@ -120,6 +239,7 @@ export class ProductComponent implements OnInit, OnDestroy {
       productObservable.pipe(take(1)).subscribe({
         next: (product) => {
           this.currentProduct.set(product);
+          this.currentImageIndex.set(0); // Reset al primer slide
           this.loading.set(false);
           console.log('Producto cargado:', product);
 
@@ -135,6 +255,13 @@ export class ProductComponent implements OnInit, OnDestroy {
           // Select first variant by default
           if (product?.variants && product.variants.length > 0) {
             this.selectedVariant.set(product.variants[0]);
+          }
+          
+          // Reconfigurar swipers después de que el DOM se actualice
+          if (isPlatformBrowser(this.platformId)) {
+            setTimeout(() => {
+              this.setupSwipers();
+            }, 200);
           }
         },
         error: (err) => {
@@ -233,6 +360,29 @@ export class ProductComponent implements OnInit, OnDestroy {
     this.currentImageIndex.set(index);
   }
 
+  goToSlide(index: number): void {
+    // Intentar con el elemento guardado primero
+    if (this.mainSwiperElement?.swiper) {
+      this.mainSwiperElement.swiper.slideTo(index);
+      this.currentImageIndex.set(index);
+      return;
+    }
+    
+    // Si no está disponible, buscar de nuevo en el DOM
+    const mainSwiper = this.elementRef.nativeElement.querySelector('#main-swiper');
+    if (mainSwiper?.swiper) {
+      this.mainSwiperElement = mainSwiper;
+      mainSwiper.swiper.slideTo(index);
+      this.currentImageIndex.set(index);
+    } else {
+      console.warn('Main swiper no disponible, reintentando configuración...');
+      // Intentar reconfigurar los swipers
+      this.setupSwipers();
+      // Y actualizar el índice de todas formas
+      this.currentImageIndex.set(index);
+    }
+  }
+
   increaseQuantity(): void {
     const selectedVariant = this.selectedVariant();
     const currentProduct = this.currentProduct();
@@ -292,9 +442,56 @@ export class ProductComponent implements OnInit, OnDestroy {
     }
   }
 
-  addToWishlist(): void {
-    console.log('Agregando a favoritos:', this.currentProduct());
-    // Aquí iría la lógica para agregar a favoritos
+  async addToWishlist(): Promise<void> {
+    const product = this.currentProduct();
+    const variant = this.selectedVariant();
+
+    if (!product || this.addingToWishlist()) {
+      return;
+    }
+
+    try {
+      this.addingToWishlist.set(true);
+      
+      // Agregar al wishlist con o sin variante según esté seleccionada
+      const result = await this.wishlistService.addToWishlist(product, variant ?? undefined);
+      
+      console.log(result.message);
+      
+      // Mostrar notificación al usuario
+      this.showNotification(result.message, result.success ? 'success' : 'error');
+      
+    } catch (error) {
+      console.error('Error agregando al wishlist:', error);
+      this.showNotification('Error al agregar a la lista de deseos', 'error');
+    } finally {
+      this.addingToWishlist.set(false);
+    }
+  }
+
+  /**
+   * Muestra una notificación al usuario
+   */
+  private showNotification(message: string, type: 'success' | 'error' | 'info'): void {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} fixed bottom-4 right-4 max-w-md shadow-lg z-50 animate-fade-in`;
+    
+    const icon = type === 'success' 
+      ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />'
+      : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />';
+    
+    toast.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        ${icon}
+      </svg>
+      <span>${message}</span>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
   }
 
   switchTab(tab: string): void {

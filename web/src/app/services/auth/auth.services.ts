@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, filter } from 'rxjs';
 import {
   Auth as FirebaseAuth,
   User,
@@ -44,6 +44,9 @@ export class Auth {
 
   // Signal para controlar si Firebase Auth ya se inicializó
   private authInitialized = signal(false);
+  
+  // Almacena la URL anterior para redirección después del login
+  private previousUrl: string | null = null;
 
   // Signal computado para saber si está autenticado
   public isAuthenticated = computed(() => {
@@ -74,6 +77,25 @@ export class Auth {
   constructor() {
     // Inicializar el listener de cambios de autenticación
     this.initAuthListener();
+    
+    // Trackear la navegación para capturar la URL anterior
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: NavigationEnd) => {
+      const currentUrl = event.urlAfterRedirects;
+      
+      // Si el usuario navega a una página de auth, guardar la URL anterior
+      // (a menos que la URL anterior también sea de auth)
+      if (currentUrl.includes('/auth/')) {
+        // Solo guardar si previousUrl no es null y no es de auth
+        if (this.previousUrl && !this.previousUrl.includes('/auth/')) {
+          // Ya está guardada, no hacer nada
+        }
+      } else {
+        // Si no es una página de auth, actualizar previousUrl
+        this.previousUrl = currentUrl;
+      }
+    });
   }
 
   /**
@@ -180,7 +202,7 @@ export class Auth {
   /**
    * Inicia sesión with email y contraseña
    */
-  async login(email: string, password: string): Promise<UserCredential> {
+  async login(email: string, password: string, returnUrl?: string): Promise<UserCredential> {
     try {
       const credential = await signInWithEmailAndPassword(this.firebaseAuth, email, password);
 
@@ -195,7 +217,7 @@ export class Auth {
       }
 
       // Manejar redirección después del login
-      this.handlePostLoginRedirect();
+      this.handlePostLoginRedirect(returnUrl);
 
       return credential;
     } catch (error) {
@@ -207,7 +229,7 @@ export class Auth {
   /**
    * Registra un nuevo usuario a través de la API del servidor
    */
-  async register(email: string, password: string, firstName: string, lastName: string): Promise<UserCredential> {
+  async register(email: string, password: string, firstName: string, lastName: string, returnUrl?: string): Promise<UserCredential> {
     try {
       // Datos para enviar al servidor
       const userData = {
@@ -234,7 +256,7 @@ export class Auth {
       const credential = await signInWithEmailAndPassword(this.firebaseAuth, email, password);
 
       // Manejar redirección después del login
-      this.handlePostLoginRedirect();
+      this.handlePostLoginRedirect(returnUrl);
       
       return credential;
     } catch (error: any) {
@@ -378,15 +400,43 @@ export class Auth {
   }
 
   /**
+   * Establece manualmente la URL de retorno para la redirección post-login
+   */
+  public setReturnUrl(url: string): void {
+    this.previousUrl = url;
+  }
+
+  /**
    * Maneja la redirección después del login
    */
-  private handlePostLoginRedirect(): void {
-    // Obtener la URL de retorno de los query params
-    const urlParams = new URLSearchParams(window.location.search);
-    const returnUrl = urlParams.get('returnUrl') || '/';
+  private handlePostLoginRedirect(returnUrl?: string): void {
+    // Prioridad de redirección:
+    // 1. returnUrl proporcionado explícitamente
+    // 2. returnUrl de query params
+    // 3. URL anterior capturada automáticamente
+    // 4. Home por defecto
+    
+    let redirectUrl = returnUrl;
+    
+    if (!redirectUrl) {
+      const urlParams = new URLSearchParams(window.location.search);
+      redirectUrl = urlParams.get('returnUrl') || undefined;
+    }
+    
+    if (!redirectUrl && this.previousUrl) {
+      redirectUrl = this.previousUrl;
+      console.log('Usando URL anterior capturada:', redirectUrl);
+    }
+    
+    if (!redirectUrl) {
+      redirectUrl = '/';
+    }
 
-    // Redirigir a la página original o al home
-    this.router.navigateByUrl(returnUrl);
+    // Limpiar la URL anterior después de usarla
+    this.previousUrl = null;
+    
+    // Redirigir a la página correspondiente
+    this.router.navigateByUrl(redirectUrl);
   }
 
   // /**

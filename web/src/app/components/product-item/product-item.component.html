@@ -43,26 +43,47 @@
             <div class="mt-auto pt-4 flex gap-2 items-center">
                 @if(product.variants.length === 0) {
                 <button
-                    class="w-9 h-9 bg-primary/20 backdrop-blur-sm text-primary border border-primary/30 rounded-full flex items-center justify-center hover:bg-primary/30 transition-all duration-300 hover:scale-110 active:scale-95"
-                    (click)="addToCart(1); $event.stopPropagation()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 icon icon-tabler icons-tabler-outline icon-tabler-shopping-cart-plus">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M4 19a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-                        <path d="M12.5 17h-6.5v-14h-2" />
-                        <path d="M6 5l14 1l-.86 6.017m-2.64 .983h-10.5" />
-                        <path d="M16 19h6" />
-                        <path d="M19 16v6" />
-                    </svg>
+                    class="w-9 h-9 bg-primary/20 backdrop-blur-sm text-primary border border-primary/30 rounded-full flex items-center justify-center hover:bg-primary/30 transition-all duration-300 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    [disabled]="isAddingToCart()"
+                    (click)="addToCart($event)">
+                    @if (isAddingToCart()) {
+                        <span class="loading loading-spinner loading-xs"></span>
+                    } @else {
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 icon icon-tabler icons-tabler-outline icon-tabler-shopping-cart-plus">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M4 19a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                            <path d="M12.5 17h-6.5v-14h-2" />
+                            <path d="M6 5l14 1l-.86 6.017m-2.64 .983h-10.5" />
+                            <path d="M16 19h6" />
+                            <path d="M19 16v6" />
+                        </svg>
+                    }
                 </button>
                 }
                 <button
-                    class="ml-auto w-9 h-9 bg-red-100/80 backdrop-blur-md rounded-full border border-red-200 flex items-center justify-center hover:bg-red-200 transition-all duration-300 group-hover:scale-110 active:scale-95"
-                    (click)="toggleFavorite(1); $event.stopPropagation()">
-                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
-                        </path>
-                    </svg>
+                    class="ml-auto w-9 h-9 rounded-full border flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    [class.bg-red-500]="isInWishlist()"
+                    [class.border-red-500]="isInWishlist()"
+                    [class.bg-red-100/80]="!isInWishlist()"
+                    [class.border-red-200]="!isInWishlist()"
+                    [class.hover:bg-red-600]="isInWishlist()"
+                    [class.hover:bg-red-200]="!isInWishlist()"
+                    [disabled]="isAddingToWishlist()"
+                    (click)="toggleFavorite($event)">
+                    @if (isAddingToWishlist()) {
+                        <span class="loading loading-spinner loading-xs text-red-500"></span>
+                    } @else {
+                        <svg class="w-5 h-5 transition-all" 
+                             [class.text-white]="isInWishlist()"
+                             [class.text-red-500]="!isInWishlist()"
+                             [attr.fill]="isInWishlist() ? 'currentColor' : 'none'" 
+                             stroke="currentColor" 
+                             viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+                            </path>
+                        </svg>
+                    }
                 </button>
             </div>
         </div>

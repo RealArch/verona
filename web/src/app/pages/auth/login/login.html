@@ -123,6 +123,7 @@
                 <p class="text-base-content/60 text-sm">
                     ¿No tienes una cuenta?
                     <a routerLink="/auth/register"
+                        [queryParams]="{ returnUrl: returnUrl }"
                         class="text-primary hover:text-primary-focus font-medium transition-colors ml-1">
                         Regístrate aquí
                     </a>

@@ -24,6 +24,7 @@ import { onCategoryCreated, onCategoryDeleted, onCategoryUpdated } from "./trigg
 import { onProductCreated, onProductDeleted, onProductUpdated } from "./triggers/products.triggers";
 import { onOrderCreated, onOrderUpdated, onOrderDeleted } from "./triggers/orders.triggers";
 import { onUserCreated, onUserDeleted } from "./triggers/users.triggers";
+import { onWishlistCreated, onWishlistDeleted } from "./triggers/wishlists.triggers";
 //importamos la app de firebase
 import "./firebase-init";
 
@@ -76,6 +77,8 @@ export { onCategoryCreated, onCategoryDeleted, onCategoryUpdated };
 export { onOrderCreated, onOrderUpdated, onOrderDeleted };
 //USERS TRIGGERS
 export { onUserCreated, onUserDeleted };
+//WISHLIST TRIGGERS
+export { onWishlistCreated, onWishlistDeleted };
 
 // import {onRequest} from "firebase-functions/https";
 // import * as logger from "firebase-functions/logger";

@@ -22,7 +22,7 @@ import {
   IonRow, 
   IonCol, 
   IonDatetime,
-  IonPopover, IonGrid } from '@ionic/angular/standalone';
+  IonPopover, IonGrid, IonFooter } from '@ionic/angular/standalone';
 import { Orders } from 'src/app/services/orders';
 import { Order, OrderSearchFilters, OrderStatus } from 'src/app/interfaces/order';
 import { addIcons } from 'ionicons';
@@ -40,13 +40,14 @@ import {
   closeOutline,
   chevronForwardOutline, documentTextOutline, callOutline, locationOutline, chevronDownOutline, refreshOutline } from 'ionicons/icons';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
+import { ToastController } from '@ionic/angular';
 
 @Component({
   selector: 'app-orders',
   templateUrl: './orders.page.html',
   styleUrls: ['./orders.page.scss'],
   standalone: true,
-  imports: [IonGrid, 
+  imports: [IonFooter, IonGrid, 
     IonPopover,
     IonCol, 
     IonRow, 
@@ -75,6 +76,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   private ordersService = inject(Orders);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private toastController = inject(ToastController);
   private destroy$ = new Subject<void>();
 
   @ViewChild(IonModal) modal!: IonModal;
@@ -82,6 +84,7 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   orders: Order[] = [];
   isLoading = false;
+  isUpdatingStatus = false;
   hasMore = true;
   searchQuery = '';
   selectedOrder: Order | null = null;
@@ -96,6 +99,7 @@ export class OrdersPage implements OnInit, OnDestroy {
     { value: 'confirmed', label: 'Confirmado' },
     { value: 'preparing', label: 'Preparando' },
     { value: 'ready', label: 'Listo para recoger' },
+    { value: 'completed', label: 'Completado' },
     { value: 'delivered', label: 'Entregado' },
     { value: 'cancelled', label: 'Cancelado' }
   ];
@@ -339,12 +343,55 @@ export class OrdersPage implements OnInit, OnDestroy {
     }
   }
 
+  async updateSelectedOrderStatus(targetStatus: OrderStatus): Promise<void> {
+    if (!this.selectedOrder || this.isUpdatingStatus) {
+      return;
+    }
+
+    this.isUpdatingStatus = true;
+
+    try {
+      await this.ordersService.updateOrderStatus(this.selectedOrder.id, targetStatus);
+      this.selectedOrder = {
+        ...this.selectedOrder,
+        status: targetStatus
+      };
+      
+      this.orders = this.orders.map(order =>
+        order.id === this.selectedOrder!.id ? { ...order, status: targetStatus } : order
+      );
+
+      const toast = await this.toastController.create({
+        message: `Estado actualizado a ${this.getStatusLabel(targetStatus)}`,
+        duration: 2500,
+        position: 'top',
+        color: 'success'
+      });
+
+      await toast.present();
+      this.closeOrderDetail();
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      const toast = await this.toastController.create({
+        message: 'No se pudo actualizar el estado. Inténtalo nuevamente.',
+        duration: 2500,
+        position: 'top',
+        color: 'danger'
+      });
+
+      await toast.present();
+    } finally {
+      this.isUpdatingStatus = false;
+    }
+  }
+
   getStatusLabel(status: string): string {
     const labels: { [key: string]: string } = {
       'pending': 'Pendiente',
       'confirmed': 'Confirmada',
       'preparing': 'En preparación',
       'ready': 'Lista',
+      'completed': 'Completada',
       'shipped': 'Enviada',
       'delivered': 'Entregada',
       'cancelled': 'Cancelada',
@@ -360,6 +407,7 @@ export class OrdersPage implements OnInit, OnDestroy {
       'preparing': 'secondary',
       'ready': 'tertiary',
       'shipped': 'medium',
+      'completed': 'success',
       'delivered': 'success',
       'cancelled': 'danger',
       'refunded': 'dark'

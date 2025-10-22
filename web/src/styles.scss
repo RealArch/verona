@@ -158,3 +158,19 @@ textarea::placeholder {
   transition: all 0.3s ease-in-out;
 }
 
+/* === Animaciones para Toast/Notifications === */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
