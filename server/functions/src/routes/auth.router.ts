@@ -40,6 +40,18 @@ const createUserSchema = Joi.object({
       'string.min': 'El apellido debe tener al menos 2 caracteres',
       'string.max': 'El apellido no puede exceder 50 caracteres',
       'any.required': 'El apellido es obligatorio'
+    }),
+  phoneNumber: Joi.string()
+    .trim()
+    .pattern(/^[0-9+\-\s()]+$/)
+    .min(8)
+    .max(20)
+    .required()
+    .messages({
+      'string.pattern.base': 'El número de teléfono contiene caracteres inválidos',
+      'string.min': 'El número de teléfono debe tener al menos 8 caracteres',
+      'string.max': 'El número de teléfono no puede exceder 20 caracteres',
+      'any.required': 'El número de teléfono es obligatorio'
     })
 });
 
@@ -59,7 +71,7 @@ authRouter.post('/createUser', async (req: Request, res: Response): Promise<void
       return;
     }
 
-    const { email, password, firstName, lastName } = value;
+    const { email, password, firstName, lastName, phoneNumber } = value;
 
     // Verificar si el usuario ya existe
     try {
@@ -82,7 +94,7 @@ authRouter.post('/createUser', async (req: Request, res: Response): Promise<void
       email,
       password,
       displayName: `${firstName} ${lastName}`,
-      emailVerified: false
+      emailVerified: false,
     });
 
     console.log(`Usuario creado exitosamente: ${userRecord.uid}`);
@@ -94,6 +106,7 @@ authRouter.post('/createUser', async (req: Request, res: Response): Promise<void
       firstName,
       lastName,
       displayName: `${firstName} ${lastName}`,
+      phoneNumber: phoneNumber,
       role: 'user', // rol por defecto
       admin: false,
       isActive: true,

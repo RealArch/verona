@@ -6,9 +6,9 @@ swiper-container {
   transition: opacity 0.3s ease;
 
   // Penetrar el Shadow DOM para permitir overflow visible
-  &::part(container) {
-    overflow: visible !important;
-  }
+  // &::part(container) {
+  //   overflow: visible !important;
+  // }
 
 }
 

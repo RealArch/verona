@@ -83,6 +83,25 @@
                         required>
                 </div>
 
+                <!-- Campo Teléfono -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text text-base-content/80">Teléfono</span>
+                    </label>
+                    <input 
+                        type="tel" 
+                        placeholder="+52 123 456 7890"
+                        [value]="phoneNumber()"
+                        (input)="onPhoneNumberChange($event)"
+                        [class]="'input input-bordered w-full bg-base-200/50 border-base-300 focus:border-primary focus:outline-none transition-colors ' + 
+                                 (phoneNumber() && phoneNumberError() ? 'border-red-500' : '')"
+                        [disabled]="isLoading()"
+                        required>
+                    @if (phoneNumber() && phoneNumberError()) {
+                        <div class="text-xs text-red-500 mt-1">{{ phoneNumberError() }}</div>
+                    }
+                </div>
+
                 <!-- Campo Password -->
                 <div class="form-control">
                     <label class="label">

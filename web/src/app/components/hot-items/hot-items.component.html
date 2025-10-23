@@ -1,4 +1,4 @@
-<section class="pb-10 pt-7 relative overflow-hidden">
+<section class="pb-10 pt-7 relative">
     <!-- Elementos decorativos glass sutiles -->
     <!-- <div class="absolute inset-0 pointer-events-none">
         <div class="absolute top-20 left-10 w-64 h-64 bg-primary/5 backdrop-blur-3xl rounded-full"></div>
@@ -56,12 +56,12 @@
         </div>
         } @else {
         <!-- Swiper -->
-        <div class="relative">
+        <div class="relative hot-items-swiper-frame">
             <!-- Swiper Container - Only render in browser -->
             @if (renderSwiper() && swiperVisible()) {
             <swiper-container 
                 [class.opacity-0]="!swiperVisible()"
-                class="opacity-0 transition-opacity duration-500"
+                class=" opacity-0 transition-opacity duration-500"
                 slides-per-view="2" space-between="12" speed="500" loop="false" grab-cursor="true"
                 navigation="false" breakpoints='{
                     "640": {
@@ -82,7 +82,7 @@
                     }
                 }'>
                 @for (product of products(); track product.id) {
-                <swiper-slide>
+                <swiper-slide class="">
                     <app-product-item [product]="product"></app-product-item>
                 </swiper-slide>
                 }

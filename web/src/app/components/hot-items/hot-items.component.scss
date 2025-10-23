@@ -1,19 +1,29 @@
 // Swiper custom styles
+:host ::ng-deep swiper-container::part(container) {
+  overflow: visible !important;
+}
+
+:host ::ng-deep swiper-container::part(wrapper) {
+  overflow: visible !important;
+}
+
+.hot-items-swiper-frame {
+  padding: 20px;
+  overflow: hidden;
+
+}
+
+@media (min-width: 768px) {
+  .hot-items-swiper-frame {
+    --hot-items-edge-buffer: 1.5rem;
+  }
+}
+
 swiper-container {
   width: 100%;
   height: 100%;
   padding: 0.5rem 0;
-  overflow: visible !important;
   transition: opacity 0.3s ease;
-
-  // Penetrar el Shadow DOM
-  &::part(container) {
-    overflow: visible !important;
-  }
-
-  &::part(wrapper) {
-    overflow: visible !important;
-  }
 }
 
 .opacity-0 {
@@ -26,10 +36,20 @@ swiper-slide {
   align-items: stretch;
   height: auto !important;
   overflow: visible !important;
+  box-sizing: border-box;
+  padding: 0 0.25rem;
 
   > * {
     width: 100%;
   }
+}
+
+.hot-items-swiper-frame .swiper-button-prev-custom {
+  left: calc(var(--hot-items-edge-buffer) - 0.75rem);
+}
+
+.hot-items-swiper-frame .swiper-button-next-custom {
+  right: calc(var(--hot-items-edge-buffer) - 0.75rem);
 }
 
 // Custom navigation buttons

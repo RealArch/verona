@@ -229,7 +229,7 @@ export class Auth {
   /**
    * Registra un nuevo usuario a través de la API del servidor
    */
-  async register(email: string, password: string, firstName: string, lastName: string, returnUrl?: string): Promise<UserCredential> {
+  async register(email: string, password: string, firstName: string, lastName: string, phoneNumber: string, returnUrl?: string): Promise<UserCredential> {
     try {
       // Datos para enviar al servidor
       const userData = {
@@ -237,6 +237,7 @@ export class Auth {
         password,
         firstName,
         lastName,
+        phoneNumber
       };
 
       // Llamar a la API del servidor para crear el usuario

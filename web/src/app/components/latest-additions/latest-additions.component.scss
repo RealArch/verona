@@ -7,13 +7,13 @@ swiper-container {
   transition: opacity 0.3s ease;
 
   // Penetrar el Shadow DOM
-  &::part(container) {
-    overflow: visible !important;
-  }
+  // &::part(container) {
+  //   overflow: visible !important;
+  // }
 
-  &::part(wrapper) {
-    overflow: visible !important;
-  }
+  // &::part(wrapper) {
+  //   overflow: visible !important;
+  // }
 }
 
 .opacity-0 {

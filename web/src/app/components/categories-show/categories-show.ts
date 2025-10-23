@@ -22,9 +22,13 @@ export class CategoriesShow implements OnInit, AfterViewInit {
 
   swiperVisible = signal(false);
   renderSwiper = signal(false);
+  swiperReady = signal(false);
   
   allCategories = this.categoriesService.categories;
   loading = this.categoriesService.categoriesLoading;
+
+  private swiperElement: any = null;
+  private navigationInitialized = false;
 
 
 
@@ -46,7 +50,88 @@ export class CategoriesShow implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId)) {
-      this.setupCustomNavigation();
+      this.setupSwiper();
+    }
+  }
+
+  private setupSwiper(attempt = 0): void {
+    const maxAttempts = 10;
+    const swiperEl = this.elementRef.nativeElement.querySelector('swiper-container') as any;
+
+    if (!swiperEl) {
+      if (attempt < maxAttempts) {
+        setTimeout(() => this.setupSwiper(attempt + 1), 100);
+      }
+      return;
+    }
+
+    // Esperar a que el swiper esté completamente inicializado
+    if (!swiperEl.swiper) {
+      if (attempt < maxAttempts) {
+        setTimeout(() => this.setupSwiper(attempt + 1), 100);
+      }
+      return;
+    }
+
+    this.swiperElement = swiperEl;
+    this.swiperReady.set(true);
+    this.setupCustomNavigation();
+
+    // Escuchar eventos del swiper para actualizar los botones
+    swiperEl.swiper.on('slideChange', () => {
+      this.updateButtonStates();
+    });
+
+    swiperEl.swiper.on('progress', () => {
+      this.updateButtonStates();
+    });
+
+    // Actualizar estados iniciales
+    setTimeout(() => this.updateButtonStates(), 100);
+  }
+
+  private setupCustomNavigation(): void {
+    if (this.navigationInitialized) return;
+
+    const prevButton = this.elementRef.nativeElement.querySelector('.swiper-button-prev-custom');
+    const nextButton = this.elementRef.nativeElement.querySelector('.swiper-button-next-custom');
+
+    if (this.swiperElement && prevButton && nextButton) {
+      prevButton.addEventListener('click', () => {
+        this.swiperElement.swiper?.slidePrev();
+        setTimeout(() => this.updateButtonStates(), 50);
+      });
+      
+      nextButton.addEventListener('click', () => {
+        this.swiperElement.swiper?.slideNext();
+        setTimeout(() => this.updateButtonStates(), 50);
+      });
+
+      this.navigationInitialized = true;
+    }
+  }
+
+  private updateButtonStates(): void {
+    if (!this.swiperElement?.swiper) return;
+
+    const swiper = this.swiperElement.swiper;
+    const prevButton = this.elementRef.nativeElement.querySelector('.swiper-button-prev-custom');
+    const nextButton = this.elementRef.nativeElement.querySelector('.swiper-button-next-custom');
+
+    if (prevButton && nextButton) {
+      // Deshabilitar botón prev si estamos al inicio
+      if (swiper.isBeginning) {
+        prevButton.setAttribute('disabled', 'true');
+      } else {
+        prevButton.removeAttribute('disabled');
+      }
+
+      // Deshabilitar botón next si estamos al final
+      if (swiper.isEnd) {
+        nextButton.setAttribute('disabled', 'true');
+      } else {
+        nextButton.removeAttribute('disabled');
+      }
     }
   }
 
@@ -57,19 +142,6 @@ export class CategoriesShow implements OnInit, AfterViewInit {
     if (width >= 1024) return 8;
     if (width >= 768) return 6;
     return width >= 640 ? 6 : 4;
-  }
-
-  private setupCustomNavigation(): void {
-    setTimeout(() => {
-      const swiperEl = this.elementRef.nativeElement.querySelector('swiper-container') as any;
-      const prevButton = this.elementRef.nativeElement.querySelector('.swiper-button-prev-custom');
-      const nextButton = this.elementRef.nativeElement.querySelector('.swiper-button-next-custom');
-
-      if (swiperEl && prevButton && nextButton) {
-        prevButton.addEventListener('click', () => swiperEl.swiper?.slidePrev());
-        nextButton.addEventListener('click', () => swiperEl.swiper?.slideNext());
-      }
-    }, 100);
   }
 
   goToCategorySearch(categoryId?: string): void {

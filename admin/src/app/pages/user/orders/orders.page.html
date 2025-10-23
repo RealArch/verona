@@ -6,11 +6,11 @@
 
     <ion-row class="w--full">
       <ion-col size="8" class="flex ">
-        <ion-title>Customers</ion-title>
+        <ion-title>Ventas</ion-title>
       </ion-col>
       <ion-col size="4" class="py-0 flex justify-end items-center gap-2">
         <ion-searchbar animated="true" mode="ios" [(ngModel)]="searchQuery" (ionInput)="onSearchChange($event)"
-          placeholder="Buscar ventas..." [debounce]="500" class="searchbar"
+          placeholder="Por nombre o email" [debounce]="500" class="searchbar"
           style="max-width: 320px; padding: 8px 16px;">
         </ion-searchbar>
         <!-- <ion-button fill="clear" size="small" (click)="refreshSearch()" class="refresh-search-btn">
@@ -95,7 +95,7 @@
 </ion-header>
 
 <ion-content>
-  <div class="container mx-auto px-3 py-3 ">
+  <ion-grid fixed class="">
 
 
 
@@ -165,7 +165,7 @@
       </ion-infinite-scroll-content>
     </ion-infinite-scroll>
 
-  </div>
+  </ion-grid>
 </ion-content>
 
 <!-- Order Detail Modal -->

@@ -24,6 +24,7 @@ export class Register implements OnInit {
   firstName = signal('');
   lastName = signal('');
   email = signal('');
+  phoneNumber = signal('');
   password = signal('');
   confirmPassword = signal('');
   acceptTerms = signal(false);
@@ -36,6 +37,40 @@ export class Register implements OnInit {
     const pass = this.password();
     const confirm = this.confirmPassword();
     return pass === confirm && pass.length > 0;
+  });
+
+  phoneNumberIsValid = computed(() => {
+    const phone = this.phoneNumber().trim();
+    if (!phone) return false;
+    
+    // Validar patrón: solo números, +, -, espacios y paréntesis
+    const pattern = /^[0-9+\-\s()]+$/;
+    if (!pattern.test(phone)) return false;
+    
+    // Validar longitud (8-20 caracteres)
+    if (phone.length < 8 || phone.length > 20) return false;
+    
+    return true;
+  });
+
+  phoneNumberError = computed(() => {
+    const phone = this.phoneNumber().trim();
+    if (!phone) return null;
+    
+    const pattern = /^[0-9+\-\s()]+$/;
+    if (!pattern.test(phone)) {
+      return 'El número de teléfono contiene caracteres inválidos';
+    }
+    
+    if (phone.length < 8) {
+      return 'El número de teléfono debe tener al menos 8 caracteres';
+    }
+    
+    if (phone.length > 20) {
+      return 'El número de teléfono no puede exceder 20 caracteres';
+    }
+    
+    return null;
   });
 
   passwordStrength = computed(() => {
@@ -55,6 +90,8 @@ export class Register implements OnInit {
     return this.firstName().trim() !== '' &&
            this.lastName().trim() !== '' &&
            this.email().trim() !== '' &&
+           this.phoneNumber().trim() !== '' &&
+           this.phoneNumberIsValid() &&
            this.password().length >= 6 &&
            this.passwordsMatch() &&
            this.acceptTerms();
@@ -99,7 +136,8 @@ export class Register implements OnInit {
         this.email(), 
         this.password(), 
         this.firstName(), 
-        this.lastName(), 
+        this.lastName(),
+        this.phoneNumber(),
         this.returnUrl !== '/' ? this.returnUrl : undefined
       );
       
@@ -177,6 +215,11 @@ export class Register implements OnInit {
   onEmailChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.email.set(target.value);
+  }
+
+  onPhoneNumberChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.phoneNumber.set(target.value);
   }
 
   onPasswordChange(event: Event): void {
