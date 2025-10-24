@@ -87,20 +87,35 @@ export class HotItemsComponent implements OnInit, OnDestroy {
 
       if (swiperEl && prevButton && nextButton) {
         this.swiperElement = swiperEl;
-        prevButton.addEventListener('click', () => {
+        
+        // Wait for swiper to initialize
+        const initSwiper = () => {
           if (swiperEl.swiper) {
-            swiperEl.swiper.slidePrev();
+            prevButton.addEventListener('click', (e: Event) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!prevButton.disabled) {
+                swiperEl.swiper.slidePrev();
+              }
+            });
+            nextButton.addEventListener('click', (e: Event) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!nextButton.disabled) {
+                swiperEl.swiper.slideNext();
+              }
+            });
+            swiperEl.swiper.on('slideChange', () => this.updateNavigationButtons());
+            this.updateNavigationButtons();
+          } else {
+            // Retry if swiper not ready
+            setTimeout(initSwiper, 100);
           }
-        });
-        nextButton.addEventListener('click', () => {
-          if (swiperEl.swiper) {
-            swiperEl.swiper.slideNext();
-          }
-        });
-        swiperEl.addEventListener('slidechange', () => this.updateNavigationButtons());
-        this.updateNavigationButtons();
+        };
+        
+        initSwiper();
       }
-    }, 0);
+    }, 100);
   }
 
   /**

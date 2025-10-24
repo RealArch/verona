@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed, CUSTOM_ELEMENTS_SCHEMA, PLATFORM_ID, ElementRef, AfterViewInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
-import { isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser, TitleCasePipe } from '@angular/common';
 import { ProductsService } from '../../../services/products/products.service';
 import { Product as ProductInterface, ProductVariant } from '../../../interfaces/products';
 import { Subject } from 'rxjs';
@@ -11,13 +11,14 @@ import { CategoriesService } from '../../../services/categories/categories.servi
 import { ProductItemComponent } from '../../../components/product-item/product-item.component';
 import { ShoppingCartService } from '../../../services/shopping-cart/shopping-cart';
 import { Wishlist } from '../../../services/wishlist';
+import { AnalyticsService } from '../../../services/analytics/analytics.service';
 import { register } from 'swiper/element/bundle';
 
 register();
 
 @Component({
   selector: 'app-product',
-  imports: [CurrencyPipe, ProductItemComponent],
+  imports: [CurrencyPipe, ProductItemComponent, TitleCasePipe, RouterLink],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './product.html',
   styleUrl: './product.scss'
@@ -30,6 +31,7 @@ export class ProductComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly categoriesService = inject(CategoriesService);
   private readonly cartService = inject(ShoppingCartService);
   private readonly wishlistService = inject(Wishlist);
+  private readonly analyticsService = inject(AnalyticsService);
   private readonly titleService = inject(Title);
   private readonly metaService = inject(Meta);
   private readonly platformId = inject(PLATFORM_ID);
@@ -227,6 +229,53 @@ export class ProductComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
+   * Devuelve el path de categorías con ID y nombre desde la raíz hasta la categoría actual
+   */
+  getCategoryPathWithIds(categoryId: string): Array<{ id: string; name: string }> {
+    const categories = this.categoriesService.categories() ?? [];
+    const path: Array<{ id: string; name: string }> = [];
+    let currentId = categoryId;
+    
+    while (currentId) {
+      const category = categories.find((cat) => cat.objectID === currentId);
+      if (!category) break;
+      path.unshift({ id: category.objectID!, name: category.name });
+      currentId = category.parentId;
+      if (!currentId || currentId === 'root') break;
+    }
+    
+    return path;
+  }
+
+  /**
+   * Load related products from Algolia based on category
+   */
+  async loadRelatedProducts(categoryId: string, currentProductId: string): Promise<void> {
+    try {
+      const results = await this.productsService.search(
+        '', // Empty search query
+        undefined, // No min price
+        undefined, // No max price
+        [categoryId], // Filter by same category
+        15, // Get 15 products
+        0 // First page
+      );
+
+      // Filter out the current product and set related products
+      const related = results.hits.filter(p => {
+        const pId = p.id || p.objectID;
+        return pId !== currentProductId;
+      }).slice(0, 15); // Ensure max 15 products
+
+      this.relatedProducts.set(related);
+      console.log('Related products loaded:', related.length);
+    } catch (error) {
+      console.error('Error loading related products:', error);
+      this.relatedProducts.set([]);
+    }
+  }
+
+  /**
    * Load product data from service (one-time fetch)
    */
   async loadProduct(productId: string): Promise<void> {
@@ -246,12 +295,21 @@ export class ProductComponent implements OnInit, OnDestroy, AfterViewInit {
           // Update SEO metadata
           if (product) {
             this.updateMetaTags(product);
+            
+            // Track product view in Analytics
+            this.analyticsService.logProductView(
+              product.objectID || product.id || '',
+              product.name,
+              product.price,
+              this.getCategoryName(product.categoryId)
+            );
           }
 
-          //related products mock example, replace with real logic
-          if (product) {
-            this.relatedProducts.set([...this.relatedProducts(), product]);
+          // Load related products based on category
+          if (product?.categoryId) {
+            this.loadRelatedProducts(product.categoryId, productId);
           }
+          
           // Select first variant by default
           if (product?.variants && product.variants.length > 0) {
             this.selectedVariant.set(product.variants[0]);
@@ -422,6 +480,15 @@ export class ProductComponent implements OnInit, OnDestroy, AfterViewInit {
       
       await this.cartService.addToCart(product, variant ?? undefined, quantity);
       
+      // Track add to cart event in Analytics
+      const price = variant?.price ?? product.price;
+      this.analyticsService.logAddToCart(
+        product.objectID || product.id || '',
+        product.name,
+        price,
+        quantity
+      );
+      
       console.log('Producto agregado al carrito exitosamente:', {
         product: product.name,
         variant: variant?.name,
@@ -455,6 +522,16 @@ export class ProductComponent implements OnInit, OnDestroy, AfterViewInit {
       
       // Agregar al wishlist con o sin variante según esté seleccionada
       const result = await this.wishlistService.addToWishlist(product, variant ?? undefined);
+      
+      // Track add to wishlist event in Analytics
+      if (result.success) {
+        const price = variant?.price ?? product.price;
+        this.analyticsService.logAddToWishlist(
+          product.objectID || product.id || '',
+          product.name,
+          price
+        );
+      }
       
       console.log(result.message);
       

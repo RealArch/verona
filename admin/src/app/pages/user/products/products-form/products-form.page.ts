@@ -944,6 +944,7 @@ export class ProductFormPage implements OnInit {
       name: this.productForm.get('name')?.value,
       slug: this.productForm.get('slug')?.value,
       description: this.productForm.get('description')?.value,
+      plain_description: this.stripHtml(this.productForm.get('description')?.value || ''),
       price: this.productForm.get('price')?.value,
       stock: this.productForm.get('stock')?.value,
       sku: this.productForm.get('sku')?.value,
@@ -998,6 +999,28 @@ export class ProductFormPage implements OnInit {
   }
 
   // --- Utilidades ---
+  /**
+   * Elimina todas las etiquetas HTML y devuelve solo el texto plano
+   * @param html Cadena HTML
+   * @returns Texto sin etiquetas HTML
+   */
+  private stripHtml(html: string): string {
+    if (!html) return '';
+    
+    // Crear un elemento temporal para parsear el HTML
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    
+    // Obtener solo el texto
+    const text = tmp.textContent || tmp.innerText || '';
+    
+    // Limpiar espacios múltiples y saltos de línea excesivos
+    return text
+      .replace(/\s+/g, ' ')  // Reemplazar múltiples espacios con uno solo
+      .replace(/\n+/g, ' ')  // Reemplazar saltos de línea con espacio
+      .trim();               // Eliminar espacios al inicio y final
+  }
+
   trackById(index: number, item: { value: { id: string } }): string { return item.value.id; }
   getActiveImages(): ExistingImage[] { return this.existingImages(); }
   

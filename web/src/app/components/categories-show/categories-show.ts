@@ -97,14 +97,22 @@ export class CategoriesShow implements OnInit, AfterViewInit {
     const nextButton = this.elementRef.nativeElement.querySelector('.swiper-button-next-custom');
 
     if (this.swiperElement && prevButton && nextButton) {
-      prevButton.addEventListener('click', () => {
-        this.swiperElement.swiper?.slidePrev();
-        setTimeout(() => this.updateButtonStates(), 50);
+      prevButton.addEventListener('click', (e: Event) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!prevButton.disabled) {
+          this.swiperElement.swiper?.slidePrev();
+          setTimeout(() => this.updateButtonStates(), 50);
+        }
       });
       
-      nextButton.addEventListener('click', () => {
-        this.swiperElement.swiper?.slideNext();
-        setTimeout(() => this.updateButtonStates(), 50);
+      nextButton.addEventListener('click', (e: Event) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!nextButton.disabled) {
+          this.swiperElement.swiper?.slideNext();
+          setTimeout(() => this.updateButtonStates(), 50);
+        }
       });
 
       this.navigationInitialized = true;

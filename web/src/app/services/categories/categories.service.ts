@@ -78,6 +78,16 @@ export class CategoriesService {
   }
 
   /**
+   * Get a category by its ID
+   * @param categoryId The category ID
+   * @returns The category or undefined if not found
+   */
+  getCategoryById(categoryId: string): Category | undefined {
+    const categories = this.categories() ?? [];
+    return categories.find((cat: Category) => cat.objectID === categoryId);
+  }
+
+  /**
    * Get all descendant category IDs (children, grandchildren, etc.) for a given category
    * @param categoryId The parent category ID
    * @returns Array of all descendant category IDs including the parent

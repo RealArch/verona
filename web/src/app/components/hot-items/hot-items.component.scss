@@ -59,7 +59,7 @@ swiper-slide {
   &:disabled {
     opacity: 0.3;
     cursor: not-allowed;
-    pointer-events: none;
+    pointer-events: auto !important; // Mantener interactividad para bloquear clicks
   }
 }
 

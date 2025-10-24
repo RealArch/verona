@@ -1,0 +1,55 @@
+// Animations for filter panel
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.filter-panel-floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+// Custom input focus effects
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+// Smooth transitions for all interactive elements
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+
+// Custom scrollbar for category list
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(var(--p) / 0.3) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: oklch(var(--p) / 0.3);
+    border-radius: 3px;
+    
+    &:hover {
+      background: oklch(var(--p) / 0.5);
+    }
+  }
+}

@@ -5,6 +5,7 @@ export interface Product {
     name: string;
     slug: string; // URL-friendly version of the name
     description?: string;
+    plain_description?: string; // Descripción sin HTML
     price: number;
     stock: number;
     sku?: string;
@@ -26,6 +27,7 @@ export interface newProduct {
     id?: string;
     name: string;
     description?: string;
+    plain_description?: string; // Descripción sin HTML
     stock: number;
     sku?: string;
     categories: string[];

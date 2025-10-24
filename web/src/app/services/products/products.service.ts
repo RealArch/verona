@@ -87,7 +87,13 @@ export class ProductsService {
     categoryIds?: string[],
     hitsPerPage: number = 20,
     page: number = 0
-  ): Promise<{ hits: Product[]; nbHits: number; page: number; nbPages: number }> {
+  ): Promise<{ 
+    hits: Product[]; 
+    nbHits: number; 
+    page: number; 
+    nbPages: number;
+    categoryFacets?: Record<string, number>;
+  }> {
     try {
       // Build filters array
       const filters: string[] = [];
@@ -129,6 +135,9 @@ export class ProductsService {
           hitsPerPage: hitsPerPage,
           page: page,
           filters: filters.length > 0 ? filters.join(' AND ') : undefined,
+          // Solicitar facets para categorías
+          facets: ['categoryId'],
+          maxValuesPerFacet: 100,
           // attributesToRetrieve: [
           //   'objectID',
           //   'name',
@@ -161,7 +170,8 @@ export class ProductsService {
         hits: response.hits as Product[],
         nbHits: response.nbHits ?? 0,
         page: response.page ?? 0,
-        nbPages: response.nbPages ?? 0
+        nbPages: response.nbPages ?? 0,
+        categoryFacets: response.facets?.['categoryId'] as Record<string, number> | undefined
       };
 
     } catch (error) {

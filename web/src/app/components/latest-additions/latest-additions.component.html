@@ -56,19 +56,14 @@
         </div>
         } @else {
         <!-- Swiper -->
-        <div class="relative">
+        <div class="relative latest-additions-swiper-frame">
             <!-- Swiper Container - Only render in browser -->
             @if (renderSwiper() && swiperVisible()) {
-            <swiper-container
+            <swiper-container 
                 [class.opacity-0]="!swiperVisible()"
-                class="opacity-0 transition-opacity duration-500"
-                slides-per-view="2"
-                space-between="12"
-                speed="500"
-                loop="false"
-                grab-cursor="true"
-                navigation="false"
-                breakpoints='{
+                class=" opacity-0 transition-opacity duration-500"
+                slides-per-view="2" space-between="12" speed="500" loop="false" grab-cursor="true"
+                navigation="false" breakpoints='{
                     "640": {
                         "slidesPerView": 3,
                         "spaceBetween": 12
@@ -85,10 +80,9 @@
                         "slidesPerView": 6,
                         "spaceBetween": 24
                     }
-                }'
-            >
+                }'>
                 @for (product of products(); track product.id) {
-                <swiper-slide>
+                <swiper-slide class="">
                     <app-product-item [product]="product"></app-product-item>
                 </swiper-slide>
                 }
@@ -106,12 +100,14 @@
 
             <!-- Custom Navigation Buttons -->
             @if (shouldShowNav() && swiperVisible()) {
-            <button class="swiper-nav-button swiper-button-prev-custom absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hidden md:flex items-center justify-center cursor-pointer hover:bg-white transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
+            <button
+                class="swiper-nav-button swiper-button-prev-custom absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hidden md:flex items-center justify-center cursor-pointer hover:bg-white transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
                 <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
             </button>
-            <button class="swiper-nav-button swiper-button-next-custom absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hidden md:flex items-center justify-center cursor-pointer hover:bg-white transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
+            <button
+                class="swiper-nav-button swiper-button-next-custom absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hidden md:flex items-center justify-center cursor-pointer hover:bg-white transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
                 <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>

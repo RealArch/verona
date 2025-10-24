@@ -27,9 +27,9 @@
     <div class="container mx-auto px-4 py-4">
         <div class="text-sm breadcrumbs">
             <ul>
-                <li><a class="text-primary hover:text-primary-focus">Inicio</a></li>
-                @for (catId of getCategoryPath(currentProduct()!.categoryId); track catId) {
-                <li><a class="text-primary hover:text-primary-focus">{{ catId }}</a></li>
+                <li><a routerLink="/" class="text-primary hover:text-primary-focus">Inicio</a></li>
+                @for (cat of getCategoryPathWithIds(currentProduct()!.categoryId); track cat.id) {
+                <li><a [routerLink]="['/search']" [queryParams]="{categoryIds: cat.id}" class="text-primary hover:text-primary-focus">{{ cat.name | titlecase}}</a></li>
                 }
                 <li class="text-base-content">{{ currentProduct()!.name }}</li>
             </ul>
@@ -114,149 +114,148 @@
 
             <!-- Product Info -->
             <div class="space-y-6 lg:sticky lg:top-24 lg:z-20 lg:self-start" style="align-self: flex-start;">
-                <!-- SKU -->
-                <!-- <div class="text-sm text-base-content/60">
-                    SKU: {{ currentProduct()!.sku }}
-                </div> -->
-
-                <!-- Title & Brand -->
-                <div>
-                    <!-- <div class="text-sm text-primary font-medium mb-1">VERONA</div> -->
-                    <h1 class="text-3xl lg:text-4xl font-light text-base-content mb-2">{{ currentProduct()!.name }}</h1>
-                </div>
-
-                <!-- Price -->
-                <div class="space-y-2">
-                    <div class="flex items-baseline gap-3">
-                        <span class="text-3xl font-semibold text-primary"> {{ currentPrice() | currency }}</span>
-                    </div>
-                </div>
-
-                <!-- Stock Status -->
-                <div class="flex items-center gap-2">
-                    @if (isInStock()) {
-                    <div class="w-3 h-3 bg-success rounded-full"></div>
-                    <span class="text-success font-medium">En stock ({{ currentStock() }} unidades disponibles)</span>
-                    } @else {
-                    <div class="w-3 h-3 bg-error rounded-full"></div>
-                    <span class="text-error font-medium">Agotado</span>
-                    }
-                </div>
-
-                <!-- Product Variants -->
-                @if (currentProduct()!.variants && currentProduct()!.variants.length > 0) {
-                <div class="space-y-4">
+                <!-- Price & Actions - Floating Card -->
+                <div class="bg-base-200/80 backdrop-blur-xl rounded-3xl border border-base-300/50 shadow-xl p-6 lg:p-8 sticky bottom-4 lg:static transition-all duration-300 hover:shadow-2xl space-y-6">
+                    
+                    <!-- Title & Brand -->
                     <div>
-                        <h3 class="text-sm font-medium text-base-content mb-3">
-                            Variantes disponibles:
-                            <span class="font-normal">{{ selectedVariant()?.name || 'Selecciona una variante' }}</span>
-                        </h3>
-                        <div class="flex flex-wrap gap-2">
-                            @for (variant of currentProduct()!.variants; track variant.id) {
-                            <div class="inline-flex items-center border rounded-full px-2 py-1 cursor-pointer transition-all whitespace-nowrap"
-                                [class.border-primary]="selectedVariant()?.id === variant.id"
-                                [class.bg-primary/10]="selectedVariant()?.id === variant.id"
-                                [class.border-base-300]="selectedVariant()?.id !== variant.id"
-                                (click)="selectVariant(variant)">
-                                @if (variant.colorHex) {
-                                <div class="w-4 h-4 rounded-full border border-base-300 mr-2"
-                                    [style.background-color]="variant.colorHex"></div>
+                        <!-- <div class="text-sm text-primary font-medium mb-1">VERONA</div> -->
+                        <h1 class="text-2xl lg:text-3xl font-light text-base-content mb-3">{{ currentProduct()!.name | titlecase }}</h1>
+                    </div>
+
+                    <!-- Stock Status -->
+                    <div class="flex items-center gap-2 pb-4 border-b border-base-300/50">
+                        @if (isInStock()) {
+                        <div class="w-3 h-3 bg-success rounded-full"></div>
+                        <span class="text-success font-medium text-sm">En stock ({{ currentStock() }} unidades disponibles)</span>
+                        } @else {
+                        <div class="w-3 h-3 bg-error rounded-full"></div>
+                        <span class="text-error font-medium text-sm">Agotado</span>
+                        }
+                    </div>
+
+                    <!-- Product Variants -->
+                    @if (currentProduct()!.variants && currentProduct()!.variants.length > 0) {
+                    <div class="space-y-4 pb-6 border-b border-base-300/50">
+                        <div>
+                            <h3 class="text-sm font-medium text-base-content mb-3">
+                                Variantes disponibles:
+                                <span class="font-normal">{{ selectedVariant()?.name || 'Selecciona una variante' }}</span>
+                            </h3>
+                            <div class="flex flex-wrap gap-2">
+                                @for (variant of currentProduct()!.variants; track variant.id) {
+                                <div class="inline-flex items-center border rounded-full px-2 py-1 cursor-pointer transition-all whitespace-nowrap"
+                                    [class.border-primary]="selectedVariant()?.id === variant.id"
+                                    [class.bg-primary/10]="selectedVariant()?.id === variant.id"
+                                    [class.border-base-300]="selectedVariant()?.id !== variant.id"
+                                    (click)="selectVariant(variant)">
+                                    @if (variant.colorHex) {
+                                    <div class="w-4 h-4 rounded-full border border-base-300 mr-2"
+                                        [style.background-color]="variant.colorHex"></div>
+                                    }
+                                    <span class="font-medium mr-2">{{ variant.name }}</span>
+                                    <!-- <span class="text-sm text-base-content/60 mr-2">{{ variant.sku }}</span> -->
+                                    <span class="font-semibold">{{ variant.price | currency }}</span>
+                                </div>
                                 }
-                                <span class="font-medium mr-2">{{ variant.name }}</span>
-                                <!-- <span class="text-sm text-base-content/60 mr-2">{{ variant.sku }}</span> -->
-                                <span class="font-semibold">{{ variant.price | currency }}</span>
-                            </div>
-                            }
-                        </div>
-                    </div>
-                </div>
-                }
-
-                <!-- Quantity & Add to Cart -->
-                <div class="space-y-4">
-                    <div>
-                        <h3 class="text-sm font-medium text-base-content mb-3">Cantidad</h3>
-                        <div class="flex items-center gap-4">
-                            <div class="join">
-                                <button class="btn join-item btn-outline" (click)="decreaseQuantity()"
-                                    [disabled]="selectedQuantity() <= 1">-</button>
-                                <input type="number" [value]="selectedQuantity()"
-                                    class="input join-item input-bordered w-16 text-center" [min]="1"
-                                    [max]="currentStock()" readonly>
-                                <button class="btn join-item btn-outline" (click)="increaseQuantity()"
-                                    [disabled]="selectedQuantity() >= currentStock()">+</button>
                             </div>
                         </div>
                     </div>
+                    }
 
-                    <!-- Action Buttons -->
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <button 
-                            class="btn btn-lg flex-1 transition-all duration-300" 
-                            [class.btn-primary]="!isInCart() && isInStock() && !addingToCart()"
-                            [class.btn-success]="isInCart()"
-                            [class.btn-disabled]="!isInStock() || addingToCart()"
-                            [disabled]="!isInStock() || addingToCart()" 
-                            (click)="addToCart()">
-                            
-                            @if (addingToCart()) {
-                                <span class="loading loading-spinner loading-sm mr-2"></span>
-                            } @else if (isInCart()) {
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            } @else {
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9m-9 0h9"></path>
-                                </svg>
-                            }
-                            
-                            {{ addToCartButtonText() }}
-                        </button>
-                        <button 
-                            class="btn btn-lg transition-all duration-300" 
-                            [class.btn-error]="isInWishlist()"
-                            [class.btn-outline]="!isInWishlist()"
-                            [disabled]="addingToWishlist()"
-                            (click)="addToWishlist()">
-                            
-                            @if (addingToWishlist()) {
-                                <span class="loading loading-spinner loading-sm"></span>
-                            } @else {
-                                <svg class="w-5 h-5" 
-                                     [attr.fill]="isInWishlist() ? 'currentColor' : 'none'" 
-                                     stroke="currentColor" 
-                                     viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
-                                    </path>
-                                </svg>
-                            }
-                        </button>
+                    <!-- Price -->
+                    <div class="space-y-2 pb-6 border-b border-base-300/50">
+                        <div class="flex items-baseline gap-3">
+                            <span class="text-4xl font-bold text-primary">{{ currentPrice() | currency }}</span>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Quick Info Cards -->
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-primary/10 rounded-lg p-4 text-center">
-                        <svg class="w-6 h-6 mx-auto mb-2 text-primary" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                        </svg>
-                        <div class="text-sm font-medium">Envíos</div>
-                        <div class="text-xs text-base-content/60">A todo el pais</div>
+                    <!-- Quantity & Add to Cart -->
+                    <div class="space-y-4">
+                        <div>
+                            <h3 class="text-sm font-medium text-base-content mb-3">Cantidad</h3>
+                            <div class="flex items-center gap-4">
+                                <div class="join">
+                                    <button class="btn join-item btn-outline" (click)="decreaseQuantity()"
+                                        [disabled]="selectedQuantity() <= 1">-</button>
+                                    <input type="number" [value]="selectedQuantity()"
+                                        class="input join-item input-bordered w-16 text-center" [min]="1"
+                                        [max]="currentStock()" readonly>
+                                    <button class="btn join-item btn-outline" (click)="increaseQuantity()"
+                                        [disabled]="selectedQuantity() >= currentStock()">+</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <button 
+                                class="btn btn-lg flex-1 transition-all duration-300 shadow-lg hover:shadow-xl" 
+                                [class.btn-primary]="!isInCart() && isInStock() && !addingToCart()"
+                                [class.btn-success]="isInCart()"
+                                [class.btn-disabled]="!isInStock() || addingToCart()"
+                                [disabled]="!isInStock() || addingToCart()" 
+                                (click)="addToCart()">
+                                
+                                @if (addingToCart()) {
+                                    <span class="loading loading-spinner loading-sm mr-2"></span>
+                                } @else if (isInCart()) {
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                } @else {
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9m-9 0h9"></path>
+                                    </svg>
+                                }
+                                
+                                {{ addToCartButtonText() }}
+                            </button>
+                            <button 
+                                class="btn btn-lg transition-all duration-300 shadow-lg hover:shadow-xl" 
+                                [class.btn-error]="isInWishlist()"
+                                [class.btn-outline]="!isInWishlist()"
+                                [disabled]="addingToWishlist()"
+                                (click)="addToWishlist()">
+                                
+                                @if (addingToWishlist()) {
+                                    <span class="loading loading-spinner loading-sm"></span>
+                                } @else {
+                                    <svg class="w-5 h-5" 
+                                         [attr.fill]="isInWishlist() ? 'currentColor' : 'none'" 
+                                         stroke="currentColor" 
+                                         viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+                                        </path>
+                                    </svg>
+                                }
+                            </button>
+                        </div>
                     </div>
-                    <div class="bg-primary/10 rounded-lg p-4 text-center">
-                        <svg class="w-6 h-6 mx-auto mb-2 text-primary" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <div class="text-sm font-medium">Garantía</div>
-                        <div class="text-xs text-base-content/60">En todos los productos</div>
+
+                    <!-- Quick Info Cards -->
+                    <div class="grid grid-cols-2 gap-3 pt-4 border-t border-base-300/50">
+                        <div class="bg-primary/10 rounded-lg p-4 text-center">
+                            <svg class="w-6 h-6 mx-auto mb-2 text-primary" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                            </svg>
+                            <div class="text-sm font-medium">Envíos</div>
+                            <div class="text-xs text-base-content/60">A todo el pais</div>
+                        </div>
+                        <div class="bg-primary/10 rounded-lg p-4 text-center">
+                            <svg class="w-6 h-6 mx-auto mb-2 text-primary" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div class="text-sm font-medium">Garantía</div>
+                            <div class="text-xs text-base-content/60">En todos los productos</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -267,13 +266,20 @@
  
             <h2 class="text-2xl md:text-3xl font-light text-center mb-8 text-base-content">Descripción</h2>
 
-            <div class="mt-6 bg-base-300/50 rounded-2xl p-8 lg:p-15 ">
-                <!-- Description Tab Content -->
-                <div class="prose prose-lg max-w-none w-full [&_ul]:list-disc [&_ul]:pl-6 [&_li]:ml-0 [&_ol]:list-decimal [&_ol]:pl-6" style="word-break: normal; overflow-wrap: anywhere; hyphens: auto;" [innerHTML]="currentProduct()?.description">
-
-                </div>
-
-
+            <div class="mt-6 bg-base-300/50 rounded-2xl p-8 lg:p-15">
+                @if (currentProduct()?.description && currentProduct()!.description.trim().length > 0) {
+                    <!-- Description Tab Content -->
+                    <div class="prose prose-lg max-w-none w-full [&_ul]:list-disc [&_ul]:pl-6 [&_li]:ml-0 [&_ol]:list-decimal [&_ol]:pl-6" style="word-break: normal; overflow-wrap: anywhere; hyphens: auto;" [innerHTML]="currentProduct()?.description">
+                    </div>
+                } @else {
+                    <!-- Empty State -->
+                    <div class="text-center py-12">
+                        <svg class="w-16 h-16 mx-auto mb-4 text-base-content/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p class="text-base-content/40 text-lg">No se ha añadido descripción para este artículo</p>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -282,12 +288,23 @@
     <div class="bg-base-200/30 py-12 mt-12">
         <div class="container mx-auto px-4">
             <h2 class="text-2xl md:text-3xl font-light text-center mb-8 text-base-content">Productos Relacionados</h2>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                <!-- Related Product Card -->
-                @for (product of relatedProducts(); track product.id) {
-                 <app-product-item [product]="product"></app-product-item>
-                }
-            </div>
+            
+            @if (relatedProducts().length > 0) {
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-6">
+                    <!-- Related Product Card -->
+                    @for (product of relatedProducts(); track product.id || product.objectID) {
+                     <app-product-item [product]="product"></app-product-item>
+                    }
+                </div>
+            } @else {
+                <!-- Empty State -->
+                <div class="text-center py-12">
+                    <svg class="w-16 h-16 mx-auto mb-4 text-base-content/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                    </svg>
+                    <p class="text-base-content/40 text-lg">No hay artículos relacionados disponibles</p>
+                </div>
+            }
         </div>
     </div>
     }

@@ -3,7 +3,7 @@
   @apply transition-all duration-300;
   
   &:hover {
-    @apply transform -translate-y-1;
+    transform: translateY(-0.25rem);
   }
 }
 
@@ -25,9 +25,4 @@
 // Smooth transitions for images
 figure img {
   @apply transition-all duration-300;
-}
-
-// Badge styles
-.badge {
-  @apply shadow-sm;
 }

@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
 import { ProductsService } from '../../../services/products/products.service';
 import { CategoriesService } from '../../../services/categories/categories.service';
+import { AnalyticsService } from '../../../services/analytics/analytics.service';
 import { Product } from '../../../interfaces/products';
 import { Subject, takeUntil } from 'rxjs';
 import { ProductItemComponent } from '../../../components/product-item/product-item.component';
@@ -30,6 +31,7 @@ export class Search implements OnInit, OnDestroy {
   private readonly productsService = inject(ProductsService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly categoriesService = inject(CategoriesService);
+  private readonly analyticsService = inject(AnalyticsService);
   private readonly titleService = inject(Title);
   private readonly metaService = inject(Meta);
   private readonly destroy$ = new Subject<void>();
@@ -43,16 +45,18 @@ export class Search implements OnInit, OnDestroy {
   hasMoreResults = signal<boolean>(true);
   totalResults = signal<number>(0);
   currentPage = signal<number>(0);
+  availableCategories = signal<Array<{ id: string; name: string; count: number }>>([]);
 
   // Filter form values
   tempMinPrice = signal<number>(0);
-  tempMaxPrice = signal<number>(10000);
+  tempMaxPrice = signal<number>(0);
+  selectedCategoryIds = signal<string[]>([]);
 
   // Default values
   private readonly defaultParams: Required<SearchParams> = {
     q: '',
     minPrice: 0,
-    maxPrice: 10000,
+    maxPrice: 0,
     page: 0,
     categoryIds: []
   };
@@ -160,6 +164,7 @@ export class Search implements OnInit, OnDestroy {
     // Update temp filter values
     this.tempMinPrice.set(params.minPrice ?? this.defaultParams.minPrice);
     this.tempMaxPrice.set(params.maxPrice ?? this.defaultParams.maxPrice);
+    this.selectedCategoryIds.set(params.categoryIds ?? []);
     
     await this.performSearch(params, 0);
   }
@@ -187,7 +192,7 @@ export class Search implements OnInit, OnDestroy {
         console.log('Search params being sent:', {
           searchQuery,
           minPrice: minPrice > 0 ? minPrice : undefined,
-          maxPrice: maxPrice < this.defaultParams.maxPrice ? maxPrice : undefined,
+          maxPrice: maxPrice > 0 ? maxPrice : undefined,
           categoryIds,
           hitsPerPage: 20,
           page
@@ -198,11 +203,16 @@ export class Search implements OnInit, OnDestroy {
       const results = await this.productsService.search(
         searchQuery,
         minPrice > 0 ? minPrice : undefined,
-        maxPrice < this.defaultParams.maxPrice ? maxPrice : undefined,
+        maxPrice > 0 ? maxPrice : undefined,
         categoryIds,
         20, // hitsPerPage
         page
       );
+
+      // Track search event in Analytics (only for first page)
+      if (page === 0 && searchQuery) {
+        this.analyticsService.logSearch(searchQuery);
+      }
 
       if (append && results.hits.length > 0) {
         // Append new results for infinite scroll, ensuring unique IDs
@@ -217,6 +227,24 @@ export class Search implements OnInit, OnDestroy {
       this.totalResults.set(results.nbHits);
       this.currentPage.set(results.page);
       this.hasMoreResults.set(results.page < results.nbPages - 1);
+
+      // Process category facets to show available categories
+      if (results.categoryFacets && !append) {
+        const categoryFacets = results.categoryFacets;
+        const availableCats = Object.entries(categoryFacets)
+          .map(([categoryId, count]) => {
+            const category = this.categoriesService.getCategoryById(categoryId);
+            return {
+              id: categoryId,
+              name: category?.name ?? 'Sin categoría',
+              count: count
+            };
+          })
+          .filter(cat => cat.count > 0)
+          .sort((a, b) => b.count - a.count); // Sort by count descending
+
+        this.availableCategories.set(availableCats);
+      }
 
     } catch (error) {
       console.error('Search error:', error);
@@ -257,7 +285,7 @@ export class Search implements OnInit, OnDestroy {
       queryParams.minPrice = updatedParams.minPrice;
     }
 
-    if (updatedParams.maxPrice && updatedParams.maxPrice < this.defaultParams.maxPrice) {
+    if (updatedParams.maxPrice && updatedParams.maxPrice > 0) {
       queryParams.maxPrice = updatedParams.maxPrice;
     }
 
@@ -289,11 +317,40 @@ export class Search implements OnInit, OnDestroy {
   resetFilters(): void {
     this.tempMinPrice.set(this.defaultParams.minPrice);
     this.tempMaxPrice.set(this.defaultParams.maxPrice);
+    this.selectedCategoryIds.set([]);
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: {},
       queryParamsHandling: 'replace'
     });
+  }
+
+  /**
+   * Toggle category selection
+   */
+  toggleCategory(categoryId: string): void {
+    const current = this.selectedCategoryIds();
+    const index = current.indexOf(categoryId);
+    
+    if (index > -1) {
+      // Remove category
+      this.selectedCategoryIds.set(current.filter(id => id !== categoryId));
+    } else {
+      // Add category
+      this.selectedCategoryIds.set([...current, categoryId]);
+    }
+    
+    // Update search params
+    this.updateSearchParams({ 
+      categoryIds: this.selectedCategoryIds() 
+    });
+  }
+
+  /**
+   * Check if category is selected
+   */
+  isCategorySelected(categoryId: string): boolean {
+    return this.selectedCategoryIds().includes(categoryId);
   }
 
   /**

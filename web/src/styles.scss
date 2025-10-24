@@ -129,7 +129,7 @@ textarea::placeholder {
 }
 
 /* Footer del modal (botones) */
-.modal-box .flex.flex-col.sm\\:flex-row.gap-3.pt-4 {
+.modal-box .modal-action {
   flex-shrink: 0; /* Footer fijo */
   margin-top: auto; /* Se alinea al final */
 }

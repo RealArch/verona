@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection, PLATFORM_ID } from '@angular/core';
 import { provideRouter, withRouterConfig, withInMemoryScrolling } from '@angular/router';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 
@@ -47,8 +47,15 @@ export const appConfig: ApplicationConfig = {
       return storage;
     }),
 
-    provideAnalytics(() => getAnalytics()),
-    ScreenTrackingService,
-    UserTrackingService,
+    // Analytics solo en el navegador (no en SSR)
+    provideAnalytics(() => {
+      if (typeof window !== 'undefined') {
+        const analytics = getAnalytics(getApp());
+        return analytics;
+      }
+      return null as any;
+    }),
+    ScreenTrackingService, // Trackea automáticamente cambios de página
+    UserTrackingService,   // Trackea información de usuarios
   ]
 };
