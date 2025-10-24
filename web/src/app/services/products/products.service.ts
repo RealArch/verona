@@ -2,7 +2,7 @@ import { Injectable, Injector, inject, runInInjectionContext } from '@angular/co
 import { Firestore, collection, query, orderBy, limit, collectionData, doc, docData, where } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { algoliasearch, SearchClient } from 'algoliasearch';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 import { Product } from '../../interfaces/products';
 import { CategoriesService } from '../categories/categories.service';
 

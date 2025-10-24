@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { algoliasearch, SearchClient } from 'algoliasearch';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment';
 import { Category } from '../../interfaces/categories';
 
 
