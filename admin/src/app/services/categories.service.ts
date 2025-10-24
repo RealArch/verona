@@ -122,6 +122,31 @@ export class CategoriesService {
     await deleteDoc(docRef);
   }
 
+  /**
+   * Obtiene todos los IDs de una categoría y sus descendientes recursivamente
+   * @param categoryId ID de la categoría
+   * @param allCategories Array completo de categorías para buscar descendientes
+   * @returns Array de IDs incluyendo la categoría y todos sus descendientes
+   */
+  getCategoryAndDescendantIds(categoryId: string, allCategories: Category[]): string[] {
+    const ids: string[] = [categoryId];
+    
+    // Función recursiva para obtener todos los hijos
+    const getChildrenIds = (parentId: string) => {
+      const children = allCategories.filter(cat => cat.parentId === parentId);
+      children.forEach(child => {
+        if (child.id) {
+          ids.push(child.id);
+          // Recursivamente obtener los hijos de este hijo
+          getChildrenIds(child.id);
+        }
+      });
+    };
+    
+    getChildrenIds(categoryId);
+    return ids;
+  }
+
   buildCategoryTree(categories: Category[], parentId: string | null = null): Category[] {
     const tree: Category[] = [];
     // Si parentId es null, buscar categorías principales (parentId === "root")

@@ -12,7 +12,8 @@ import {
   Timestamp,
   docData,
   serverTimestamp,
-  orderBy
+  orderBy,
+  getDocs
 } from '@angular/fire/firestore';
 import { Storage, ref, uploadBytes, getDownloadURL, deleteObject, uploadBytesResumable } from '@angular/fire/storage';
 import { Observable, map } from 'rxjs';
@@ -148,6 +149,43 @@ export class ProductsService {
       });
 
       return Promise.all(deletePromises);
+    });
+  }
+
+  /**
+   * Verifica si una categoría o cualquiera de sus subcategorías tiene productos asociados
+   * @param categoryIds Array de IDs de categorías a verificar (incluye la categoría principal y sus hijos)
+   * @returns Promise<boolean> true si hay productos, false si no hay productos
+   */
+  async categoryHasProducts(categoryIds: string[]): Promise<boolean> {
+    return runInInjectionContext(this.injector, async () => {
+      if (!categoryIds || categoryIds.length === 0) {
+        return false;
+      }
+
+      try {
+        // Verificar cada categoría en el array
+        for (const categoryId of categoryIds) {
+          const q = query(
+            this.productsCollection, 
+            where('categoryId', '==', categoryId)
+          );
+          const snapshot = await getDocs(q);
+          
+          // Si encontramos al menos un producto en cualquier categoría, retornar true
+          if (!snapshot.empty) {
+            console.log(`Found ${snapshot.size} product(s) in category ${categoryId}`);
+            return true;
+          }
+        }
+        
+        // No se encontraron productos en ninguna categoría
+        return false;
+      } catch (error) {
+        console.error('Error checking if category has products:', error);
+        // En caso de error, por seguridad retornamos true para evitar eliminaciones accidentales
+        return true;
+      }
     });
   }
 

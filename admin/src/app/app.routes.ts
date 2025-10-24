@@ -77,6 +77,10 @@ export const routes: Routes = [
     path: 'main-header-images',
     loadComponent: () => import('./pages/user/settings/main-header-images/main-header-images.page').then( m => m.MainHeaderImagesPage)
   },
+  {
+    path: 'modal-view-order',
+    loadComponent: () => import('./pages/user/orders/modal-view-order/modal-view-order.page').then( m => m.ModalViewOrderPage)
+  },
 
 
 

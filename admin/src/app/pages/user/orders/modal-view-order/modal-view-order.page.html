@@ -1,0 +1,188 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Detalle del Pedido</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="close()">
+        <ion-icon name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- Modal Header -->
+  <div class="mb-6">
+    <div class="flex items-center gap-3 mb-2">
+      <h3 class="text-xl font-semibold text-gray-800">
+        Pedido #{{ order.id.slice(-10).toUpperCase() }}
+      </h3>
+      <ion-badge [color]="order.status ? getStatusColor(order.status) : 'medium'">
+        {{ order.status ? getStatusLabel(order.status) : 'Desconocido' }}
+      </ion-badge>
+    </div>
+    <div class="text-sm text-gray-600 flex items-center gap-2">
+      <ion-icon name="calendar-outline" class="text-base"></ion-icon>
+      {{ order.createdAt ? formatDate(order.createdAt) : 'Fecha no disponible' }}
+    </div>
+  </div>
+
+  <!-- Order Items -->
+  <div class="mb-6">
+    <h4 class="text-sm font-semibold text-gray-500 uppercase mb-3">
+      Artículos ({{ order.items.length }})
+    </h4>
+    <div class="space-y-3">
+      <div *ngFor="let item of order.items || []"
+        class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+
+        <!-- Product Image -->
+        <img [src]="item.productImage || '/img/no-image.svg'" [alt]="item.productName"
+          class="w-16 h-16 object-cover rounded-md" loading="lazy" />
+
+        <!-- Product Details -->
+        <div class="flex-1 min-w-0">
+          <h5 class="font-medium text-gray-800">{{ item.productName }}</h5>
+          <p *ngIf="item.variantName" class="text-sm text-gray-600 flex items-center gap-2">
+            {{ item.variantName }}
+            <span *ngIf="item.variantColorHex" class="w-4 h-4 rounded-full border border-gray-300 inline-block ml-1"
+              [style.background-color]="item.variantColorHex">
+            </span>
+          </p>
+          <p class="text-sm text-gray-600">Cantidad: {{ item.quantity }}</p>
+        </div>
+
+        <!-- Price -->
+        <div class="text-right">
+          <p class="font-semibold text-gray-800">{{ item.totalPrice ? formatCurrency(item.totalPrice) : '$0.00' }}
+          </p>
+          <p class="text-sm text-gray-600">{{ item.unitPrice ? formatCurrency(item.unitPrice) : '$0.00' }} c/u</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Addresses and Summary -->
+  <div class="bg-gray-50 rounded-lg p-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- Billing Address -->
+      <div>
+        <h4 class="text-sm font-semibold text-gray-500 uppercase mb-2 flex items-center gap-2">
+          <ion-icon name="document-text-outline" class="text-base"></ion-icon>
+          Dirección de Facturación
+        </h4>
+        <div class="text-sm space-y-1" *ngIf="order.billingAddress">
+          <p class="font-medium text-gray-800">{{ order.billingAddress.name }}</p>
+          <p class="text-gray-600">
+            {{ order.billingAddress.address_1 }}
+            <span *ngIf="order.billingAddress.address_2">, {{ order.billingAddress.address_2 }}</span>
+          </p>
+          <p class="text-gray-600">
+            {{ order.billingAddress.city }}, {{ order.billingAddress.state }}
+          </p>
+          <p class="text-gray-600">
+            {{ order.billingAddress.country }} {{ order.billingAddress.postalCode }}
+          </p>
+          <p *ngIf="order.billingAddress.phone" class="text-gray-600 flex items-center gap-1">
+            <ion-icon name="call-outline" class="text-sm"></ion-icon>
+            {{ order.billingAddress.phone }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Order Totals -->
+      <div>
+        <h4 class="text-sm font-semibold text-gray-500 uppercase mb-2 flex items-center gap-2">
+          <ion-icon name="cash-outline" class="text-base"></ion-icon>
+          Resumen del Pedido
+        </h4>
+        <div class="space-y-1 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Subtotal</span>
+            <span class="text-gray-800">{{ order.totals.subtotal ?
+              formatCurrency(order.totals.subtotal) : '$0.00' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">IGV ({{ order.totals.taxPercentage || 0 }}%)</span>
+            <span class="text-gray-800">{{ order.totals.taxAmount ?
+              formatCurrency(order.totals.taxAmount) : '$0.00' }}</span>
+          </div>
+          <div *ngIf="order.totals.shippingCost > 0" class="flex justify-between">
+            <span class="text-gray-600">Envío</span>
+            <span class="text-gray-800">{{ order.totals.shippingCost ?
+              formatCurrency(order.totals.shippingCost) : '$0.00' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">
+              <ion-icon
+                [name]="order.deliveryMethod ? getDeliveryMethodIcon(order.deliveryMethod) : 'help-circle'"
+                class="text-base"></ion-icon>
+              {{ getDeliveryMethodLabel(order.deliveryMethod) }}
+            </span>
+          </div>
+          <div class="divider my-2"></div>
+          <div class="flex justify-between font-semibold text-base">
+            <span class="text-gray-800">Total</span>
+            <span class="text-primary text-lg">{{ order.totals.total ?
+              formatCurrency(order.totals.total) : '$0.00' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shipping Address (if exists) -->
+    <div *ngIf="order.shippingAddress" class="mt-6 pt-4 border-t border-gray-300">
+      <h4 class="text-sm font-semibold text-gray-500 uppercase mb-2 flex items-center gap-2">
+        <ion-icon name="location-outline" class="text-base"></ion-icon>
+        Dirección de Envío
+      </h4>
+      <div class="text-sm space-y-1">
+        <p class="font-medium text-gray-800">{{ order.shippingAddress.name }}</p>
+        <p class="text-gray-600">
+          {{ order.shippingAddress.address_1 }}
+          <span *ngIf="order.shippingAddress.address_2">, {{ order.shippingAddress.address_2 }}</span>
+        </p>
+        <p class="text-gray-600">
+          {{ order.shippingAddress.city }}, {{ order.shippingAddress.state }}
+        </p>
+        <p class="text-gray-600">
+          {{ order.shippingAddress.country }} {{ order.shippingAddress.postalCode }}
+        </p>
+        <p *ngIf="order.shippingAddress.phone" class="text-gray-600 flex items-center gap-1">
+          <ion-icon name="call-outline" class="text-sm"></ion-icon>
+          {{ order.shippingAddress.phone }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div *ngIf="order.notes" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+    <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+      <ion-icon name="chatbubbles-outline" class="text-base"></ion-icon>
+      Notas
+    </h4>
+    <p class="text-sm text-gray-700">{{ order.notes }}</p>
+  </div>
+
+</ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-buttons slot="end" *ngIf="order.status === 'pending'">
+      <ion-button color="danger" [disabled]="isUpdatingStatus" (click)="updateOrderStatus('cancelled')">
+        <ion-spinner *ngIf="isUpdatingStatus" slot="start" name="crescent"></ion-spinner>
+        Cancelar pedido
+      </ion-button>
+      <ion-button fill="solid" color="primary" [disabled]="isUpdatingStatus" (click)="updateOrderStatus('completed')">
+        <ion-spinner *ngIf="isUpdatingStatus" slot="start" name="crescent"></ion-spinner>
+        Marcar como completado
+      </ion-button>
+    </ion-buttons>
+    <div *ngIf="order.status !== 'pending'" class="px-4 py-3 text-sm text-gray-600">
+      Solo los pedidos pendientes pueden cambiar de estado.
+    </div>
+  </ion-toolbar>
+</ion-footer>
+

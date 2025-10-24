@@ -15,14 +15,15 @@ import {
   IonSpinner,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
-  IonModal,
   IonButton, 
   IonSelect, 
   IonSelectOption, 
   IonRow, 
   IonCol, 
   IonDatetime,
-  IonPopover, IonGrid, IonFooter } from '@ionic/angular/standalone';
+  IonPopover, 
+  IonGrid,
+  ModalController } from '@ionic/angular/standalone';
 import { Orders } from 'src/app/services/orders';
 import { Order, OrderSearchFilters, OrderStatus } from 'src/app/interfaces/order';
 import { addIcons } from 'ionicons';
@@ -38,23 +39,27 @@ import {
   airplaneOutline,
   chatbubblesOutline,
   closeOutline,
-  chevronForwardOutline, documentTextOutline, callOutline, locationOutline, chevronDownOutline, refreshOutline } from 'ionicons/icons';
+  chevronForwardOutline, 
+  documentTextOutline, 
+  callOutline, 
+  locationOutline, 
+  chevronDownOutline, 
+  refreshOutline } from 'ionicons/icons';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
-import { ToastController } from '@ionic/angular';
+import { ModalViewOrderPage } from './modal-view-order/modal-view-order.page';
 
 @Component({
   selector: 'app-orders',
   templateUrl: './orders.page.html',
   styleUrls: ['./orders.page.scss'],
   standalone: true,
-  imports: [IonFooter, IonGrid, 
+  imports: [IonGrid, 
     IonPopover,
     IonCol, 
     IonRow, 
     IonSelect, 
     IonSelectOption, 
     IonDatetime,
-    IonModal,
     IonButton,
     IonInfiniteScrollContent,
     IonInfiniteScroll,
@@ -76,18 +81,15 @@ export class OrdersPage implements OnInit, OnDestroy {
   private ordersService = inject(Orders);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private toastController = inject(ToastController);
+  private modalController = inject(ModalController);
   private destroy$ = new Subject<void>();
 
-  @ViewChild(IonModal) modal!: IonModal;
   @ViewChild(IonInfiniteScroll) infiniteScroll!: IonInfiniteScroll;
 
   orders: Order[] = [];
   isLoading = false;
-  isUpdatingStatus = false;
   hasMore = true;
   searchQuery = '';
-  selectedOrder: Order | null = null;
   currentPage = 0;
   pageSize = 20;
 
@@ -343,45 +345,25 @@ export class OrdersPage implements OnInit, OnDestroy {
     }
   }
 
-  async updateSelectedOrderStatus(targetStatus: OrderStatus): Promise<void> {
-    if (!this.selectedOrder || this.isUpdatingStatus) {
-      return;
-    }
+  async openOrderDetail(order: Order): Promise<void> {
+    const modal = await this.modalController.create({
+      component: ModalViewOrderPage,
+      componentProps: {
+        order: order
+      }
+    });
 
-    this.isUpdatingStatus = true;
+    await modal.present();
 
-    try {
-      await this.ordersService.updateOrderStatus(this.selectedOrder.id, targetStatus);
-      this.selectedOrder = {
-        ...this.selectedOrder,
-        status: targetStatus
-      };
-      
-      this.orders = this.orders.map(order =>
-        order.id === this.selectedOrder!.id ? { ...order, status: targetStatus } : order
+    const { data } = await modal.onWillDismiss();
+    
+    // If the order was updated, refresh it in the list
+    if (data?.updated) {
+      this.orders = this.orders.map(o => 
+        o.id === data.orderId 
+          ? { ...o, status: data.newStatus } 
+          : o
       );
-
-      const toast = await this.toastController.create({
-        message: `Estado actualizado a ${this.getStatusLabel(targetStatus)}`,
-        duration: 2500,
-        position: 'top',
-        color: 'success'
-      });
-
-      await toast.present();
-      this.closeOrderDetail();
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      const toast = await this.toastController.create({
-        message: 'No se pudo actualizar el estado. Inténtalo nuevamente.',
-        duration: 2500,
-        position: 'top',
-        color: 'danger'
-      });
-
-      await toast.present();
-    } finally {
-      this.isUpdatingStatus = false;
     }
   }
 
@@ -481,15 +463,5 @@ export class OrdersPage implements OnInit, OnDestroy {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
-  }
-
-  openOrderDetail(order: Order): void {
-    this.selectedOrder = order;
-    this.modal.present();
-  }
-
-  closeOrderDetail(): void {
-    this.modal.dismiss();
-    this.selectedOrder = null;
   }
 }

@@ -1,78 +1,254 @@
-<ion-header >
-  <ion-toolbar color="primary">
-    <ion-title>Resumen</ion-title>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content >
-  <ion-grid class="p-4" fixed>
-    <ion-row class="ion-justify-content-center ion-align-items-stretch">
-      <!-- Admin Users -->
-      <ion-col size="12" size-md="6" size-lg="3" class="mb-4">
-        <div class="h-full rounded-xl border border-transparent bg-gradient-to-br from-indigo-50 to-white p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between">
-          <div class="flex items-start justify-between">
-            <div>
-              <div class="text-xs uppercase tracking-wide text-gray-500">Usuarios Admin</div>
-              <div class="text-3xl font-bold text-gray-800">{{ counters()?.adminUsers ?? 0 }}</div>
-            </div>
-            <ion-icon name="people" class="text-indigo-500 text-3xl"></ion-icon>
+<ion-content color="light" class="bg-gradient-to-br from-gray-50 via-emerald-50/30 to-teal-50/30">
+  <ion-grid class="p-4 max-w-7xl mx-auto mb-30" fixed>
+    
+    <!-- Welcome Banner -->
+    <ion-row class="mb-6">
+      <ion-col size="12">
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#186440] via-[#1a7a52] to-[#155838] p-6 shadow-xl">
+          <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
+          <div class="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
+          <div class="relative z-10">
+            <h1 class="text-2xl md:text-3xl font-bold text-white mb-2">¡Bienvenido de vuelta! 👋</h1>
+            <p class="text-white/80 text-sm md:text-base">Aquí está el resumen de tu negocio</p>
           </div>
-          <div class="text-[11px] text-gray-400 mt-3">Actualizado en tiempo real</div>
+        </div>
+      </ion-col>
+    </ion-row>
+
+    <!-- Stats Cards Row 1 -->
+    <ion-row class="mb-4">
+      <!-- Total Products -->
+      <ion-col size="12" size-md="6" size-lg="3" class="mb-4">
+        <div class="h-full rounded-2xl bg-gradient-to-br from-[#186440] to-[#155838] p-5 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          <div class="flex items-start justify-between mb-4">
+            <div class="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+              <ion-icon name="cube-outline" class="text-white text-3xl"></ion-icon>
+            </div>
+            <div class="px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm">
+              <span class="text-xs font-semibold text-white">Total</span>
+            </div>
+          </div>
+          <div class="text-white">
+            <div class="text-4xl font-bold mb-1">{{ counters()?.products ?? 0 }}</div>
+            <div class="text-white/80 text-sm font-medium">Productos</div>
+          </div>
+        </div>
+      </ion-col>
+
+      <!-- Active Products -->
+      <ion-col size="12" size-md="6" size-lg="3" class="mb-4">
+        <div class="h-full rounded-2xl bg-gradient-to-br from-[#1a7a52] to-[#186440] p-5 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          <div class="flex items-start justify-between mb-4">
+            <div class="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+              <ion-icon name="checkmark-circle-outline" class="text-white text-3xl"></ion-icon>
+            </div>
+            <div class="px-3 py-1 rounded-full bg-green-400/30 backdrop-blur-sm">
+              <span class="text-xs font-semibold text-white">Activos</span>
+            </div>
+          </div>
+          <div class="text-white">
+            <div class="text-4xl font-bold mb-1">{{ counters()?.products_active ?? 0 }}</div>
+            <div class="text-white/80 text-sm font-medium">Productos activos</div>
+          </div>
+        </div>
+      </ion-col>
+
+      <!-- Paused Products -->
+      <ion-col size="12" size-md="6" size-lg="3" class="mb-4">
+        <div class="h-full rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-5 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          <div class="flex items-start justify-between mb-4">
+            <div class="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+              <ion-icon name="pause-circle-outline" class="text-white text-3xl"></ion-icon>
+            </div>
+            <div class="px-3 py-1 rounded-full bg-yellow-400/30 backdrop-blur-sm">
+              <span class="text-xs font-semibold text-white">Pausados</span>
+            </div>
+          </div>
+          <div class="text-white">
+            <div class="text-4xl font-bold mb-1">{{ counters()?.products_paused ?? 0 }}</div>
+            <div class="text-amber-100 text-sm font-medium">Productos pausados</div>
+          </div>
         </div>
       </ion-col>
 
       <!-- Categories -->
       <ion-col size="12" size-md="6" size-lg="3" class="mb-4">
-        <div class="h-full rounded-xl border border-transparent bg-gradient-to-br from-purple-50 to-white p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between">
-          <div class="flex items-start justify-between">
-            <div>
-              <div class="text-xs uppercase tracking-wide text-gray-500">Categorías</div>
-              <div class="text-3xl font-bold text-gray-800">{{ counters()?.categories ?? 0 }}</div>
+        <div class="h-full rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 p-5 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          <div class="flex items-start justify-between mb-4">
+            <div class="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+              <ion-icon name="layers" class="text-white text-3xl"></ion-icon>
             </div>
-            <ion-icon name="layers" class="text-purple-500 text-3xl"></ion-icon>
+            <div class="px-3 py-1 rounded-full bg-pink-400/30 backdrop-blur-sm">
+              <span class="text-xs font-semibold text-white">Total</span>
+            </div>
           </div>
-          <div class="text-[11px] text-gray-400 mt-3">Actualizado en tiempo real</div>
+          <div class="text-white">
+            <div class="text-4xl font-bold mb-1">{{ counters()?.categories ?? 0 }}</div>
+            <div class="text-purple-100 text-sm font-medium">Categorías</div>
+          </div>
         </div>
       </ion-col>
+    </ion-row>
 
-      <!-- Products -->
-      <ion-col size="12" size-md="6" size-lg="3" class="mb-4">
-        <div class="h-full rounded-xl border border-transparent bg-gradient-to-br from-emerald-50 to-white p-4 shadow-sm hover:shadow-md transition flex flex-col">
-          <div class="flex items-start justify-between">
-            <div>
-              <div class="text-xs uppercase tracking-wide text-gray-500">Productos</div>
-              <div class="text-3xl font-bold text-gray-800">{{ counters()?.products ?? 0 }}</div>
+    <!-- Stats Cards Row 2 - Sales Info -->
+    <ion-row class="mb-6">
+      <!-- Recent Orders Count -->
+      <ion-col size="12" size-md="6" size-lg="4" class="mb-4">
+        <div class="h-full rounded-2xl bg-white border-2 border-[#186440]/30 p-5 shadow-md hover:shadow-lg transition-all duration-300">
+          <div class="flex items-center justify-between mb-4">
+            <div class="p-3 rounded-xl bg-gradient-to-br from-[#186440] to-[#155838]">
+              <ion-icon name="cart-outline" class="text-white text-2xl"></ion-icon>
             </div>
-            <ion-icon name="stats-chart" class="text-emerald-500 text-3xl"></ion-icon>
+            <ion-icon name="trending-up-outline" class="text-[#186440] text-2xl"></ion-icon>
           </div>
-          <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
-            <div class="rounded-lg bg-green-50 text-green-700 p-2 text-center">
-              Activos
-              <div class="font-bold text-lg">{{ counters()?.products_active ?? 0 }}</div>
-            </div>
-            <div class="rounded-lg bg-yellow-50 text-yellow-700 p-2 text-center">
-              Pausados
-              <div class="font-bold text-lg">{{ counters()?.products_paused ?? 0 }}</div>
-            </div>
-          </div>
-          <div class="text-[11px] text-gray-400 mt-3">Actualizado en tiempo real</div>
-        </div>
-      </ion-col>
-
-      <!-- Active Rate -->
-      <ion-col size="12" size-md="6" size-lg="3" class="mb-4">
-        <div class="h-full rounded-xl border border-transparent bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm hover:shadow-md transition flex flex-col justify-between">
           <div>
-            <div class="text-xs uppercase tracking-wide text-gray-500">Tasa de activos</div>
-            <div class="text-3xl font-bold text-gray-800">
-              {{ (((counters()?.products_active ?? 0) / ((counters()?.products ?? 0) || 1)) * 100) | number:'1.0-0' }}%
-            </div>
-            <div class="text-xs text-gray-500 mt-1">de {{ counters()?.products ?? 0 }} productos</div>
+            <div class="text-3xl font-bold text-gray-800 mb-1">{{ recentOrders().length }}</div>
+            <div class="text-gray-600 text-sm font-medium">Ventas recientes</div>
+            <div class="text-xs text-[#186440] mt-2">Últimas 5 órdenes</div>
           </div>
-          <div class="text-[11px] text-gray-400 mt-3">Actualizado en tiempo real</div>
+        </div>
+      </ion-col>
+
+      <!-- Pending Orders -->
+      <ion-col size="12" size-md="6" size-lg="4" class="mb-4">
+        <div class="h-full rounded-2xl bg-white border-2 border-amber-200 p-5 shadow-md hover:shadow-lg transition-all duration-300">
+          <div class="flex items-center justify-between mb-4">
+            <div class="p-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600">
+              <ion-icon name="receipt-outline" class="text-white text-2xl"></ion-icon>
+            </div>
+            <div class="px-2 py-1 rounded-full bg-amber-100">
+              <span class="text-xs font-bold text-amber-700">Pendientes</span>
+            </div>
+          </div>
+          <div>
+            <div class="text-3xl font-bold text-gray-800 mb-1">{{ getPendingOrdersCount() }}</div>
+            <div class="text-gray-600 text-sm font-medium">Pedidos pendientes</div>
+            <div class="text-xs text-amber-600 mt-2">Requieren atención</div>
+          </div>
+        </div>
+      </ion-col>
+
+      <!-- Revenue from Recent -->
+      <ion-col size="12" size-md="6" size-lg="4" class="mb-4">
+        <div class="h-full rounded-2xl bg-white border-2 border-[#1a7a52]/30 p-5 shadow-md hover:shadow-lg transition-all duration-300">
+          <div class="flex items-center justify-between mb-4">
+            <div class="p-3 rounded-xl bg-gradient-to-br from-[#1a7a52] to-[#186440]">
+              <ion-icon name="cash-outline" class="text-white text-2xl"></ion-icon>
+            </div>
+            <ion-icon name="trending-up-outline" class="text-[#1a7a52] text-2xl"></ion-icon>
+          </div>
+          <div>
+            <div class="text-3xl font-bold bg-gradient-to-r from-[#186440] to-[#1a7a52] bg-clip-text text-transparent mb-1">
+              {{ formatCurrency(getTotalRevenue()) }}
+            </div>
+            <div class="text-gray-600 text-sm font-medium">Ingresos recientes</div>
+            <div class="text-xs text-[#1a7a52] mt-2">Últimas 5 ventas</div>
+          </div>
+        </div>
+      </ion-col>
+    </ion-row>
+
+    <!-- Recent Orders Section -->
+    <ion-row>
+      <ion-col size="12">
+        <div class="rounded-2xl bg-white border-2 border-gray-200 shadow-lg overflow-hidden">
+          <!-- Section Header -->
+          <div class="bg-gradient-to-r from-[#186440] via-[#1a7a52] to-[#155838] p-5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="p-2 rounded-lg bg-white/20 backdrop-blur-sm">
+                  <ion-icon name="receipt-outline" class="text-white text-2xl"></ion-icon>
+                </div>
+                <div>
+                  <h2 class="text-xl font-bold text-white">Últimas Ventas</h2>
+                  <p class="text-sm text-white/80">Pedidos más recientes</p>
+                </div>
+              </div>
+              <ion-button fill="solid" size="small" color="light" (click)="navigateToOrders()" class="shadow-md">
+                <span class="text-sm font-semibold text-[#186440]">Ver todas</span>
+                <ion-icon name="chevron-forward-outline" slot="end" class="text-[#186440]"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+
+          <!-- Orders List -->
+          <div class="p-5 bg-gradient-to-br from-gray-50 to-white">
+            <div *ngIf="isLoadingOrders()" class="flex justify-center py-12">
+              <div class="text-center">
+                <ion-spinner name="crescent" color="primary" class="text-4xl mb-3"></ion-spinner>
+                <p class="text-gray-500 text-sm">Cargando ventas...</p>
+              </div>
+            </div>
+
+            <div *ngIf="!isLoadingOrders() && recentOrders().length === 0" class="text-center py-12">
+              <div class="inline-flex p-5 rounded-full bg-gradient-to-br from-[#186440]/20 to-[#1a7a52]/20 mb-4">
+                <ion-icon name="receipt-outline" class="text-[#186440] text-5xl"></ion-icon>
+              </div>
+              <h3 class="text-lg font-semibold text-gray-700 mb-2">No hay ventas registradas</h3>
+              <p class="text-gray-500 text-sm">Las ventas aparecerán aquí una vez que empiecen a llegar</p>
+            </div>
+
+            <div *ngIf="!isLoadingOrders() && recentOrders().length > 0" class="space-y-3">
+              <div *ngFor="let order of recentOrders(); let i = index" 
+                   class="group relative overflow-hidden rounded-xl bg-white border-2 border-gray-200 hover:border-[#186440] p-4 transition-all duration-300 cursor-pointer hover:shadow-lg"
+                   (click)="openOrderModal(order)">
+                <!-- Gradient accent on hover -->
+                <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#186440] to-[#1a7a52] transform scale-y-0 group-hover:scale-y-100 transition-transform duration-300"></div>
+                
+                <div class="flex items-center justify-between">
+                  <div class="flex-1 min-w-0 pl-2">
+                    <div class="flex items-center gap-3 mb-3">
+                      <!-- Order number badge -->
+                      <div class="relative">
+                        <div class="px-3 py-1.5">
+                          <p class="font-bold text-md tracking-wide">
+                            Pedido #{{ order.id.slice(-8).toUpperCase() }}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <!-- Status badge -->
+                      <ion-badge [color]="getStatusColor(order.status)" class="px-3 py-1 text-xs font-semibold shadow-sm">
+                        {{ getStatusLabel(order.status) }}
+                      </ion-badge>
+                      
+                      <!-- Order index -->
+                    </div>
+                    
+                    <!-- Order details -->
+                    <div class="flex flex-wrap items-center gap-3 text-xs">
+                      <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200">
+                        <ion-icon name="calendar-outline" class="text-blue-600"></ion-icon>
+                        <span class="font-medium text-blue-700">{{ formatDate(order.createdAt) }}</span>
+                      </div>
+                      
+                      <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200">
+                        <ion-icon name="cart-outline" class="text-purple-600"></ion-icon>
+                        <span class="font-medium text-purple-700">
+                          {{ order.items.length }} {{ order.items.length === 1 ? 'artículo' : 'artículos' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Price and arrow -->
+                  <div class="flex items-center gap-4 ml-4">
+                    <div class="text-right">
+                      <p class="text-sm text-gray-500 mb-1">Total</p>
+                      <p class="text-2xl font-bold bg-gradient-to-r from-[#186440] to-[#1a7a52] bg-clip-text text-transparent">
+                        {{ formatCurrency(order.totals.total) }}
+                      </p>
+                    </div>
+                    <ion-icon name="chevron-forward-outline" 
+                              class="text-2xl text-gray-300 group-hover:text-[#186440] group-hover:translate-x-1 transition-all duration-300">
+                    </ion-icon>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </ion-col>
     </ion-row>
   </ion-grid>
-
 </ion-content>

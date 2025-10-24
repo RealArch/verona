@@ -7,7 +7,7 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 import { Subscription } from 'rxjs';
 import { addIcons } from 'ionicons';
-import { cube, layers, logOut, speedometer, card, settings, receipt } from 'ionicons/icons';
+import { cube, layers, logOut, speedometer, card, settings, receipt, chevronForward, gridOutline, cubeOutline, receiptOutline, settingsOutline, logOutOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-user',
@@ -25,7 +25,7 @@ export class UserPage implements OnInit {
   subscription?: Subscription;
 
   constructor(private router: Router) {
-    addIcons({speedometer,cube,receipt,layers,card,settings,logOut});
+    addIcons({gridOutline,cubeOutline,receiptOutline,settingsOutline,logOutOutline,speedometer,chevronForward,cube,receipt,layers,settings,logOut,card});
 
     // Monitorea el estado de autenticación y redirige si no está logueado
     effect(() => {
