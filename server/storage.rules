@@ -61,6 +61,21 @@ service firebase.storage {
     }
     
     // ==========================================
+    // IMÁGENES DE CONFIGURACIÓN/SETTINGS
+    // ==========================================
+    match /img/settings/{fileName} {
+      // Lectura: Pública (para headers, logos, etc.)
+      allow read: if true;
+      
+      // Escritura: Solo admin, solo imágenes
+      allow write: if isAdmin() && 
+                     isImage();
+      
+      // Eliminación: Solo admin
+      allow delete: if isAdmin();
+    }
+    
+    // ==========================================
     // IMÁGENES DE USUARIOS (Avatares)
     // ==========================================
     match /img/users/{userId}/{fileName} {

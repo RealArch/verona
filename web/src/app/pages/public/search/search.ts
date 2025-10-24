@@ -51,6 +51,11 @@ export class Search implements OnInit, OnDestroy {
   tempMinPrice = signal<number>(0);
   tempMaxPrice = signal<number>(0);
   selectedCategoryIds = signal<string[]>([]);
+  showFiltersModal = signal<boolean>(false);
+
+  // Scroll throttle
+  private scrollTimeout?: any;
+  private isLoadingMore = false;
 
   // Default values
   private readonly defaultParams: Required<SearchParams> = {
@@ -79,10 +84,29 @@ export class Search implements OnInit, OnDestroy {
   }
 
   /**
-   * Listen for scroll events for infinite scrolling
+   * Listen for scroll events for infinite scrolling (throttled)
    */
   @HostListener('window:scroll')
   onScroll(): void {
+    // Throttle scroll events to every 200ms
+    if (this.scrollTimeout) {
+      return;
+    }
+
+    this.scrollTimeout = setTimeout(() => {
+      this.scrollTimeout = undefined;
+      this.checkScrollPosition();
+    }, 200);
+  }
+
+  /**
+   * Check scroll position and load more if needed
+   */
+  private checkScrollPosition(): void {
+    if (this.isLoadingMore || !this.hasMoreResults() || this.loading()) {
+      return;
+    }
+
     const scrollHeight = document.documentElement.scrollHeight;
     const scrollTop = document.documentElement.scrollTop;
     const clientHeight = document.documentElement.clientHeight;
@@ -256,15 +280,19 @@ export class Search implements OnInit, OnDestroy {
   }
 
   /**
-   * Load more results for infinite scroll
+   * Load more products (infinite scroll)
    */
-  async loadMore(): Promise<void> {
-    if (this.loadingMore() || !this.hasMoreResults() || this.loading()) {
+  private loadMore(): void {
+    if (this.isLoadingMore || !this.hasMoreResults() || this.loading()) {
       return;
     }
 
+    this.isLoadingMore = true;
     const nextPage = this.currentPage() + 1;
-    await this.performSearch(this.searchParams(), nextPage, true);
+    this.performSearch(this.searchParams(), nextPage, true)
+      .finally(() => {
+        this.isLoadingMore = false;
+      });
   }
 
   /**
@@ -365,5 +393,27 @@ export class Search implements OnInit, OnDestroy {
    */
   getCurrentSearchQuery(): string {
     return this.searchParams().q || '';
+  }
+
+  /**
+   * Toggle filters modal (for mobile)
+   */
+  toggleFiltersModal(): void {
+    this.showFiltersModal.set(!this.showFiltersModal());
+  }
+
+  /**
+   * Close filters modal
+   */
+  closeFiltersModal(): void {
+    this.showFiltersModal.set(false);
+  }
+
+  /**
+   * Apply filters and close modal (for mobile)
+   */
+  applyFiltersAndClose(): void {
+    this.applyPriceFilter();
+    this.closeFiltersModal();
   }
 }

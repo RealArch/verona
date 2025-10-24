@@ -1,9 +1,9 @@
-<div class="w-full mt-15 mb-7 ">
+<div class="w-full mt-15 md:mb-7 ">
 
     <div class="container mx-auto">
-        <div class="mb-6 text-center">
-            <h2 class="text-2xl md:text-3xl font-light text-primary mb-2">Categorías
-    </h2>
+        <div class="md:mb-6 text-center">
+            <h2 class="text-2xl md:text-3xl font-light text-primary">Categorías
+            </h2>
         </div>
         <!-- Loading State -->
         @if (loading()) {
@@ -12,7 +12,8 @@
                 @for (item of [1,2,3,4,5,6]; track item) {
                 <div class="flex-shrink-0 pb-5" style="width: 120px;">
                     <div class="grid place-items-center aspect-square">
-                        <div class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg bg-base-300 animate-pulse">
+                        <div
+                            class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg bg-base-300 animate-pulse">
                             <div class="absolute inset-0 rounded-full bg-primary/20 pointer-events-none"></div>
                         </div>
                     </div>
@@ -21,20 +22,13 @@
             </div>
         </div>
         } @else if (mainCategories.length > 0) {
-              <!-- Categories Content -->
+        <!-- Categories Content -->
         <div class="relative px-4">
             <!-- Swiper Container - Only render in browser -->
             @if (swiperVisible()) {
-            <swiper-container
-                [class.opacity-0]="!swiperVisible()"
-                class="py-30 opacity-0 transition-opacity duration-500"
-                slides-per-view="4"
-                space-between="8"
-                speed="500"
-                loop="false"
-                grab-cursor="true"
-                navigation="false"
-                breakpoints='{
+            <swiper-container [class.opacity-0]="!swiperVisible()"
+                class="opacity-0 transition-opacity duration-500" slides-per-view="4" space-between="8"
+                speed="500" loop="false" grab-cursor="true" navigation="false" breakpoints='{
                     "640": {
                         "slidesPerView": 6,
                         "spaceBetween": 8
@@ -51,18 +45,15 @@
                         "slidesPerView": 10,
                         "spaceBetween": 16
                     }
-                }'
-            >
+                }'>
                 @for( category of mainCategories; track category.objectID){
-                <swiper-slide class="py-5" >
-                    <div class="grid place-items-center aspect-square cursor-pointer transition-all duration-300 hover:scale-105" (click)="goToCategorySearch(category.objectID)">
-                        <div class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg">
-                            <img 
-                                [src]="getImageUrl(category)"
-                                [attr.data-original-src]="category.image?.url"
-                                [alt]="category.name"
-                                loading="lazy"
-                                (error)="onImageError($event)"
+                <swiper-slide class="py-5">
+                    <div class="grid place-items-center aspect-square cursor-pointer transition-all duration-300 hover:scale-105"
+                        (click)="goToCategorySearch(category.objectID)">
+                        <div
+                            class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg">
+                            <img [src]="getImageUrl(category)" [attr.data-original-src]="category.image?.url"
+                                [alt]="category.name" loading="lazy" (error)="onImageError($event)"
                                 class="absolute inset-0 w-full h-full object-cover rounded-full border-4 border-gray-200 transition-all duration-500 group-hover:scale-125 group-hover:shadow-xl group-hover:shadow-black/20" />
                             <div class="absolute inset-0 rounded-full bg-primary/20 pointer-events-none"></div>
                             <span
@@ -70,24 +61,23 @@
                                 style="max-width:90%; font-size: clamp(0.6rem, 1.5vw, 0.8rem);">
                                 {{ category.name }}
                             </span>
-                        </div> 
+                        </div>
                     </div>
                 </swiper-slide>
                 }
             </swiper-container>
             } @else {
             <!-- Fallback grid for SSR -->
-            <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2 md:gap-4 py-30">
+            <div
+                class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2 md:gap-4 py-30">
                 @for( category of mainCategories.slice(0, 10); track category.objectID){
                 <div class="pb-5">
-                    <div class="grid place-items-center aspect-square cursor-pointer transition-all duration-300 hover:scale-105" (click)="goToCategorySearch(category.objectID)">
-                        <div class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg">
-                            <img 
-                                [src]="getImageUrl(category)"
-                                [attr.data-original-src]="category.image?.url"
-                                [alt]="category.name"
-                                loading="lazy"
-                                (error)="onImageError($event)"
+                    <div class="grid place-items-center aspect-square cursor-pointer transition-all duration-300 hover:scale-105"
+                        (click)="goToCategorySearch(category.objectID)">
+                        <div
+                            class="relative w-full h-full flex items-center justify-center group overflow-hidden rounded-full shadow-lg">
+                            <img [src]="getImageUrl(category)" [attr.data-original-src]="category.image?.url"
+                                [alt]="category.name" loading="lazy" (error)="onImageError($event)"
                                 class="absolute inset-0 w-full h-full object-cover rounded-full border-4 border-gray-200 transition-all duration-500 group-hover:scale-125 group-hover:shadow-xl group-hover:shadow-black/20" />
                             <div class="absolute inset-0 rounded-full bg-primary/20 pointer-events-none"></div>
                             <span
@@ -95,7 +85,7 @@
                                 style="max-width:90%; font-size: clamp(0.6rem, 1.5vw, 0.8rem);">
                                 {{ category.name }}
                             </span>
-                        </div> 
+                        </div>
                     </div>
                 </div>
                 }
@@ -104,12 +94,14 @@
 
             <!-- Custom Navigation Buttons - Only visible on larger screens -->
             @if (shouldShowNav && swiperVisible()) {
-            <button class="swiper-nav-button swiper-button-prev-custom absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hidden md:flex items-center justify-center cursor-pointer hover:bg-white transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
+            <button
+                class="swiper-nav-button swiper-button-prev-custom absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hidden md:flex items-center justify-center cursor-pointer hover:bg-white transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
                 <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
             </button>
-            <button class="swiper-nav-button swiper-button-next-custom absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hidden md:flex items-center justify-center cursor-pointer hover:bg-white transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
+            <button
+                class="swiper-nav-button swiper-button-next-custom absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hidden md:flex items-center justify-center cursor-pointer hover:bg-white transition-all hover:scale-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed">
                 <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
@@ -120,7 +112,7 @@
         <!-- Empty state -->
         <div class="flex flex-col items-center justify-center py-8 px-4">
 
-            
+
             <!-- Mensaje principal -->
             <div class="text-center max-w-md">
                 <h3 class="text-2xl font-light text-base-content mb-3">
@@ -129,7 +121,7 @@
                 <p class="text-base-content/60 text-sm leading-relaxed mb-6">
                     Aún no hay categorías disponibles. ¡Vuelve pronto para descubrir las últimas incorporaciones!
                 </p>
-                
+
 
             </div>
         </div>

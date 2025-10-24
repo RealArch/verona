@@ -370,14 +370,14 @@ export class OrdersPage implements OnInit, OnDestroy {
   getStatusLabel(status: string): string {
     const labels: { [key: string]: string } = {
       'pending': 'Pendiente',
-      'confirmed': 'Confirmada',
-      'preparing': 'En preparación',
-      'ready': 'Lista',
+      // 'confirmed': 'Confirmada',
+      // 'preparing': 'En preparación',
+      // 'ready': 'Lista',
       'completed': 'Completada',
-      'shipped': 'Enviada',
-      'delivered': 'Entregada',
+      // 'shipped': 'Enviada',
+      // 'delivered': 'Entregada',
       'cancelled': 'Cancelada',
-      'refunded': 'Reembolsada'
+      // 'refunded': 'Reembolsada'
     };
     return labels[status] || status;
   }
@@ -399,9 +399,9 @@ export class OrdersPage implements OnInit, OnDestroy {
 
   getDeliveryMethodLabel(method: string): string {
     const labels: { [key: string]: string } = {
-      'pickup': 'Retiro en persona',
-      'homeDelivery': 'Delivery',
-      'shipping': 'Envío',
+      // 'pickup': 'Retiro en persona',
+      // 'homeDelivery': 'Delivery',
+      // 'shipping': 'Envío',
       'arrangeWithSeller': 'Acordar con vendedor'
     };
     return labels[method] || method;

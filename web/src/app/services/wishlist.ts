@@ -1,4 +1,4 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed, effect } from '@angular/core';
 import { Firestore, doc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from '@angular/fire/firestore';
 import { Auth } from './auth/auth.services';
 import { Product, ProductVariant } from '../interfaces/products';
@@ -41,11 +41,22 @@ export class Wishlist {
   public wishlistCount = computed(() => this.wishlistItemsSignal().length);
 
   constructor() {
-    // Escuchar cambios en el usuario autenticado usando effect
-    const currentUser = this.authService.user();
-    if (currentUser) {
-      this.listenToWishlist(currentUser.uid);
-    }
+    // Usar effect para reaccionar a cambios en la autenticación
+    effect(() => {
+      const initialized = this.authService.authInitialized();
+      const currentUser = this.authService.user();
+      
+      // Solo proceder cuando Firebase esté inicializado
+      if (!initialized) {
+        return;
+      }
+      
+      if (currentUser) {
+        this.listenToWishlist(currentUser.uid);
+      } else {
+        this.clearWishlist();
+      }
+    }, { allowSignalWrites: true });
   }
 
   /**
@@ -57,27 +68,39 @@ export class Wishlist {
       this.unsubscribeWishlist();
     }
 
+    this.loadingSignal.set(true);
     const wishlistDocRef = doc(this.firestore, 'wishlists', uid);
 
-    this.unsubscribeWishlist = onSnapshot(wishlistDocRef, (docSnapshot) => {
-      if (docSnapshot.exists()) {
-        const data = docSnapshot.data();
-        const items = data['items'] || [];
-        
-        // Convertir Timestamps de Firestore a Date
-        const normalizedItems = items.map((item: any) => ({
-          ...item,
-          addedAt: item.addedAt?.toDate ? item.addedAt.toDate() : item.addedAt
-        }));
-        
-        this.wishlistItemsSignal.set(normalizedItems);
-      } else {
+    this.unsubscribeWishlist = onSnapshot(wishlistDocRef, 
+      (docSnapshot) => {
+        try {
+          if (docSnapshot.exists()) {
+            const data = docSnapshot.data();
+            const items = data['items'] || [];
+            
+            // Convertir Timestamps de Firestore a Date
+            const normalizedItems = items.map((item: any) => ({
+              ...item,
+              addedAt: item.addedAt?.toDate ? item.addedAt.toDate() : item.addedAt
+            }));
+            
+            this.wishlistItemsSignal.set(normalizedItems);
+          } else {
+            this.wishlistItemsSignal.set([]);
+          }
+        } catch (error) {
+          console.error('Error processing wishlist data:', error);
+          this.wishlistItemsSignal.set([]);
+        } finally {
+          this.loadingSignal.set(false);
+        }
+      }, 
+      (error) => {
+        console.error('Error listening to wishlist:', error);
         this.wishlistItemsSignal.set([]);
+        this.loadingSignal.set(false);
       }
-    }, (error) => {
-      console.error('Error listening to wishlist:', error);
-      this.wishlistItemsSignal.set([]);
-    });
+    );
   }
 
   /**

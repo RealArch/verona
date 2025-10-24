@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Title, Meta } from '@angular/platform-browser';
 import { Unsubscribe } from '@angular/fire/firestore';
@@ -12,7 +12,7 @@ import { Order } from '../../../interfaces/sales';
   templateUrl: './my-orders.html',
   styleUrl: './my-orders.scss'
 })
-export class MyOrders implements OnInit, OnDestroy {
+export class MyOrders implements OnDestroy {
   private auth = inject(Auth);
   private sales = inject(Sales);
   private readonly titleService = inject(Title);
@@ -26,9 +26,26 @@ export class MyOrders implements OnInit, OnDestroy {
   
   private unsubscribe?: Unsubscribe;
 
-  ngOnInit(): void {
+  constructor() {
     this.setupSEO();
-    this.loadOrders();
+    
+    // Usar effect para cargar orders cuando el usuario esté disponible
+    effect(() => {
+      const initialized = this.auth.authInitialized();
+      const user = this.auth.user();
+      
+      // Solo proceder cuando Firebase esté inicializado
+      if (!initialized) {
+        return;
+      }
+      
+      if (user) {
+        this.loadOrders(user.uid);
+      } else {
+        this.loading.set(false);
+        this.orders.set([]);
+      }
+    }, { allowSignalWrites: true });
   }
 
   private setupSEO(): void {
@@ -44,30 +61,32 @@ export class MyOrders implements OnInit, OnDestroy {
     }
   }
 
-  private loadOrders(): void {
-    const user = this.auth.user();
-    
-    if (!user) {
-      this.loading.set(false);
-      return;
+  private loadOrders(uid: string): void {
+    // Limpiar suscripción anterior si existe
+    if (this.unsubscribe) {
+      this.unsubscribe();
     }
+
+    this.loading.set(true);
+    this.error.set(null);
 
     try {
       // Usar el servicio de sales para suscribirse a los pedidos
       this.unsubscribe = this.sales.subscribeToUserOrders(
-        user.uid,
+        uid,
         (orders) => {
           this.orders.set(orders);
           this.loading.set(false);
           this.error.set(null);
         },
         (error) => {
+          console.error('Error loading orders:', error);
           this.error.set(error.message);
           this.loading.set(false);
         }
       );
     } catch (err: any) {
-      console.error('Error loading orders:', err);
+      console.error('Error setting up orders subscription:', err);
       this.error.set(err.message || 'Error al cargar los pedidos');
       this.loading.set(false);
     }

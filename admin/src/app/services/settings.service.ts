@@ -4,6 +4,8 @@ import { Storage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from
 import { StoreSettings, HeaderImage } from '../interfaces/settings';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 type SettingKey = 'storeEnabled' | 'pickupEnabled' | 'deliveryEnabled' | 'shippingEnabled' | 'arrangeWithSellerEnabled';
 
@@ -15,7 +17,9 @@ export class SettingsService {
   private firestore = inject(Firestore);
   private storage = inject(Storage);
   private authService = inject(AuthService);
+  private http = inject(HttpClient);
   private readonly settingsDocRef = this.runInContext(() => doc(this.firestore, 'store/settings'));
+  private readonly apiUrl = environment.api;
 
   private _storeEnabled = signal<boolean>(true);
   private _pickupEnabled = signal<boolean>(true);
@@ -214,14 +218,18 @@ export class SettingsService {
 
   async saveHeaderImages(largeScreenData?: { path: string, url: string, type: string, name: string }, smallScreenData?: { path: string, url: string, type: string, name: string }): Promise<void> {
     try {
-      // Mover imágenes de temp a img/settings
+      // Mover imágenes de temp a img/settings usando el backend
       if (largeScreenData) {
-        const finalPath = `img/settings/header-large.${this.getExtensionFromType(largeScreenData.type)}`;
-        const finalUrl = await this.moveImage(largeScreenData.path, finalPath);
+        const response = await firstValueFrom(
+          this.http.post<{ success: boolean, finalPath: string, url: string }>(
+            `${this.apiUrl}/admin/moveHeaderImage`,
+            { tempPath: largeScreenData.path, screenType: 'large' }
+          )
+        );
 
         const headerImage: HeaderImage = {
-          path: finalPath,
-          url: finalUrl,
+          path: response.finalPath,
+          url: response.url,
           type: largeScreenData.type,
           processing: false,
           name: largeScreenData.name
@@ -231,12 +239,16 @@ export class SettingsService {
       }
 
       if (smallScreenData) {
-        const finalPath = `img/settings/header-small.${this.getExtensionFromType(smallScreenData.type)}`;
-        const finalUrl = await this.moveImage(smallScreenData.path, finalPath);
+        const response = await firstValueFrom(
+          this.http.post<{ success: boolean, finalPath: string, url: string }>(
+            `${this.apiUrl}/admin/moveHeaderImage`,
+            { tempPath: smallScreenData.path, screenType: 'small' }
+          )
+        );
 
         const headerImage: HeaderImage = {
-          path: finalPath,
-          url: finalUrl,
+          path: response.finalPath,
+          url: response.url,
           type: smallScreenData.type,
           processing: false,
           name: smallScreenData.name
@@ -335,33 +347,6 @@ export class SettingsService {
       reader.onerror = () => reject(reader.error);
       reader.readAsArrayBuffer(file);
     });
-  }
-
-  private async moveImage(tempPath: string, finalPath: string): Promise<string> {
-    try {
-      // Obtener referencia a la imagen temporal
-      const tempRef = this.runInContext(() => ref(this.storage, tempPath));
-
-      // Descargar la imagen temporal
-      const tempUrl = await this.runInContext(() => getDownloadURL(tempRef));
-      const response = await fetch(tempUrl);
-      const blob = await response.blob();
-
-      // Subir a la ubicación final
-      const finalRef = this.runInContext(() => ref(this.storage, finalPath));
-      await this.runInContext(() => uploadBytesResumable(finalRef, blob));
-
-      // Obtener URL final
-      const finalUrl = await this.runInContext(() => getDownloadURL(finalRef));
-
-      // Eliminar imagen temporal
-      await this.runInContext(() => deleteObject(tempRef));
-
-      return finalUrl;
-    } catch (error) {
-      console.error('Error moving image:', error);
-      throw error;
-    }
   }
 
   private runInContext<T>(fn: () => T): T {

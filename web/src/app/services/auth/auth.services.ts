@@ -43,20 +43,16 @@ export class Auth {
   private userProfileSignal = signal<UserProfile | null>(null);
 
   // Signal para controlar si Firebase Auth ya se inicializó
-  private authInitialized = signal(false);
+  private authInitializedSignal = signal(false);
   
   // Almacena la URL anterior para redirección después del login
   private previousUrl: string | null = null;
 
   // Signal computado para saber si está autenticado
-  public isAuthenticated = computed(() => {
-    // Si no se ha inicializado Firebase Auth, asumir que está autenticado temporalmente
-    if (!this.authInitialized()) {
-      return true;
-    }
-    // Una vez inicializado, usar el estado real del usuario
-    return !!this.userSignal();
-  });
+  public isAuthenticated = computed(() => !!this.userSignal());
+
+  // Getter público para saber si la autenticación está inicializada
+  public authInitialized = this.authInitializedSignal.asReadonly();
 
   // Getters para acceder a los datos desde cualquier componente
   public user = this.userSignal.asReadonly();
@@ -113,7 +109,7 @@ export class Auth {
   private initAuthListener(): void {
     onAuthStateChanged(this.firebaseAuth, (user) => {
       // Marcar como inicializado al recibir el primer evento
-      this.authInitialized.set(true);
+      this.authInitializedSignal.set(true);
       this.userSignal.set(user);
 
       if (user) {

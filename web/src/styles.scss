@@ -5,6 +5,36 @@
 @use "tailwindcss";
 @plugin "daisyui";
 
+/* Performance optimizations for smooth scrolling */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+  /* Enable GPU acceleration */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Optimize sticky elements */
+[class*="sticky"],
+[class*="fixed"] {
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Reduce repaints on scroll */
+img {
+  will-change: auto;
+}
+
 /* Swiper styles */
 
 

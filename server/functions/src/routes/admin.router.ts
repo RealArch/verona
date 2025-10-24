@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 // import * as admin from "firebase-admin";
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { db, auth } from '../firebase-init';
+import { db, auth, storage } from '../firebase-init';
 // import { info } from 'firebase-functions/logger';
 
 const usersRouter: Router = Router();
@@ -50,6 +50,59 @@ usersRouter.post('/createAdminUser', async (req, res) => {
     } catch (error) {
         console.error('Error creating admin user:', error);
         res.status(500).json({ error: 'Failed to create admin user', info: error });
+    }
+});
+
+// Endpoint para mover imágenes de header de temp a ubicación final
+usersRouter.post('/moveHeaderImage', async (req: Request, res: Response) => {
+    try {
+        const { tempPath, screenType } = req.body;
+
+        if (!tempPath || !screenType) {
+            res.status(400).json({ error: 'tempPath and screenType are required' });
+            return;
+        }
+
+        if (screenType !== 'large' && screenType !== 'small') {
+            res.status(400).json({ error: 'screenType must be "large" or "small"' });
+            return;
+        }
+
+        // Obtener la extensión del archivo desde tempPath
+        const pathParts = tempPath.split('.');
+        const extension = pathParts[pathParts.length - 1];
+
+        // Definir el path final
+        const finalPath = `img/settings/header-${screenType}.${extension}`;
+
+        // Obtener bucket de storage
+        const bucket = storage.bucket();
+
+        // Copiar archivo de temp a ubicación final
+        await bucket.file(tempPath).copy(bucket.file(finalPath));
+
+        // Eliminar archivo temporal
+        await bucket.file(tempPath).delete();
+
+        // Generar URL según el entorno
+        let url: string;
+        if (process.env.FIREBASE_STORAGE_EMULATOR_HOST) {
+            // Emulador local
+            url = `http://localhost:9199/v0/b/${bucket.name}/o/${encodeURIComponent(finalPath)}?alt=media`;
+        } else {
+            // Producción - hacer el archivo público
+            await bucket.file(finalPath).makePublic();
+            url = `https://storage.googleapis.com/${bucket.name}/${encodeURIComponent(finalPath)}`;
+        }
+
+        res.status(200).json({
+            success: true,
+            finalPath,
+            url
+        });
+    } catch (error) {
+        console.error('Error moving header image:', error);
+        res.status(500).json({ error: 'Failed to move header image', info: error });
     }
 });
 

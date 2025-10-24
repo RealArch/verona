@@ -7,13 +7,14 @@
   overflow: visible !important;
 }
 
-.hot-items-swiper-frame {
+
+
+@media (min-width: 768px) {
+  .hot-items-swiper-frame {
   padding: 20px;
   overflow: hidden;
 
 }
-
-@media (min-width: 768px) {
   .hot-items-swiper-frame {
     --hot-items-edge-buffer: 1.5rem;
   }

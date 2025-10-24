@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, effect } from '@angular/core';
 import { Title, Meta } from '@angular/platform-browser';
 import { Router } from '@angular/router';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { Wishlist, WishlistItem } from '../../../services/wishlist';
 import { ShoppingCartService } from '../../../services/shopping-cart/shopping-cart';
+import { Auth } from '../../../services/auth/auth.services';
 
 @Component({
   selector: 'app-my-wishlist',
@@ -11,12 +12,13 @@ import { ShoppingCartService } from '../../../services/shopping-cart/shopping-ca
   templateUrl: './my-wishlist.html',
   styleUrl: './my-wishlist.scss'
 })
-export class MyWishlist implements OnInit {
+export class MyWishlist {
   private readonly titleService = inject(Title);
   private readonly metaService = inject(Meta);
   private readonly wishlistService = inject(Wishlist);
   private readonly cartService = inject(ShoppingCartService);
   private readonly router = inject(Router);
+  private readonly authService = inject(Auth);
 
   // Signals
   wishlistItems = this.wishlistService.wishlistItems;
@@ -34,8 +36,22 @@ export class MyWishlist implements OnInit {
     }, 0);
   });
 
-  ngOnInit(): void {
+  constructor() {
     this.setupSEO();
+    
+    // Verificar autenticación solo después de que esté inicializada
+    effect(() => {
+      const initialized = this.authService.authInitialized();
+      const user = this.authService.user();
+      
+      // Solo verificar cuando Firebase esté inicializado
+      if (initialized && !user) {
+        // Si no hay usuario, redirigir al login
+        this.router.navigate(['/auth/login'], {
+          queryParams: { returnUrl: '/user/wishlist' }
+        });
+      }
+    });
   }
 
   private setupSEO(): void {
