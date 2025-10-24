@@ -509,6 +509,9 @@ export class ProductComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  /**
+   * Agrega o remueve el producto del wishlist
+   */
   async addToWishlist(): Promise<void> {
     const product = this.currentProduct();
     const variant = this.selectedVariant();
@@ -520,27 +523,33 @@ export class ProductComponent implements OnInit, OnDestroy, AfterViewInit {
     try {
       this.addingToWishlist.set(true);
       
-      // Agregar al wishlist con o sin variante según esté seleccionada
-      const result = await this.wishlistService.addToWishlist(product, variant ?? undefined);
-      
-      // Track add to wishlist event in Analytics
-      if (result.success) {
-        const price = variant?.price ?? product.price;
-        this.analyticsService.logAddToWishlist(
-          product.objectID || product.id || '',
-          product.name,
-          price
-        );
+      const productId = product.objectID || product.id || '';
+      const isInWishlist = this.wishlistService.isInWishlist(productId, variant?.id);
+
+      if (isInWishlist) {
+        // Si ya está en wishlist, remover
+        const result = await this.wishlistService.removeFromWishlist(productId, variant?.id);
+        this.showNotification(result.message, result.success ? 'info' : 'error');
+      } else {
+        // Si no está, agregar
+        const result = await this.wishlistService.addToWishlist(product, variant ?? undefined);
+        
+        // Track add to wishlist event in Analytics
+        if (result.success) {
+          const price = variant?.price ?? product.price;
+          this.analyticsService.logAddToWishlist(
+            productId,
+            product.name,
+            price
+          );
+        }
+        
+        this.showNotification(result.message, result.success ? 'success' : 'error');
       }
       
-      console.log(result.message);
-      
-      // Mostrar notificación al usuario
-      this.showNotification(result.message, result.success ? 'success' : 'error');
-      
     } catch (error) {
-      console.error('Error agregando al wishlist:', error);
-      this.showNotification('Error al agregar a la lista de deseos', 'error');
+      console.error('Error toggling wishlist:', error);
+      this.showNotification('Error al actualizar la lista de deseos', 'error');
     } finally {
       this.addingToWishlist.set(false);
     }

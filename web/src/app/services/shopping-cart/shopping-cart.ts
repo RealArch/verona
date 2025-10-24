@@ -60,11 +60,6 @@ export class ShoppingCartService {
         this.loadCart();
       });
     });
-
-    // Cargar carrito inicial dentro del contexto de inyección
-    runInInjectionContext(this.injector, () => {
-      this.loadCart();
-    });
   }
 
   /**
@@ -106,11 +101,24 @@ export class ShoppingCartService {
       if (this.isUserAuthenticated()) {
         await this.loadUserCart();
       } else {
+        // Para usuarios no autenticados, solo cargar desde localStorage
+        // No intentar leer de Firestore
         this.loadLocalCart();
       }
     } catch (error) {
       console.error('Error loading cart:', error);
-      this._error.set('Error al cargar el carrito');
+      // No mostrar error si es solo un problema de permisos
+      if (error && typeof error === 'object' && 'code' in error) {
+        const firebaseError = error as any;
+        if (firebaseError.code === 'permission-denied') {
+          console.log('Permission denied - user not authenticated, loading local cart');
+          this.loadLocalCart();
+        } else {
+          this._error.set('Error al cargar el carrito');
+        }
+      } else {
+        this._error.set('Error al cargar el carrito');
+      }
     } finally {
       this._loading.set(false);
     }

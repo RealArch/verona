@@ -1,18 +1,184 @@
-rules_version='2'
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // ==========================================
+    // FUNCIONES AUXILIARES
+    // ==========================================
+    
+    // Verifica si el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Verifica si el usuario es el propietario del recurso
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Verifica si el usuario es admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/adminUsers/$(request.auth.uid));
+    }
+    
+    // ==========================================
+    // COLECCIÓN: store (Configuración pública)
+    // ==========================================
+    match /store/{document} {
+      // Lectura pública para settings (necesario para la app)
+      allow read: if true;
+      
+      // Escritura: Solo admin
+      allow write: if isAdmin();
+    }
+    
+    // ==========================================
+    // COLECCIÓN: users
+    // ==========================================
+    match /users/{userId} {
+      // Lectura: El usuario puede leer su propia información o si es admin
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Creación: Solo durante el registro (el usuario crea su propio documento)
+      allow create: if isOwner(userId) && 
+                      request.resource.data.keys().hasAll(['firstName', 'lastName', 'email']);
+      
+      // Actualización: Solo el propietario o admin
+      allow update: if isOwner(userId) || isAdmin();
+      
+      // Eliminación: Solo admin
+      allow delete: if isAdmin();
+      
+      // Subcolección: addresses
+      match /addresses/{addressId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if isOwner(userId) || isAdmin();
+      }
+      
+      // Subcolección: orders (solo lectura para el usuario)
+      match /orders/{orderId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if false; // Las órdenes se crean desde funciones del servidor
+      }
+    }
+    
+    // ==========================================
+    // COLECCIÓN: shopping_carts
+    // ==========================================
+    match /shopping_carts/{userId} {
+      // Lectura: Solo el propietario o admin
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Creación: Solo el propietario (cuando se autentica)
+      allow create: if isOwner(userId);
+      
+      // Actualización: Solo el propietario o admin
+      allow update: if isOwner(userId) || isAdmin();
+      
+      // Eliminación: Solo el propietario o admin
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // ==========================================
+    // COLECCIÓN: adminUsers
+    // ==========================================
+    match /adminUsers/{adminId} {
+      // Solo lectura para verificar si alguien es admin
+      allow read: if isAuthenticated();
+      // Solo admins pueden crear/modificar otros admins
+      allow write: if isAdmin();
+    }
+    
+    // ==========================================
+    // COLECCIÓN: products
+    // ==========================================
+    match /products/{productId} {
+      // Lectura: Todos pueden leer productos activos, admin puede leer todos
+      allow read: if resource.data.status == 'active' || isAdmin();
+      
+      // Escritura: Solo admin
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // ==========================================
+    // COLECCIÓN: categories
+    // ==========================================
+    match /categories/{categoryId} {
+      // Lectura: Todos pueden leer categorías
+      allow read: if true;
+      
+      // Escritura: Solo admin
+      allow write: if isAdmin();
+    }
+    
+    // ==========================================
+    // COLECCIÓN: orders
+    // ==========================================
+    match /orders/{orderId} {
+      // Lectura: Solo el usuario dueño de la orden o admin
+      allow read: if isAuthenticated() && 
+                    (resource.data.userData.uid == request.auth.uid || isAdmin());
+      
+      // Creación: Solo a través de funciones del servidor (validado por backend)
+      // Las órdenes se crean desde el endpoint /createOrder
+      allow create: if false;
+      
+      // Actualización: Solo admin (para cambiar estados de orden)
+      allow update: if isAdmin();
+      
+      // Eliminación: Solo admin
+      allow delete: if isAdmin();
+    }
+    
+    // ==========================================
+    // COLECCIÓN: wishlists
+    // ==========================================
+    match /wishlists/{wishlistId} {
+      // Lectura: Solo el propietario o admin
+      allow read: if isAuthenticated() && 
+                    (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Creación: Usuario autenticado puede crear su wishlist
+      allow create: if isAuthenticated() && 
+                      request.resource.data.userId == request.auth.uid;
+      
+      // Actualización: Solo el propietario o admin
+      allow update: if isAuthenticated() && 
+                      (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Eliminación: Solo el propietario o admin
+      allow delete: if isAuthenticated() && 
+                      (resource.data.userId == request.auth.uid || isAdmin());
+    }
+    
+    // ==========================================
+    // COLECCIÓN: metadata
+    // ==========================================
+    match /metadata/{document} {
+      // Lectura: Admin puede leer contadores y metadatos
+      allow read: if isAdmin();
+      
+      // Escritura: Solo a través de triggers del servidor
+      allow write: if false;
+    }
+    
+    // ==========================================
+    // STORAGE RULES (Referencia)
+    // ==========================================
+    // Las reglas de Storage están en storage.rules
+    // Productos: Solo admin puede subir
+    // Usuarios: Solo el propietario puede subir su avatar
+    
+    // ==========================================
+    // REGLAS POR DEFECTO
+    // ==========================================
+    // Denegar acceso a cualquier otra colección no especificada
     match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }

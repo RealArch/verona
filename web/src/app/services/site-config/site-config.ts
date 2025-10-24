@@ -33,29 +33,45 @@ export class SiteConfig {
           this.storeSettings.set(data);
           // console.log('Store settings loaded:', data);
         } else {
-          console.warn('Store settings document does not exist');
+          console.warn('Store settings document does not exist - using defaults');
           // Configuración por defecto si no existe
-          this.storeSettings.set({
-            storeEnabled: true,
-            deliveryMethods: {
-              pickupEnabled: true,
-              homeDeliveryEnabled: true,
-              shippingEnabled: false,
-              arrangeWithSellerEnabled: false
-            },
-            taxPercentage: 16, // Por defecto 16%
-            headerImages: {
-              largeScreen: null,
-              smallScreen: null
-            }
-          });
+          this.setDefaultSettings();
         }
       },
       (error) => {
         console.error('Error loading store settings:', error);
         this.loading.set(false);
+        
+        // Si es un error de permisos, usar configuración por defecto
+        if (error && typeof error === 'object' && 'code' in error) {
+          const firebaseError = error as any;
+          if (firebaseError.code === 'permission-denied') {
+            console.warn('Permission denied loading store settings - using defaults');
+            this.setDefaultSettings();
+          }
+        }
       }
     );
+  }
+  
+  /**
+   * Establece la configuración por defecto
+   */
+  private setDefaultSettings(): void {
+    this.storeSettings.set({
+      storeEnabled: true,
+      deliveryMethods: {
+        pickupEnabled: true,
+        homeDeliveryEnabled: true,
+        shippingEnabled: false,
+        arrangeWithSellerEnabled: false
+      },
+      taxPercentage: 16, // Por defecto 16%
+      headerImages: {
+        largeScreen: null,
+        smallScreen: null
+      }
+    });
   }
   
   /**
