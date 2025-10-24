@@ -4,10 +4,13 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "g build --configuration production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:web": "node dist/web/server/server.mjs"
+    "serve:ssr:web": "node dist/web/server/server.mjs",
+
+    "dev:ssr": "ng run web:serve-ssr:development",
+    "prerender": "ng run web:prerender"
   },
   "prettier": {
     "overrides": [

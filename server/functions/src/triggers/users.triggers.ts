@@ -90,7 +90,9 @@ export const onUserDeleted = onDocumentDeleted(
         // Decrementar contador global de usuarios
         const countersRef = db.collection("metadata").doc("counters");
         await countersRef.set({
-            'users.total': FieldValue.increment(-1)
+            users: {
+                total: FieldValue.increment(-1)
+            }
         }, { merge: true });
 
         console.log(`[Users] Deleted user ${userId}, decremented global counter`);
