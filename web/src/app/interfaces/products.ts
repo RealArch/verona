@@ -3,6 +3,7 @@ export interface Product {
     objectID?: string;
     categoryId: string;
     description: string;
+    plain_description?: string;
     name: string;
     pausedVariantsCount: number;
     photos: PhotosArray[];

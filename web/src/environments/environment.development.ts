@@ -1,6 +1,7 @@
 
 export const environment = {
     // useEmulators: false,
+    // baseUrl: "https://veronadeco.com",
     // api: "https://us-central1-verona-ffbcd.cloudfunctions.net/api",
     // firebase: {
     //     projectId: "verona-ffbcd",
@@ -21,6 +22,7 @@ export const environment = {
     //     }
     // }
     useEmulators: true,
+    baseUrl: "http://localhost:4200",
     api: "http://127.0.0.1:5001/verona-ffbcd/us-central1/api",
     firebase: {
         projectId: "verona-ffbcd",

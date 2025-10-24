@@ -12,6 +12,7 @@ import { ProductItemComponent } from '../../../components/product-item/product-i
 import { ShoppingCartService } from '../../../services/shopping-cart/shopping-cart';
 import { Wishlist } from '../../../services/wishlist';
 import { AnalyticsService } from '../../../services/analytics/analytics.service';
+import { environment } from '../../../../environments/environment';
 import { register } from 'swiper/element/bundle';
 
 register();
@@ -345,29 +346,32 @@ export class ProductComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   private updateMetaTags(product: ProductInterface): void {
     const productId = product.id || product.objectID;
-    const productUrl = `https://verona-ffbcd.web.app/product/${product.slug}/${productId}`;
+    const productUrl = `${environment.baseUrl}/product/${product.slug}/${productId}`;
     const imageUrl = product.photos && product.photos.length > 0 
       ? product.photos[0].large.url 
-      : 'https://verona-ffbcd.web.app/logos/logo.png';
+      : `${environment.baseUrl}/logos/logo.png`;
     
     const price = product.price;
     const currency = 'USD';
     const availability = parseInt(product.stock) > 0 ? 'in stock' : 'out of stock';
     const categoryName = this.getCategoryName(product.categoryId);
     
+    // Usar plain_description si existe, sino description
+    const metaDescription = product.plain_description || product.description || `Compra ${product.name} en Verona. ${categoryName}.`;
+    
     // Title
     const title = `${product.name} | Verona`;
     this.titleService.setTitle(title);
     
     // Standard Meta Tags
-    this.metaService.updateTag({ name: 'description', content: product.description || `Compra ${product.name} en Verona. ${categoryName}.` });
+    this.metaService.updateTag({ name: 'description', content: metaDescription });
     this.metaService.updateTag({ name: 'keywords', content: `${product.name}, ${categoryName}, comprar online, Verona, Venezuela` });
     this.metaService.updateTag({ name: 'author', content: 'Verona' });
     
     // Open Graph (Facebook, LinkedIn, etc.)
     this.metaService.updateTag({ property: 'og:type', content: 'product' });
     this.metaService.updateTag({ property: 'og:title', content: product.name });
-    this.metaService.updateTag({ property: 'og:description', content: product.description || `Compra ${product.name} en Verona.` });
+    this.metaService.updateTag({ property: 'og:description', content: metaDescription });
     this.metaService.updateTag({ property: 'og:image', content: imageUrl });
     this.metaService.updateTag({ property: 'og:image:alt', content: product.name });
     this.metaService.updateTag({ property: 'og:image:width', content: '1200' });
@@ -385,7 +389,7 @@ export class ProductComponent implements OnInit, OnDestroy, AfterViewInit {
     // Twitter Card
     this.metaService.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
     this.metaService.updateTag({ name: 'twitter:title', content: product.name });
-    this.metaService.updateTag({ name: 'twitter:description', content: product.description || `Compra ${product.name} en Verona.` });
+    this.metaService.updateTag({ name: 'twitter:description', content: metaDescription });
     this.metaService.updateTag({ name: 'twitter:image', content: imageUrl });
     this.metaService.updateTag({ name: 'twitter:image:alt', content: product.name });
     
@@ -403,7 +407,7 @@ export class ProductComponent implements OnInit, OnDestroy, AfterViewInit {
     
     // Additional product structured data hints (JSON-LD would be ideal but requires script injection)
     this.metaService.updateTag({ itemprop: 'name', content: product.name });
-    this.metaService.updateTag({ itemprop: 'description', content: product.description || '' });
+    this.metaService.updateTag({ itemprop: 'description', content: metaDescription });
     this.metaService.updateTag({ itemprop: 'image', content: imageUrl });
     this.metaService.updateTag({ itemprop: 'price', content: price.toString() });
     this.metaService.updateTag({ itemprop: 'priceCurrency', content: currency });

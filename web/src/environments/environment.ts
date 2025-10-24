@@ -1,6 +1,7 @@
 
 export const environment = {
     useEmulators: false,
+    baseUrl: "https://veronadeco.com",
     api: "https://us-central1-verona-ffbcd.cloudfunctions.net/api",
     firebase: {
         projectId: "verona-ffbcd",

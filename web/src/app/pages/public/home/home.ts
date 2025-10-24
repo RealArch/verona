@@ -5,6 +5,7 @@ import { HotItemsComponent } from '../../../components/hot-items/hot-items.compo
 import { MainFooterComponent } from '../../../components/main-footer/main-footer.component';
 import { CategoriesShow } from '../../../components/categories-show/categories-show';
 import { LatestAdditionsComponent } from '../../../components/latest-additions/latest-additions.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-home',
@@ -24,8 +25,8 @@ export class Home implements OnInit {
   private setupSEO(): void {
     const title = 'Verona - Tu Tienda Online en Venezuela';
     const description = 'Descubre los mejores productos en Verona. Compra online con envío a toda Venezuela. Ofertas exclusivas, productos de calidad y la mejor atención.';
-    const url = 'https://verona-ffbcd.web.app';
-    const image = 'https://verona-ffbcd.web.app/logos/logo.png';
+    const url = environment.baseUrl;
+    const image = `${environment.baseUrl}/logos/logo.png`;
 
     // Title
     this.titleService.setTitle(title);
