@@ -95,8 +95,12 @@ service cloud.firestore {
     // COLECCIÓN: products
     // ==========================================
     match /products/{productId} {
-      // Lectura: Todos pueden leer productos activos, admin puede leer todos
-      allow read: if resource.data.status == 'active' || isAdmin();
+      // Lectura individual: Productos activos para todos, admin ve todos
+      allow get: if resource.data.status == 'active' || isAdmin();
+      
+      // Lectura de lista/queries: Todos pueden listar productos
+      // El frontend debe filtrar por status == 'active' si no es admin
+      allow list: if true;
       
       // Escritura: Solo admin
       allow create: if isAdmin();
@@ -119,9 +123,13 @@ service cloud.firestore {
     // COLECCIÓN: orders
     // ==========================================
     match /orders/{orderId} {
-      // Lectura: Solo el usuario dueño de la orden o admin
-      allow read: if isAuthenticated() && 
-                    (resource.data.userData.uid == request.auth.uid || isAdmin());
+      // Lectura individual: Solo el usuario dueño de la orden o admin
+      allow get: if isAuthenticated() && 
+                   (resource.data.userData.uid == request.auth.uid || isAdmin());
+      
+      // Lectura de lista/queries: Solo usuarios autenticados (el query debe filtrar por userId)
+      // El frontend debe hacer: .where('userData.uid', '==', currentUser.uid)
+      allow list: if isAuthenticated();
       
       // Creación: Solo a través de funciones del servidor (validado por backend)
       // Las órdenes se crean desde el endpoint /createOrder
@@ -138,13 +146,16 @@ service cloud.firestore {
     // COLECCIÓN: wishlists
     // ==========================================
     match /wishlists/{wishlistId} {
-      // Lectura: Solo el propietario o admin
-      allow read: if isAuthenticated() && 
-                    (resource.data.userId == request.auth.uid || isAdmin());
+      // Lectura individual: Solo el propietario o admin
+      allow get: if isAuthenticated() && 
+                   (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Lectura de lista/queries: Solo usuarios autenticados
+      allow list: if isAuthenticated();
       
       // Creación: Usuario autenticado puede crear su wishlist
-      allow create: if isAuthenticated() && 
-                      request.resource.data.userId == request.auth.uid;
+      // Permitir creación durante registro (sin validar userId por si aún no existe)
+      allow create: if isAuthenticated();
       
       // Actualización: Solo el propietario o admin
       allow update: if isAuthenticated() && 

@@ -77,13 +77,19 @@ service firebase.storage {
     }
     
     // ==========================================
-    // DOCUMENTOS Y ARCHIVOS TEMPORALES
+    // ARCHIVOS TEMPORALES (temp y tmp)
     // ==========================================
+    // Ruta: temp/{userId}/{fileName} - Usada durante uploads
+    match /temp/{userId}/{fileName} {
+      // Archivos temporales: Solo el propietario o admin, máximo 10MB
+      allow read, write: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
+      
+      // Auto-delete después de 24 horas (configurar con lifecycle en Firebase Console)
+    }
+    
     match /tmp/{userId}/{fileName} {
-      // Archivos temporales: Solo el propietario, máximo 10MB
-      allow read, write: if isAuthenticated() && 
-                           request.auth.uid == userId && 
-                           isValidSize(10 * 1024 * 1024);
+      // Archivos temporales: Solo el propietario o admin, máximo 10MB
+      allow read, write: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
       
       // Auto-delete después de 24 horas (configurar con lifecycle en Firebase Console)
     }

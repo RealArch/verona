@@ -1,5 +1,5 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
-import { Firestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from '@angular/fire/firestore';
+import { Firestore, doc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from '@angular/fire/firestore';
 import { Auth } from './auth/auth.services';
 import { Product, ProductVariant } from '../interfaces/products';
 import { Router } from '@angular/router';
@@ -176,29 +176,23 @@ export class Wishlist {
         return { success: true, message: 'Variante agregada a tu lista de deseos' };
       }
 
-      // Verificar si el documento existe
-      const docSnapshot = await getDoc(wishlistDocRef);
-
-      if (docSnapshot.exists()) {
-        // Documento existe, agregar el item
-        await updateDoc(wishlistDocRef, {
-          items: arrayUnion(newItem),
-          updatedAt: new Date()
-        });
-      } else {
-        // Documento no existe, crearlo
-        await setDoc(wishlistDocRef, {
-          userId: user.uid,
-          items: [newItem],
-          createdAt: new Date(),
-          updatedAt: new Date()
-        });
-      }
+      // El documento debe existir (creado por el backend al registrar el usuario)
+      // Si no existe, intentar agregarlo igual (updateDoc fallará y se capturará en el catch)
+      await updateDoc(wishlistDocRef, {
+        items: arrayUnion(newItem),
+        updatedAt: new Date()
+      });
 
       return { success: true, message: 'Producto agregado a tu lista de deseos' };
 
     } catch (error) {
       console.error('Error agregando a wishlist:', error);
+      
+      // Si el error es porque el documento no existe (race condition), informar al usuario
+      if (error instanceof Error && error.message.includes('No document to update')) {
+        return { success: false, message: 'Tu lista de deseos aún no está disponible. Intenta de nuevo en unos segundos.' };
+      }
+      
       return { success: false, message: 'Error al agregar el producto a tu lista de deseos' };
     } finally {
       this.loadingSignal.set(false);

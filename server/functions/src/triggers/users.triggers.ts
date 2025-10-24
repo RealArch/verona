@@ -34,8 +34,17 @@ export const onUserCreated = onDocumentCreated(
             }
         }, { merge: true });
 
+        // Crear wishlist vacío para el nuevo usuario
+        const wishlistRef = db.collection("wishlists").doc(userId);
+        batch.set(wishlistRef, {
+            userId: userId,
+            items: [],
+            createdAt: FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp()
+        });
+
         await batch.commit();
-        console.log(`[Users] Created user ${userId}, incremented global counter`);
+        console.log(`[Users] Created user ${userId}, incremented global counter, and initialized wishlist`);
 
         // Enviar email de bienvenida (en paralelo, sin bloquear)
         if (data.email && data.firstName && data.lastName) {
