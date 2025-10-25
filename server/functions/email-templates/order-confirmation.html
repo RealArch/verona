@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<!-- 
+  Plantilla de email para confirmación de pedido
+  Usa sintaxis Handlebars para variables dinámicas
+  Los errores de linter de CSS inline con {{}} son falsos positivos
+-->
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmación de Pedido - Verona</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            max-width: 650px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .header {
+            background: linear-gradient(135deg, #006633 0%, #139b57 100%);
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 32px;
+            font-weight: 600;
+        }
+        .header p {
+            color: #ffffff;
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        .content {
+            padding: 40px 30px;
+            color: #333333;
+        }
+        .greeting {
+            font-size: 24px;
+            color: #333333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .message {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555555;
+            margin-bottom: 20px;
+        }
+        .order-summary-box {
+            background-color: #f8f9fa;
+            border: 2px solid #006633;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .order-summary-box h2 {
+            margin-top: 0;
+            color: #006633;
+            font-size: 22px;
+            text-align: center;
+        }
+        .order-info {
+            display: table;
+            width: 100%;
+            margin: 20px 0;
+        }
+        .order-info-row {
+            display: table-row;
+        }
+        .order-info-label {
+            display: table-cell;
+            padding: 8px 0;
+            color: #777777;
+            font-size: 14px;
+            width: 40%;
+        }
+        .order-info-value {
+            display: table-cell;
+            padding: 8px 0;
+            color: #333333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background-color: #28a745;
+            color: #ffffff;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .items-table thead {
+            background-color: #f0f0f0;
+        }
+        .items-table th {
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            color: #555555;
+            font-weight: 600;
+            text-transform: uppercase;
+            border-bottom: 2px solid #ddd;
+        }
+        .items-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #eeeeee;
+            font-size: 14px;
+            color: #555555;
+        }
+        .item-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+        }
+        .item-name {
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 4px;
+        }
+        .item-variant {
+            font-size: 13px;
+            color: #777777;
+        }
+        .color-badge {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        /* Nota: El color de fondo se aplica inline en el HTML con {{variantColorHex}} */
+        .totals-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 25px 0;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 15px;
+        }
+        .total-row.subtotal {
+            color: #555555;
+        }
+        .total-row.tax, .total-row.shipping {
+            color: #777777;
+            font-size: 14px;
+        }
+        .total-row.grand-total {
+            border-top: 2px solid #006633;
+            margin-top: 10px;
+            padding-top: 15px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #006633;
+        }
+        .address-section {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .address-section h3 {
+            margin-top: 0;
+            color: #006633;
+            font-size: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .address-section h3::before {
+            content: '📍';
+            margin-right: 8px;
+            font-size: 18px;
+        }
+        .address-section.billing h3::before {
+            content: '💳';
+        }
+        .address-section p {
+            margin: 6px 0;
+            color: #555555;
+            line-height: 1.5;
+        }
+        .delivery-method-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .delivery-method-box h3 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .delivery-method-box p {
+            margin: 0;
+            font-size: 15px;
+            opacity: 0.95;
+        }
+        .cta-button {
+            display: inline-block;
+            padding: 14px 30px;
+            background: linear-gradient(135deg, #006633 0%, #139b57 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .cta-button:hover {
+            opacity: 0.9;
+        }
+        .info-box {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 25px 0;
+        }
+        .info-box p {
+            margin: 5px 0;
+            color: #856404;
+            font-size: 14px;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 30px 0;
+        }
+        .footer {
+            background-color: #333333;
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .footer p {
+            margin: 10px 0;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 30px 20px;
+            }
+            .items-table {
+                font-size: 12px;
+            }
+            .items-table th,
+            .items-table td {
+                padding: 10px 8px;
+            }
+            .item-image {
+                width: 50px;
+                height: 50px;
+            }
+            .greeting {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>✓ ¡Pedido Confirmado!</h1>
+            <p>Gracias por tu compra en Verona</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <p class="greeting">¡Hola {{customerFirstName}}!</p>
+            
+            <p class="message">
+                Hemos recibido tu pedido y está siendo procesado. Te enviaremos actualizaciones 
+                sobre el estado de tu envío a tu correo electrónico.
+            </p>
+
+            <!-- Order Summary Box -->
+            <div class="order-summary-box">
+                <h2>📦 Resumen del Pedido</h2>
+                <div class="order-info">
+                    <div class="order-info-row">
+                        <span class="order-info-label">Número de Orden:</span>
+                        <span class="order-info-value">#{{orderId}}</span>
+                    </div>
+                    <div class="order-info-row">
+                        <span class="order-info-label">Fecha del Pedido:</span>
+                        <span class="order-info-value">{{orderDate}}</span>
+                    </div>
+                    <div class="order-info-row">
+                        <span class="order-info-label">Estado:</span>
+                        <span class="order-info-value"><span class="status-badge">{{orderStatus}}</span></span>
+                    </div>
+                    <div class="order-info-row">
+                        <span class="order-info-label">Método de Pago:</span>
+                        <span class="order-info-value">{{paymentMethod}}</span>
+                    </div>
+                    <div class="order-info-row">
+                        <span class="order-info-label">Total de Artículos:</span>
+                        <span class="order-info-value">{{itemCount}} artículo(s)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Method -->
+            <div class="delivery-method-box">
+                <h3>🚚 Método de Entrega</h3>
+                <p>{{deliveryMethodLabel}}</p>
+            </div>
+
+            <!-- Items Table -->
+            <h3 style="color: #333333; margin-top: 30px;">Artículos del Pedido</h3>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th style="text-align: center;">Cantidad</th>
+                        <th style="text-align: right;">Precio Unit.</th>
+                        <th style="text-align: right;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each items}}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                {{#if productImage}}
+                                <img src="{{productImage}}" alt="{{productName}}" class="item-image">
+                                {{/if}}
+                                <div>
+                                    <div class="item-name">{{productName}}</div>
+                                    {{#if variantName}}
+                                    <div class="item-variant">
+                                        {{#if variantColorHex}}
+                                        <span class="color-badge" style="background-color: {{variantColorHex}};"></span>
+                                        {{/if}}
+                                        {{variantName}}
+                                    </div>
+                                    {{/if}}
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align: center;">{{quantity}}</td>
+                        <td style="text-align: right;">${{unitPrice}}</td>
+                        <td style="text-align: right; font-weight: 600;">${{totalPrice}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+
+            <!-- Totals -->
+            <div class="totals-section">
+                <div class="total-row subtotal">
+                    <span>Subtotal:</span>
+                    <span>${{subtotal}}</span>
+                </div>
+                <div class="total-row tax">
+                    <span>Impuestos ({{taxPercentage}}%):</span>
+                    <span>${{taxAmount}}</span>
+                </div>
+                {{#if shippingCost}}
+                <div class="total-row shipping">
+                    <span>Envío:</span>
+                    <span>${{shippingCost}}</span>
+                </div>
+                {{/if}}
+                <div class="total-row grand-total">
+                    <span>Total:</span>
+                    <span>${{total}}</span>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Shipping Address (if applicable) -->
+            {{#if shippingAddress}}
+            <div class="address-section">
+                <h3>Dirección de Envío</h3>
+                <p><strong>{{shippingAddress.name}}</strong></p>
+                <p>{{shippingAddress.address_1}}</p>
+                {{#if shippingAddress.address_2}}
+                <p>{{shippingAddress.address_2}}</p>
+                {{/if}}
+                {{#if shippingAddress.description}}
+                <p><em>{{shippingAddress.description}}</em></p>
+                {{/if}}
+                <p>
+                    {{#if shippingAddress.municipality}}{{shippingAddress.municipality}}, {{/if}}{{shippingAddress.city}}, {{shippingAddress.state}}
+                </p>
+                <p>{{shippingAddress.postalCode}}, {{shippingAddress.country}}</p>
+                {{#if shippingAddress.phone}}
+                <p>📞 {{shippingAddress.phone}}</p>
+                {{/if}}
+            </div>
+            {{/if}}
+
+            <!-- Billing Address (if different) -->
+            {{#if billingAddress}}
+            <div class="address-section billing">
+                <h3>Dirección de Facturación</h3>
+                <p><strong>{{billingAddress.name}}</strong></p>
+                <p>{{billingAddress.address_1}}</p>
+                {{#if billingAddress.address_2}}
+                <p>{{billingAddress.address_2}}</p>
+                {{/if}}
+                <p>
+                    {{#if billingAddress.municipality}}{{billingAddress.municipality}}, {{/if}}{{billingAddress.city}}, {{billingAddress.state}}
+                </p>
+                <p>{{billingAddress.postalCode}}, {{billingAddress.country}}</p>
+                {{#if billingAddress.phone}}
+                <p>📞 {{billingAddress.phone}}</p>
+                {{/if}}
+            </div>
+            {{/if}}
+
+            <!-- Customer Notes (if any) -->
+            {{#if notes}}
+            <div class="info-box">
+                <p><strong>📝 Notas del pedido:</strong></p>
+                <p>{{notes}}</p>
+            </div>
+            {{/if}}
+
+            <div class="divider"></div>
+
+            <!-- Next Steps -->
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+                <h3 style="color: #006633; margin-top: 0;">¿Qué sigue?</h3>
+                <p class="message">
+                    <strong>1. Procesamiento:</strong> Estamos preparando tus productos con cuidado.<br>
+                    <strong>2. Notificación:</strong> Te avisaremos cuando tu pedido esté en camino.<br>
+                    <strong>3. Seguimiento:</strong> Recibirás un código de rastreo (si aplica).<br>
+                    <strong>4. Entrega:</strong> Disfruta de tus productos.
+                </p>
+            </div>
+
+            <!-- CTA Button -->
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{trackOrderUrl}}" class="cta-button">Ver Estado del Pedido</a>
+            </div>
+
+            <div class="divider"></div>
+
+            <p class="message">
+                Si tienes alguna pregunta sobre tu pedido, no dudes en contactarnos. 
+                Estamos aquí para ayudarte.
+            </p>
+
+            <p class="message" style="margin-top: 30px;">
+                ¡Gracias por comprar con nosotros!<br>
+                <strong>El equipo de Verona</strong>
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p style="margin: 0 0 10px 0;">
+                <strong>Verona</strong><br>
+                Tu tienda de confianza
+            </p>
+            
+            <div style="margin: 20px 0;">
+                <a href="{{storeUrl}}">Visitar tienda</a> | 
+                <a href="{{supportUrl}}">Soporte</a> | 
+                <a href="{{trackOrderUrl}}">Rastrear pedido</a>
+            </div>
+            
+            <p style="font-size: 12px; color: #999999; margin-top: 20px;">
+                Este correo de confirmación fue enviado a {{customerEmail}}<br>
+                Número de orden: #{{orderId}}
+            </p>
+            
+            <p style="font-size: 12px; color: #999999; margin-top: 10px;">
+                © {{year}} Verona. Todos los derechos reservados.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

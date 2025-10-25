@@ -5,36 +5,6 @@
 @use "tailwindcss";
 @plugin "daisyui";
 
-/* Performance optimizations for smooth scrolling */
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  overflow-x: hidden;
-  /* Enable GPU acceleration */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-}
-
-/* Optimize sticky elements */
-[class*="sticky"],
-[class*="fixed"] {
-  will-change: transform;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-}
-
-/* Reduce repaints on scroll */
-img {
-  will-change: auto;
-}
-
 /* Swiper styles */
 
 
@@ -159,7 +129,7 @@ textarea::placeholder {
 }
 
 /* Footer del modal (botones) */
-.modal-box .modal-action {
+.modal-box .flex.flex-col.sm\\:flex-row.gap-3.pt-4 {
   flex-shrink: 0; /* Footer fijo */
   margin-top: auto; /* Se alinea al final */
 }
@@ -168,20 +138,7 @@ textarea::placeholder {
 }
 
 /* === RESPONSIVE - Móviles === */
-@media (max-width: 768px) {
-  .modal-box {
-    max-height: 100vh; /* En móviles ocupa toda la pantalla */
-    height: 100vh;
-    margin: 0 1rem; /* Padding lateral, sin margen vertical */
-    border-radius: 0; /* Sin bordes redondeados en móviles */
-  }
 
-  /* En móviles el contenido puede hacer scroll */
-  .modal-box form {
-    max-height: calc(100vh - 8rem);
-    overflow-y: auto;
-  }
-}
 
 /* === Animaciones suaves === */
 .modal-box {

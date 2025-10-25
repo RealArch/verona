@@ -39,15 +39,6 @@ swiper-slide {
   }
 }
 
-// Hide navigation buttons on small screens
-@media (max-width: 768px) {
-
-  .swiper-button-prev-custom,
-  .swiper-button-next-custom {
-    display: none !important;
-  }
-}
-
 // Smooth transitions for Swiper
 swiper-container::part(button-prev),
 swiper-container::part(button-next) {

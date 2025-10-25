@@ -90,13 +90,21 @@ export class CategoriesShow implements OnInit, AfterViewInit {
     setTimeout(() => this.updateButtonStates(), 100);
   }
 
-  private setupCustomNavigation(): void {
+  private setupCustomNavigation(attempt = 0): void {
     if (this.navigationInitialized) return;
 
+    const maxAttempts = 10;
     const prevButton = this.elementRef.nativeElement.querySelector('.swiper-button-prev-custom');
     const nextButton = this.elementRef.nativeElement.querySelector('.swiper-button-next-custom');
 
-    if (this.swiperElement && prevButton && nextButton) {
+    if (!prevButton || !nextButton) {
+      if (attempt < maxAttempts) {
+        setTimeout(() => this.setupCustomNavigation(attempt + 1), 100);
+      }
+      return;
+    }
+
+    if (this.swiperElement) {
       prevButton.addEventListener('click', (e: Event) => {
         e.preventDefault();
         e.stopPropagation();
