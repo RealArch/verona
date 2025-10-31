@@ -1,0 +1,9 @@
+/* Optimización de scroll para el contenedor fijo del header */
+.public-layout > .fixed {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+

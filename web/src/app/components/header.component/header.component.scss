@@ -8,3 +8,18 @@
         font-weight: bold;
     }
 }
+
+/* Mitigar parpadeos del nav en scroll promoviendo capa propia de composición */
+:host {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+:host nav {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
