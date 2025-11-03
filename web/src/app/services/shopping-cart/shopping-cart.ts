@@ -479,6 +479,34 @@ export class ShoppingCartService {
   }
 
   /**
+   * Remueve múltiples items del carrito en una sola operación
+   */
+  async removeMultipleFromCart(itemIds: string[]): Promise<void> {
+    this._loading.set(true);
+    this._error.set(null);
+
+    try {
+      const currentCart = this._cart();
+      if (!currentCart) throw new Error('Carrito no disponible');
+
+      // Filtrar todos los items que no estén en la lista de IDs a eliminar
+      const updatedCart: IShoppingCart = {
+        ...currentCart,
+        items: currentCart.items.filter(item => !itemIds.includes(item.id))
+      };
+
+      await this.saveCart(updatedCart);
+      
+    } catch (error) {
+      console.error('Error removing multiple items from cart:', error);
+      this._error.set('Error al remover items del carrito');
+      throw error;
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  /**
    * Actualiza la cantidad de un item
    */
   async updateQuantity(itemId: string, quantity: number): Promise<void> {

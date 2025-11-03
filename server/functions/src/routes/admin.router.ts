@@ -53,6 +53,45 @@ usersRouter.post('/createAdminUser', async (req, res) => {
     }
 });
 
+// Endpoint para eliminar un usuario administrador
+usersRouter.delete('/deleteAdminUser/:uid', async (req: Request, res: Response) => {
+    try {
+        const { uid } = req.params;
+
+        if (!uid) {
+            res.status(400).json({ error: 'UID is required' });
+            return;
+        }
+
+        // Verificar que el usuario existe en Firestore
+        const userDoc = await db.collection('adminUsers').doc(uid).get();
+        if (!userDoc.exists) {
+            res.status(404).json({ error: 'Admin user not found in Firestore' });
+            return;
+        }
+
+        // Eliminar el documento de Firestore
+        await db.collection('adminUsers').doc(uid).delete();
+
+        // Eliminar el usuario de Firebase Auth
+        await auth.deleteUser(uid);
+
+        // Decrementar el contador de usuarios administradores
+        const adminUsersRef = db.doc('metadata/counters');
+        await adminUsersRef.set({
+            adminUsers: FieldValue.increment(-1)
+        }, { merge: true });
+
+        res.status(200).json({ 
+            message: 'Admin user deleted successfully',
+            uid: uid
+        });
+    } catch (error) {
+        console.error('Error deleting admin user:', error);
+        res.status(500).json({ error: 'Failed to delete admin user', info: error });
+    }
+});
+
 // Endpoint para mover imágenes de header de temp a ubicación final
 usersRouter.post('/moveHeaderImage', async (req: Request, res: Response) => {
     try {

@@ -1,28 +1,26 @@
 import { Component, inject, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonRouterOutlet, IonApp,
-   IonSplitPane, IonList, IonItem, IonIcon, IonLabel,IonMenu, IonMenuToggle, IonText, IonFooter } from '@ionic/angular/standalone';
+import { IonContent, IonRouterOutlet, IonApp, IonSplitPane, IonIcon, IonMenu, IonMenuToggle } from '@ionic/angular/standalone';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 import { Subscription } from 'rxjs';
 import { addIcons } from 'ionicons';
 import { cube, layers, logOut, speedometer, card, settings, receipt, chevronForward, gridOutline, cubeOutline, receiptOutline, settingsOutline, logOutOutline } from 'ionicons/icons';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-user',
   templateUrl: './user.page.html',
   styleUrls: ['./user.page.scss'],
   standalone: true,
-  imports: [IonText, IonLabel, IonIcon, IonItem, IonList, IonSplitPane, IonApp,
-     IonRouterOutlet, IonContent, IonHeader, IonTitle, IonToolbar,
-      CommonModule, FormsModule, IonMenu, IonMenuToggle, RouterLink, RouterLinkActive
-    ]
+  imports: [IonIcon, IonSplitPane, IonApp, IonRouterOutlet, IonContent, CommonModule, FormsModule, IonMenu, IonMenuToggle, RouterLink, RouterLinkActive]
 })
 export class UserPage implements OnInit {
   private authService = inject(AuthService);
   user: any = null;
   subscription?: Subscription;
+  version = environment.version;
 
   constructor(private router: Router) {
     addIcons({gridOutline,cubeOutline,receiptOutline,settingsOutline,logOutOutline,speedometer,chevronForward,cube,receipt,layers,settings,logOut,card});
@@ -41,9 +39,11 @@ export class UserPage implements OnInit {
     this.loadAdminUser();
   }
 
-  async loadAdminUser() {
-    this.user = await this.authService.getAdminUserData();
-    console.log('Admin user data:', this.user);
+  loadAdminUser() {
+    this.subscription = this.authService.getAdminUserData$().subscribe(user => {
+      this.user = user;
+      console.log('Admin user data:', this.user);
+    });
   }
 
   ngOnDestroy(): void {

@@ -10,5 +10,7 @@ export const environment = {
       categories: 'categories_prod',
       orders: 'orders_prod'
     }
-  }
+  },
+  version: '1.0.1'
+
 };

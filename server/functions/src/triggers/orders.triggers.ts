@@ -3,6 +3,7 @@ import { defineSecret } from 'firebase-functions/params';
 import { FieldValue } from '@google-cloud/firestore';
 import * as admin from 'firebase-admin';
 import { syncDocumentAlgolia, removeDocumentAlgolia } from '../utils/syncWithAlgolia';
+import { sendOrderConfirmationEmail, emailUser, emailPassword, emailFrom, emailHost, emailPort } from '../utils/emailService';
 
 // Define los secrets para Algolia
 const algoliaAdminKey = defineSecret("ALGOLIA_ADMIN_KEY");
@@ -18,9 +19,13 @@ const db = admin.firestore();
  * - Sincroniza la orden con Algolia
  * - Incrementa el contador de órdenes en metadata
  * - Incrementa los contadores de ventas por tipo de entrega
+ * - Envía email de confirmación al cliente
  */
 export const onOrderCreated = onDocumentCreated(
-  { document: "orders/{orderId}", secrets: [algoliaAdminKey, algoliaAppId] },
+  { 
+    document: "orders/{orderId}", 
+    secrets: [algoliaAdminKey, algoliaAppId, emailUser, emailPassword, emailFrom, emailHost, emailPort] 
+  },
   async (event) => {
     const data = event.data?.data();
     if (!data) {
@@ -89,6 +94,59 @@ export const onOrderCreated = onDocumentCreated(
 
     await batch.commit();
     console.log(`[Orders] Created order ${orderId}, incremented all counters`);
+
+    // Enviar email de confirmación al cliente
+    if (data.userData?.email && data.userData?.firstName) {
+      // Formatear la fecha de la orden en zona horaria de Venezuela
+      const orderDate = data.createdAt 
+        ? new Date(data.createdAt.toMillis()).toLocaleString('es-VE', {
+            timeZone: 'America/Caracas',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        : new Date().toLocaleString('es-VE', {
+            timeZone: 'America/Caracas',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+
+      // Enviar email con await (mismo patrón que welcome)
+      try {
+        await sendOrderConfirmationEmail({
+          customerEmail: data.userData.email,
+          customerFirstName: data.userData.firstName,
+          orderId: orderId,
+          orderDate: orderDate,
+          orderStatus: data.status || 'pending',
+          paymentMethod: data.paymentMethod || 'No especificado',
+          deliveryMethod: deliveryMethod,
+          items: data.items || [],
+          totals: data.totals || {
+            subtotal: 0,
+            taxAmount: 0,
+            taxPercentage: 0,
+            shippingCost: 0,
+            total: 0,
+            itemCount: 0
+          },
+          shippingAddress: data.shippingAddress || null,
+          billingAddress: data.billingAddress || null,
+          notes: data.notes || null
+        });
+        console.log(`[Orders] Order confirmation email sent successfully to ${data.userData.email}`);
+      } catch (error) {
+        console.error(`[Orders] Error sending order confirmation email to ${data.userData.email}:`, error);
+        // No lanzar el error para no afectar la creación de la orden
+      }
+    } else {
+      console.warn(`[Orders] Cannot send order confirmation email for order ${orderId}: missing email or firstName`);
+    }
   }
 );
 

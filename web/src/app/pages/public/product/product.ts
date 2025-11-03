@@ -78,6 +78,23 @@ export class ProductComponent implements OnInit, OnDestroy, AfterViewInit {
 
   isInStock = computed(() => this.currentStock() > 0);
 
+  // Computed para verificar si se requiere seleccionar una variante
+  requiresVariant = computed(() => {
+    const product = this.currentProduct();
+    return product?.variants && product.variants.length > 0;
+  });
+
+  isVariantSelected = computed(() => {
+    return this.selectedVariant() !== null;
+  });
+
+  canAddToCart = computed(() => {
+    if (!this.isInStock()) return false;
+    if (this.addingToCart()) return false;
+    if (this.requiresVariant() && !this.isVariantSelected()) return false;
+    return true;
+  });
+
   // Computed para verificar si el producto actual está en el carrito
   isInCart = computed(() => {
     const cart = this.cartService.cart();
@@ -470,6 +487,12 @@ export class ProductComponent implements OnInit, OnDestroy, AfterViewInit {
     const quantity = this.selectedQuantity();
 
     if (!product || this.addingToCart() || !this.isInStock()) {
+      return;
+    }
+
+    // Validar que si el producto tiene variantes, debe estar seleccionada una
+    if (this.requiresVariant() && !this.isVariantSelected()) {
+      console.warn('Debe seleccionar una variante antes de agregar al carrito');
       return;
     }
 

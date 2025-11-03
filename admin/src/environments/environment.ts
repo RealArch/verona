@@ -15,7 +15,8 @@ export const environment = {
             categories: 'categories_dev',
             orders: 'orders_dev'
         }
-    }
+    },
+    version: '1.0.1'
 };
 
 /*

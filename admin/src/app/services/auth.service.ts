@@ -1,7 +1,7 @@
 import { Injectable, inject, Injector, runInInjectionContext, signal, computed } from '@angular/core';
 import { Auth, authState, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, user, User } from '@angular/fire/auth';
-import { doc, Firestore, setDoc, getDoc } from '@angular/fire/firestore';
-import { firstValueFrom, map, Observable, take, filter } from 'rxjs';
+import { doc, Firestore, setDoc, getDoc, collection, collectionData, query, where, getDocs, deleteDoc, docData } from '@angular/fire/firestore';
+import { firstValueFrom, map, Observable, take, filter, switchMap, of } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { Router } from '@angular/router';
@@ -54,6 +54,23 @@ export class AuthService {
     });
   }
 
+  /**
+   * Obtiene la data del AdminUser en tiempo real como Observable.
+   * Se actualiza automáticamente cuando cambian los datos en Firestore.
+   * @returns Observable<AdminUser | null>
+   */
+  getAdminUserData$(): Observable<AdminUser | null> {
+    return this.user$.pipe(
+      switchMap(user => {
+        if (!user) {
+          return of(null);
+        }
+        const userDocRef = doc(this.firestore, `adminUsers/${user.uid}`);
+        return docData(userDocRef) as Observable<AdminUser | null>;
+      })
+    );
+  }
+
   login(email: string, password: string): Promise<any> {
     return runInInjectionContext(this.injector, () =>
       signInWithEmailAndPassword(this.auth, email, password)
@@ -102,5 +119,31 @@ export class AuthService {
       take(1), // Toma el primer valor válido
       map(user => !!user) // Convierte el objeto de usuario (o null) en un booleano
     );
+  }
+
+  /**
+   * Obtiene todos los usuarios admin de Firestore
+   * @returns Observable con array de AdminUser
+   */
+  getAllAdminUsers(): Observable<AdminUser[]> {
+    return runInInjectionContext(this.injector, () => {
+      const adminUsersCollection = collection(this.firestore, 'adminUsers');
+      const q = query(adminUsersCollection, where('isAdmin', '==', true));
+      return collectionData(q, { idField: 'uid' }) as Observable<AdminUser[]>;
+    });
+  }
+
+  /**
+   * Elimina un usuario admin
+   * @param userId - ID del usuario a eliminar
+   * @returns Promise<void>
+   */
+  deleteAdminUser(userId: string): Promise<void> {
+    return runInInjectionContext(this.injector, async () => {
+      // Llamar a la API para eliminar el usuario de forma segura
+      await firstValueFrom(
+        this.http.delete(`${environment.api}/admin/deleteAdminUser/${userId}`)
+      );
+    });
   }
 }

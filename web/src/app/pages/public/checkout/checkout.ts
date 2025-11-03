@@ -201,7 +201,8 @@ export class Checkout implements OnInit {
       
       if (state?.selectedItems && Array.isArray(state.selectedItems)) {
         this.checkoutItems.set(state.selectedItems);
-        // console.log('Checkout items loaded:', state.selectedItems);
+        console.log('Checkout items loaded:', state.selectedItems.length, 'items');
+        console.log('Item IDs:', state.selectedItems.map((item: any) => item.id));
       } else {
         // Si no hay items seleccionados, redirigir al carrito
         console.warn('No checkout items found, redirecting to cart');
@@ -368,15 +369,23 @@ export class Checkout implements OnInit {
       const response = await this.sales.createOrder(orderData);
 
       if (response.success && response.orderId) {
-        // console.log('Order created successfully:', response.orderId);
+        console.log('Order created successfully:', response.orderId);
         
-        // Eliminar los items comprados del carrito
+        // Eliminar los items comprados del carrito en una sola operación atómica
         try {
           const itemIds = items.map(item => item.id).filter(id => id);
-          await Promise.all(itemIds.map(itemId => this.cartService.removeFromCart(itemId)));
+          console.log('Removing items from cart:', itemIds.length, 'items');
+          
+          if (itemIds.length > 0) {
+            await this.cartService.removeMultipleFromCart(itemIds);
+            console.log('Successfully removed all items from cart');
+          } else {
+            console.warn('No item IDs found to remove from cart');
+          }
         } catch (cartError) {
           console.error('Error removing items from cart:', cartError);
           // No fallar la orden por esto, solo loguear el error
+          // La orden ya fue creada exitosamente, así que continuamos
         }
 
         // Redirigir a la página de éxito con información de la orden

@@ -186,31 +186,41 @@
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="flex flex-col sm:flex-row gap-3">
-                            <button 
-                                class="btn btn-lg flex-1 transition-all duration-300 shadow-lg hover:shadow-xl" 
-                                [class.btn-primary]="!isInCart() && isInStock() && !addingToCart()"
-                                [class.btn-success]="isInCart()"
-                                [class.btn-disabled]="!isInStock() || addingToCart()"
-                                [disabled]="!isInStock() || addingToCart()" 
-                                (click)="addToCart()">
-                                
-                                @if (addingToCart()) {
-                                    <span class="loading loading-spinner loading-sm mr-2"></span>
-                                } @else if (isInCart()) {
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                } @else {
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9m-9 0h9"></path>
-                                    </svg>
-                                }
-                                
-                                {{ addToCartButtonText() }}
-                            </button>
+                        <div class="flex flex-col gap-3">
+                            <!-- Mensaje discreto para variantes no seleccionadas -->
+                            @if (requiresVariant() && !isVariantSelected()) {
+                            <div class="text-xs text-warning/80 bg-warning/10 px-3 py-2 rounded-lg border border-warning/20 flex items-center gap-2">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                                <span>Por favor, selecciona una variante para continuar</span>
+                            </div>
+                            }
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <button 
+                                    class="btn btn-lg flex-1 transition-all duration-300 shadow-lg hover:shadow-xl" 
+                                    [class.btn-primary]="!isInCart() && canAddToCart()"
+                                    [class.btn-success]="isInCart()"
+                                    [class.btn-disabled]="!canAddToCart()"
+                                    [disabled]="!canAddToCart()" 
+                                    (click)="addToCart()">
+                                    
+                                    @if (addingToCart()) {
+                                        <span class="loading loading-spinner loading-sm mr-2"></span>
+                                    } @else if (isInCart()) {
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    } @else {
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9m-9 0h9"></path>
+                                        </svg>
+                                    }
+                                    
+                                    {{ addToCartButtonText() }}
+                                </button>
                             <button 
                                 class="btn btn-lg transition-all duration-300 shadow-lg hover:shadow-xl" 
                                 [class.btn-error]="isInWishlist()"
@@ -258,6 +268,7 @@
                 </div>
             </div>
         </div>
+    </div>
 
     <!-- Product Details Tabs -->
     <div class="mt-12" id="descripcion">

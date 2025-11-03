@@ -1,24 +1,29 @@
-import { Component, OnInit, inject, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonToggle, IonButtons, IonMenuButton, IonListHeader, IonGrid, IonIcon, IonPopover, IonButton, IonInput, IonSpinner, IonImg, ModalController } from '@ionic/angular/standalone';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonList, IonItem, IonLabel, IonToggle, IonButtons, IonMenuButton, IonListHeader, IonGrid, IonIcon, IonPopover, IonButton, IonInput, IonSpinner, IonImg, ModalController, IonAvatar, IonChip, IonModal } from '@ionic/angular/standalone';
 import { SettingsService } from 'src/app/services/settings.service';
 import { Popups } from 'src/app/services/popups';
+import { AuthService } from 'src/app/services/auth.service';
 import { addIcons } from 'ionicons';
-import { home, bicycle, airplane, chatbubbles, calculator, createOutline, imageOutline, trashOutline } from 'ionicons/icons';
+import { home, bicycle, airplane, chatbubbles, calculator, createOutline, imageOutline, trashOutline, personAddOutline, closeOutline, checkmarkOutline } from 'ionicons/icons';
 import { MainHeaderImagesPage } from './main-header-images/main-header-images.page';
+import { AdminUser } from 'src/app/interfaces/users';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-settings',
   templateUrl: './settings.page.html',
   styleUrls: ['./settings.page.scss'],
   standalone: true,
-  imports: [IonInput, IonButton, IonPopover, IonLabel, IonIcon, IonGrid, IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonToggle, IonButtons, IonMenuButton, CommonModule, FormsModule]
+  imports: [IonInput, IonButton, IonPopover, IonLabel, IonIcon, IonGrid, IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonList, IonToggle, IonButtons, IonMenuButton, IonAvatar, IonChip, IonModal, CommonModule, FormsModule, ReactiveFormsModule]
 })
-export class SettingsPage implements OnInit {
+export class SettingsPage implements OnInit, OnDestroy {
   private settingsService = inject(SettingsService);
   private popups = inject(Popups);
   private modalController = inject(ModalController);
+  private authService = inject(AuthService);
+  private formBuilder = inject(FormBuilder);
 
   // Signals para todos los settings
   storeEnabled = computed(() => this.settingsService.storeEnabled());
@@ -32,11 +37,62 @@ export class SettingsPage implements OnInit {
   isTaxPopoverOpen = false;
   tempTaxPercentage: number = 0;
 
+  // Admin users management
+  adminUsers = signal<AdminUser[]>([]);
+  currentUserUid: string = '';
+  private adminUsersSubscription: Subscription | null = null;
+  private currentUserSubscription: Subscription | null = null;
+
+  // Modal state for creating new admin user
+  isCreateUserModalOpen = false;
+  newUserForm!: FormGroup;
+
   constructor() {
-    addIcons({ home, bicycle, airplane, chatbubbles, calculator, createOutline, imageOutline, trashOutline });
+    addIcons({ home, bicycle, airplane, chatbubbles, calculator, createOutline, imageOutline, trashOutline, personAddOutline, closeOutline, checkmarkOutline });
   }
 
   ngOnInit() {
+    this.loadCurrentUser();
+    this.loadAdminUsers();
+    this.initNewUserForm();
+    this.subscribeToCurrentUser();
+  }
+
+  initNewUserForm() {
+    this.newUserForm = this.formBuilder.group({
+      firstName: ['', [Validators.required, Validators.minLength(2)]],
+      lastName: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]]
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.adminUsersSubscription) {
+      this.adminUsersSubscription.unsubscribe();
+    }
+    if (this.currentUserSubscription) {
+      this.currentUserSubscription.unsubscribe();
+    }
+  }
+
+  async loadCurrentUser() {
+    const user = await this.authService.getAdminUserData();
+    if (user) {
+      this.currentUserUid = user.uid;
+    }
+  }
+
+  subscribeToCurrentUser() {
+    this.currentUserSubscription = this.authService.user$.subscribe(async () => {
+      await this.loadCurrentUser();
+    });
+  }
+
+  loadAdminUsers() {
+    this.adminUsersSubscription = this.authService.getAllAdminUsers().subscribe(users => {
+      this.adminUsers.set(users);
+    });
   }
 
   openTaxPopover(event: any) {
@@ -186,6 +242,93 @@ export class SettingsPage implements OnInit {
       component: MainHeaderImagesPage
     });
     await modal.present();
+  }
+
+  // Admin users management functions
+  openCreateUserModal() {
+    this.isCreateUserModalOpen = true;
+    this.newUserForm.reset();
+  }
+
+  closeCreateUserModal() {
+    this.isCreateUserModalOpen = false;
+    this.newUserForm.reset();
+  }
+
+  async createAdminUser() {
+    if (this.newUserForm.invalid) {
+      this.markFormGroupTouched(this.newUserForm);
+      await this.popups.presentToast('bottom', 'warning', 'Por favor completa correctamente todos los campos');
+      return;
+    }
+
+    const formValue = this.newUserForm.value;
+
+    try {
+      await this.authService.createAdminUser(formValue);
+      await this.popups.presentToast('bottom', 'success', 'Usuario admin creado correctamente');
+      this.closeCreateUserModal();
+    } catch (error) {
+      console.error('Error creating admin user:', error);
+      await this.popups.presentToast('bottom', 'danger', 'Error al crear el usuario admin');
+    }
+  }
+
+  private markFormGroupTouched(formGroup: FormGroup) {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      control?.markAsTouched();
+
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
+  }
+
+  getErrorMessage(controlName: string): string {
+    const control = this.newUserForm.get(controlName);
+    if (!control || !control.errors) return '';
+
+    if (control.errors['required']) {
+      return 'Este campo es requerido';
+    }
+    if (control.errors['email']) {
+      return 'Email inválido';
+    }
+    if (control.errors['minlength']) {
+      const requiredLength = control.errors['minlength'].requiredLength;
+      if (controlName === 'firstName' || controlName === 'lastName') {
+        return `Debe tener al menos ${requiredLength} caracteres`;
+      }
+      if (controlName === 'password') {
+        return `La contraseña debe tener al menos ${requiredLength} caracteres`;
+      }
+    }
+
+    return 'Campo inválido';
+  }
+
+  async deleteAdminUser(user: AdminUser) {
+    const confirmed = await this.popups.confirm(
+      'Eliminar usuario admin',
+      `¿Estás seguro que deseas eliminar a ${user.firstName} ${user.lastName}?`,
+      'Sí, eliminar',
+      'Cancelar'
+    );
+
+    if (confirmed) {
+      try {
+        await this.authService.deleteAdminUser(user.uid);
+        await this.popups.presentToast('bottom', 'success', 'Usuario admin eliminado correctamente');
+      } catch (error) {
+        console.error('Error deleting admin user:', error);
+        await this.popups.presentToast('bottom', 'danger', 'Error al eliminar el usuario admin');
+      }
+    }
+  }
+
+  isCurrentUser(userUid: string): boolean {
+    return userUid === this.currentUserUid;
   }
 
 }

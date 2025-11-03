@@ -170,6 +170,59 @@
       </div>
     </div>
 
+    <!-- Sección Usuarios Admin -->
+    <div class="mb-8">
+      <div class="mb-4 flex items-center justify-between">
+        <div>
+          <h2 class="text-xl font-bold text-gray-800 mb-1">Usuarios Administradores</h2>
+          <p class="text-sm text-gray-500">Gestiona los usuarios con acceso de administrador</p>
+        </div>
+        <!-- Botón para crear nuevo usuario -->
+        <ion-button 
+          size="small" 
+          color="primary"
+          (click)="openCreateUserModal()">
+          <ion-icon name="person-add-outline" slot="start"></ion-icon>
+          Agregar Administrador
+        </ion-button>
+      </div>
+      
+      <!-- Lista de usuarios -->
+      <ion-list class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        @for (user of adminUsers(); track user.uid) {
+          <ion-item lines="full">
+            <ion-avatar slot="start" class="mr-3">
+              <span class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-700 font-semibold text-base">
+                {{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}
+              </span>
+            </ion-avatar>
+            <ion-label>
+              <h3 class="text-base font-semibold text-gray-800">
+                {{ user.firstName }} {{ user.lastName }}
+              </h3>
+              <p class="text-sm text-gray-500">{{ user.email }}</p>
+            </ion-label>
+            <div slot="end" class="flex items-center gap-2">
+              @if (isCurrentUser(user.uid)) {
+                <ion-chip color="primary" outline>
+                  <ion-label class="text-xs">Tú</ion-label>
+                </ion-chip>
+              }
+              @if (!isCurrentUser(user.uid)) {
+                <ion-button 
+                  fill="clear" 
+                  size="small" 
+                  color="danger"
+                  (click)="deleteAdminUser(user)">
+                  <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+                </ion-button>
+              }
+            </div>
+          </ion-item>
+        }
+      </ion-list>
+    </div>
+
   </ion-grid>
 
   <!-- Popover para editar impuesto -->
@@ -212,4 +265,152 @@
       </ion-content>
     </ng-template>
   </ion-popover>
+
+  <!-- Modal para crear nuevo usuario admin -->
+  <ion-modal
+    [isOpen]="isCreateUserModalOpen"
+    (didDismiss)="closeCreateUserModal()"
+    [showBackdrop]="true"
+    [backdropDismiss]="true">
+    <ng-template>
+      <ion-header class="ion-no-border">
+        <ion-toolbar color="primary">
+          <ion-title class="font-bold">Nuevo Usuario Admin</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeCreateUserModal()">
+              <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="ion-padding">
+        <div class="w-full max-w-md mx-auto">
+          <form [formGroup]="newUserForm">
+            <p class="text-sm text-gray-600 mb-6">
+              Completa los datos para crear un nuevo usuario administrador
+            </p>
+
+            <div class="mb-4 flex flex-col md:flex-row md:gap-4">
+              <div class="flex-1 mb-4 md:mb-0">
+                <ion-label class="text-sm font-medium text-gray-700 mb-2 block">
+                  Nombre
+                </ion-label>
+                <ion-input
+                  type="text"
+                  formControlName="firstName"
+                  placeholder="Juan"
+                  [class.border-red-500]="newUserForm.get('firstName')?.invalid && newUserForm.get('firstName')?.touched"
+                  class="border border-gray-300 rounded-lg"
+                  clearOnEdit="true">
+                </ion-input>
+                @if (newUserForm.get('firstName')?.invalid && newUserForm.get('firstName')?.touched) {
+                  <p class="text-xs text-red-500 mt-1">
+                    {{ getErrorMessage('firstName') }}
+                  </p>
+                }
+              </div>
+
+              <div class="flex-1">
+                <ion-label class="text-sm font-medium text-gray-700 mb-2 block">
+                  Apellido
+                </ion-label>
+                <ion-input
+                  type="text"
+                  formControlName="lastName"
+                  placeholder="Pérez"
+                  [class.border-red-500]="newUserForm.get('lastName')?.invalid && newUserForm.get('lastName')?.touched"
+                  class="border border-gray-300 rounded-lg"
+                  clearOnEdit="true">
+                </ion-input>
+                @if (newUserForm.get('lastName')?.invalid && newUserForm.get('lastName')?.touched) {
+                  <p class="text-xs text-red-500 mt-1">
+                    {{ getErrorMessage('lastName') }}
+                  </p>
+                }
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <ion-label class="text-sm font-medium text-gray-700 mb-2 block">
+                Email
+              </ion-label>
+              <ion-input
+                type="email"
+                formControlName="email"
+                placeholder="juan.perez@example.com"
+                [class.border-red-500]="newUserForm.get('email')?.invalid && newUserForm.get('email')?.touched"
+                class="border border-gray-300 rounded-lg"
+                clearOnEdit="true">
+              </ion-input>
+              @if (newUserForm.get('email')?.invalid && newUserForm.get('email')?.touched) {
+                <p class="text-xs text-red-500 mt-1">
+                  {{ getErrorMessage('email') }}
+                </p>
+              }
+            </div>
+
+            <div class="mb-6">
+              <ion-label class="text-sm font-medium text-gray-700 mb-2 block">
+                Contraseña
+              </ion-label>
+              <ion-input
+                type="password"
+                formControlName="password"
+                placeholder="Mínimo 6 caracteres"
+                [class.border-red-500]="newUserForm.get('password')?.invalid && newUserForm.get('password')?.touched"
+                class="border border-gray-300 rounded-lg"
+                clearOnEdit="true">
+              </ion-input>
+              @if (newUserForm.get('password')?.invalid && newUserForm.get('password')?.touched) {
+                <p class="text-xs text-red-500 mt-1">
+                  {{ getErrorMessage('password') }}
+                </p>
+              } @else {
+                <p class="text-xs text-gray-500 mt-2">
+                  La contraseña debe tener al menos 6 caracteres
+                </p>
+              }
+            </div>
+
+            <div class="flex gap-3 pb-4">
+              <ion-button expand="block" color="medium" (click)="closeCreateUserModal()">
+                Cancelar
+              </ion-button>
+              <ion-button 
+                expand="block" 
+                color="primary" 
+                (click)="createAdminUser()"
+                [disabled]="newUserForm.invalid">
+                Crear Usuario
+              </ion-button>
+            </div>
+
+            <!-- Mensaje informativo sobre el botón deshabilitado -->
+            @if (newUserForm.invalid && (newUserForm.touched || newUserForm.dirty)) {
+              <div class="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p class="text-xs text-yellow-800">
+                  <strong>⚠️ El botón está deshabilitado porque:</strong>
+                </p>
+                <ul class="text-xs text-yellow-700 mt-1 list-disc list-inside">
+                  @if (newUserForm.get('firstName')?.invalid) {
+                    <li>Nombre: {{ getErrorMessage('firstName') }}</li>
+                  }
+                  @if (newUserForm.get('lastName')?.invalid) {
+                    <li>Apellido: {{ getErrorMessage('lastName') }}</li>
+                  }
+                  @if (newUserForm.get('email')?.invalid) {
+                    <li>Email: {{ getErrorMessage('email') }}</li>
+                  }
+                  @if (newUserForm.get('password')?.invalid) {
+                    <li>Contraseña: {{ getErrorMessage('password') }}</li>
+                  }
+                </ul>
+              </div>
+            }
+          </form>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
 </ion-content>

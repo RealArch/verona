@@ -334,7 +334,8 @@ export class ShoppingCart implements OnInit {
 
     this.updating.set(true);
     try {
-      await Promise.all(ids.map(id => this.cartService.removeFromCart(id)));
+      // Eliminar todos los items seleccionados en una sola operación
+      await this.cartService.removeMultipleFromCart(ids);
       this.selectedItems.set(new Set());
     } catch (error) {
       console.error('Clear failed:', error);

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <!-- 
   Plantilla de email para confirmación de pedido
-  Usa sintaxis Handlebars para variables dinámicas
-  Los errores de linter de CSS inline con {{}} son falsos positivos
+  Usa sintaxis Handlebars para variables dinámicas (doble llaves)
+  Los errores de linter de CSS inline con variables Handlebars son falsos positivos
 -->
 <html lang="es">
 <head>
@@ -103,6 +103,7 @@
             width: 100%;
             border-collapse: collapse;
             margin: 25px 0;
+            table-layout: fixed;
         }
         .items-table thead {
             background-color: #f0f0f0;
@@ -116,6 +117,18 @@
             text-transform: uppercase;
             border-bottom: 2px solid #ddd;
         }
+        .items-table th:nth-child(1) {
+            width: 50%;
+        }
+        .items-table th:nth-child(2) {
+            width: 15%;
+        }
+        .items-table th:nth-child(3) {
+            width: 17.5%;
+        }
+        .items-table th:nth-child(4) {
+            width: 17.5%;
+        }
         .items-table td {
             padding: 15px 12px;
             border-bottom: 1px solid #eeeeee;
@@ -128,15 +141,25 @@
             object-fit: cover;
             border-radius: 5px;
             border: 1px solid #e0e0e0;
+            margin-right: 8px;
         }
         .item-name {
             font-weight: 600;
             color: #333333;
             margin-bottom: 4px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
         }
         .item-variant {
             font-size: 13px;
             color: #777777;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        /* Ocultar labels de móvil en desktop */
+        .mobile-label {
+            display: none;
         }
         .color-badge {
             display: inline-block;
@@ -147,7 +170,7 @@
             vertical-align: middle;
             margin-right: 5px;
         }
-        /* Nota: El color de fondo se aplica inline en el HTML con {{variantColorHex}} */
+        /* Nota: El color de fondo se aplica inline en el HTML con la variable variantColorHex */
         .totals-section {
             background-color: #f8f9fa;
             padding: 20px;
@@ -204,7 +227,7 @@
             line-height: 1.5;
         }
         .delivery-method-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #006633 0%, #139b57 100%);
             color: #ffffff;
             padding: 20px;
             border-radius: 8px;
@@ -224,15 +247,21 @@
             display: inline-block;
             padding: 14px 30px;
             background: linear-gradient(135deg, #006633 0%, #139b57 100%);
-            color: #ffffff;
-            text-decoration: none;
+            color: #ffffff !important;
+            text-decoration: none !important;
             border-radius: 5px;
             font-weight: 600;
             margin: 20px 0;
             text-align: center;
         }
+        a.cta-button, .cta-button:link, .cta-button:visited {
+            color: #ffffff !important;
+            text-decoration: none !important;
+        }
         .cta-button:hover {
             opacity: 0.9;
+            color: #ffffff !important;
+            text-decoration: none !important;
         }
         .info-box {
             background-color: #fff8e1;
@@ -264,24 +293,240 @@
         .footer p {
             margin: 10px 0;
         }
+        /* Responsive */
         @media only screen and (max-width: 600px) {
+            .email-container {
+                width: 100% !important;
+            }
+            .header {
+                padding: 30px 15px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .header p {
+                font-size: 14px;
+            }
             .content {
-                padding: 30px 20px;
+                padding: 25px 15px;
             }
-            .items-table {
-                font-size: 12px;
+            .order-summary-box {
+                padding: 20px 15px;
             }
-            .items-table th,
-            .items-table td {
-                padding: 10px 8px;
-            }
-            .item-image {
-                width: 50px;
-                height: 50px;
+            .order-summary-box h2 {
+                font-size: 18px;
             }
             .greeting {
                 font-size: 20px;
             }
+            .message {
+                font-size: 14px;
+            }
+            
+            /* Tabla responsiva - cambiar a formato card en móvil */
+            .items-table thead {
+                display: none;
+            }
+            
+            .items-table,
+            .items-table tbody,
+            .items-table tr {
+                display: block;
+                width: 100%;
+            }
+            
+            .items-table tr {
+                margin-bottom: 20px;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 15px;
+                background-color: #ffffff;
+            }
+            
+            .items-table td {
+                display: block;
+                width: 100% !important;
+                padding: 0;
+                border: none;
+                text-align: left !important;
+            }
+            
+            /* Primera celda - imagen y título */
+            .items-table td:nth-child(1) {
+                margin-bottom: 12px;
+            }
+            
+            .item-image {
+                width: 50px;
+                height: 50px;
+                margin-right: 10px;
+            }
+            
+            .item-name {
+                font-size: 15px;
+                word-break: break-word;
+                line-height: 1.4;
+            }
+            
+            .item-variant {
+                font-size: 12px;
+                margin-top: 4px;
+            }
+            
+            /* Información de cantidad, precio y total */
+            .items-table td:nth-child(2),
+            .items-table td:nth-child(3),
+            .items-table td:nth-child(4) {
+                padding: 8px 0;
+                font-size: 14px;
+                border-top: 1px solid #f0f0f0;
+            }
+            
+            .items-table td:nth-child(2) {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .items-table td:nth-child(3) {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .items-table td:nth-child(4) {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-weight: 700;
+                color: #006633;
+                font-size: 16px;
+                border-top: 2px solid #006633;
+                padding-top: 10px;
+                margin-top: 4px;
+            }
+            
+            /* Labels para móvil - se agregan con span en el HTML */
+            .mobile-label {
+                display: inline;
+                font-weight: 600;
+                color: #555555;
+                margin-right: 8px;
+            }
+            
+            .items-table td:nth-child(4) .mobile-label {
+                color: #006633;
+            }
+            
+            /* Ajustar totales */
+            .totals-section {
+                padding: 15px;
+            }
+            .total-row {
+                font-size: 13px;
+            }
+            .total-row.grand-total {
+                font-size: 18px;
+            }
+            
+            /* Direcciones más compactas */
+            .address-section {
+                padding: 15px;
+            }
+            .address-section h3 {
+                font-size: 14px;
+            }
+            .address-section p {
+                font-size: 13px;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+            
+            /* Botón CTA más pequeño */
+            .cta-button {
+                padding: 12px 20px;
+                font-size: 14px;
+                display: block;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            
+            /* Order info más compacto */
+            .order-info-label,
+            .order-info-value {
+                font-size: 13px;
+                display: block;
+                width: 100%;
+                padding: 5px 0;
+            }
+            .order-info-label {
+                font-weight: 600;
+                color: #555555;
+            }
+            .order-info-value {
+                padding-bottom: 10px;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            .order-info-row:last-child .order-info-value {
+                border-bottom: none;
+            }
+            
+            /* Método de entrega */
+            .delivery-method-box {
+                padding: 15px;
+            }
+            .delivery-method-box h3 {
+                font-size: 16px;
+            }
+            .delivery-method-box p {
+                font-size: 14px;
+            }
+            
+            /* Footer */
+            .footer {
+                padding: 25px 15px;
+                font-size: 13px;
+            }
+            
+            /* Sección "¿Qué sigue?" más compacta */
+            .message strong {
+                display: block;
+                margin-bottom: 3px;
+            }
+        }
+        
+        /* Para pantallas muy pequeñas */
+        @media only screen and (max-width: 400px) {
+            .header h1 {
+                font-size: 20px;
+            }
+            .items-table tr {
+                padding: 12px;
+            }
+            .item-image {
+                width: 45px;
+                height: 45px;
+            }
+            .item-name {
+                font-size: 14px;
+            }
+            .items-table td:nth-child(2),
+            .items-table td:nth-child(3),
+            .items-table td:nth-child(4) {
+                font-size: 13px;
+            }
+            .total-row.grand-total {
+                font-size: 16px;
+            }
+        }
+        
+        /* Estilos generales para prevenir desbordamiento */
+        * {
+            box-sizing: border-box;
+        }
+        .email-container * {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
     </style>
 </head>
@@ -308,7 +553,7 @@
                 <div class="order-info">
                     <div class="order-info-row">
                         <span class="order-info-label">Número de Orden:</span>
-                        <span class="order-info-value">#{{orderId}}</span>
+                        <span class="order-info-value" style="text-transform: uppercase;">#{{orderId}}</span>
                     </div>
                     <div class="order-info-row">
                         <span class="order-info-label">Fecha del Pedido:</span>
@@ -367,9 +612,9 @@
                                 </div>
                             </div>
                         </td>
-                        <td style="text-align: center;">{{quantity}}</td>
-                        <td style="text-align: right;">${{unitPrice}}</td>
-                        <td style="text-align: right; font-weight: 600;">${{totalPrice}}</td>
+                        <td style="text-align: center;"><span class="mobile-label">Cantidad:</span>{{quantity}}</td>
+                        <td style="text-align: right;"><span class="mobile-label">Precio unitario:</span>${{unitPrice}}</td>
+                        <td style="text-align: right; font-weight: 600;"><span class="mobile-label">Total:</span>${{totalPrice}}</td>
                     </tr>
                     {{/each}}
                 </tbody>
@@ -483,18 +728,18 @@
         <div class="footer">
             <p style="margin: 0 0 10px 0;">
                 <strong>Verona</strong><br>
-                Tu tienda de confianza
+                La nueva era de la remodelación
             </p>
             
             <div style="margin: 20px 0;">
                 <a href="{{storeUrl}}">Visitar tienda</a> | 
-                <a href="{{supportUrl}}">Soporte</a> | 
-                <a href="{{trackOrderUrl}}">Rastrear pedido</a>
+                <!-- <a href="{{supportUrl}}">Soporte</a> | 
+                <a href="{{trackOrderUrl}}">Rastrear pedido</a> -->
             </div>
             
             <p style="font-size: 12px; color: #999999; margin-top: 20px;">
                 Este correo de confirmación fue enviado a {{customerEmail}}<br>
-                Número de orden: #{{orderId}}
+                Número de orden: #<span style="text-transform: uppercase;">{{orderId}}</span>
             </p>
             
             <p style="font-size: 12px; color: #999999; margin-top: 10px;">

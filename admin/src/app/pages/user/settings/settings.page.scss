@@ -25,6 +25,17 @@ ion-input{
   --padding-start: 10px;
 }
 
+// Avatar con iniciales
+ion-avatar span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #f3f4f6;
+}
+
 // Estilo para el popover de impuestos
 ion-popover {
   --width: 320px;

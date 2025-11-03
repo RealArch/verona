@@ -139,11 +139,23 @@
     color: inherit;
 }
 
+// Version Section
+.version-section {
+    padding: 0 1rem 0.75rem;
+    text-align: center;
+}
+
+.version-text {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+    font-weight: 400;
+}
+
 // Logout Section
 .logout-section {
     padding: 1.5rem 1rem 0;
     border-top: 1px solid rgba(255, 255, 255, 0.15);
-    margin-top: auto;
 }
 
 .logout-button {

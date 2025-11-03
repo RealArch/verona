@@ -1,6 +1,7 @@
 import * as nodemailer from 'nodemailer';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as Handlebars from 'handlebars';
 import { defineSecret } from 'firebase-functions/params';
 
 // Define los secrets para el email
@@ -77,37 +78,32 @@ function loadEmailTemplate(templateName: string): string {
 
 /**
  * Reemplaza las variables en la plantilla con los datos proporcionados
+ * Usa Handlebars para soportar loops, condicionales y helpers
  * @param template - Plantilla HTML con variables {{variable}}
  * @param data - Datos para reemplazar en la plantilla
  * @returns HTML con variables reemplazadas
  */
 function parseTemplate(template: string, data: Record<string, any>): string {
-  let parsedTemplate = template;
-
   // Agregar año actual si no está en los datos
   const templateData: Record<string, any> = {
     year: new Date().getFullYear().toString(),
     ...data
   };
 
-  // Reemplazar todas las variables {{variable}} con sus valores
-  Object.keys(templateData).forEach((key) => {
-    const regex = new RegExp(`{{${key}}}`, 'g');
-    const value = templateData[key] !== undefined && templateData[key] !== null 
-      ? templateData[key].toString() 
-      : '';
-    parsedTemplate = parsedTemplate.replace(regex, value);
-  });
-
-  return parsedTemplate;
+  // Compilar y ejecutar la plantilla con Handlebars
+  const compiledTemplate = Handlebars.compile(template);
+  return compiledTemplate(templateData);
 }
 
 /**
  * Envía un email usando una plantilla
  * @param emailData - Datos del email a enviar
+ * @param emailConfig - Configuración de email (host, port, user, password, from)
  * @returns Promise que se resuelve cuando el email se envía
  */
-export async function sendTemplatedEmail(emailData: EmailData): Promise<void> {
+export async function sendTemplatedEmail(
+  emailData: EmailData
+): Promise<void> {
   try {
     console.log(`[EmailService] Preparing to send email to ${emailData.to} using template ${emailData.templateName}`);
 
@@ -117,7 +113,7 @@ export async function sendTemplatedEmail(emailData: EmailData): Promise<void> {
     // Parsear la plantilla con los datos
     const htmlContent = parseTemplate(template, emailData.templateData);
 
-    // Crear el transporter
+    // Crear el transporter usando secrets (como en welcome)
     const transporter = createTransporter();
 
     // Configurar el email
@@ -165,6 +161,114 @@ export async function sendWelcomeEmail(
       storeUrl: process.env.STORE_URL || 'https://veronadeco.com',
       supportUrl: process.env.SUPPORT_URL || 'https://veronadeco.com/soporte',
       privacyUrl: process.env.PRIVACY_URL || 'https://veronadeco.com/privacidad'
+    }
+  };
+
+  await sendTemplatedEmail(emailData);
+}
+
+/**
+ * Envía un email de confirmación de orden
+ * @param orderData - Datos completos de la orden
+ * @param emailConfig - Configuración opcional de email
+ */
+export async function sendOrderConfirmationEmail(
+  orderData: {
+    customerEmail: string;
+    customerFirstName: string;
+    orderId: string;
+    orderDate: string;
+    orderStatus: string;
+    paymentMethod: string;
+    deliveryMethod: string;
+    items: Array<{
+      productName: string;
+      productImage?: string;
+      variantName?: string;
+      variantColorHex?: string;
+      quantity: number;
+      unitPrice: number;
+      totalPrice: number;
+    }>;
+    totals: {
+      subtotal: number;
+      taxAmount: number;
+      taxPercentage: number;
+      shippingCost?: number;
+      total: number;
+      itemCount: number;
+    };
+    shippingAddress?: any;
+    billingAddress?: any;
+    notes?: string;
+  }
+): Promise<void> {
+  // Mapear método de entrega a label legible
+  const deliveryMethodLabels: Record<string, string> = {
+    'pickup': 'Recoger en Tienda',
+    'homeDelivery': 'Entrega a Domicilio',
+    'shipping': 'Envío por Paquetería',
+    'arrangeWithSeller': 'Acordar con Vendedor'
+  };
+
+  // Mapear estado de orden a label legible
+  const statusLabels: Record<string, string> = {
+    'pending': 'Pendiente',
+    'payment_pending': 'Pago Pendiente',
+    'confirmed': 'Confirmado',
+    'processing': 'En Proceso',
+    'ready_for_pickup': 'Listo para Recoger',
+    'ready_for_delivery': 'Listo para Envío',
+    'out_for_delivery': 'En Camino',
+    'shipped': 'Enviado',
+    'delivered': 'Entregado',
+    'picked_up': 'Recogido',
+    'completed': 'Completado',
+    'cancelled': 'Cancelado',
+    'refunded': 'Reembolsado',
+    'returned': 'Devuelto',
+    'on_hold': 'En Espera',
+    'disputed': 'En Disputa',
+    'partially_delivered': 'Entrega Parcial'
+  };
+
+  const orderIdDisplay = (orderData.orderId || '').toString().slice(-10).toUpperCase();
+
+  const emailData: EmailData = {
+    to: orderData.customerEmail,
+    subject: `Confirmación de Pedido #${orderIdDisplay} - Verona`,
+    templateName: 'order-confirmation',
+    templateData: {
+      customerFirstName: orderData.customerFirstName,
+      customerEmail: orderData.customerEmail,
+      orderId: orderIdDisplay,
+      orderDate: orderData.orderDate,
+      orderStatus: statusLabels[orderData.orderStatus] || orderData.orderStatus,
+      paymentMethod: orderData.paymentMethod,
+      itemCount: orderData.totals.itemCount,
+      deliveryMethodLabel: deliveryMethodLabels[orderData.deliveryMethod] || orderData.deliveryMethod,
+      items: orderData.items.map(item => ({
+        productName: item.productName,
+        productImage: item.productImage || '',
+        variantName: item.variantName || '',
+        variantColorHex: item.variantColorHex || '',
+        quantity: item.quantity,
+        unitPrice: item.unitPrice.toFixed(2),
+        totalPrice: item.totalPrice.toFixed(2)
+      })),
+      subtotal: orderData.totals.subtotal.toFixed(2),
+      taxPercentage: orderData.totals.taxPercentage,
+      taxAmount: orderData.totals.taxAmount.toFixed(2),
+      shippingCost: orderData.totals.shippingCost ? orderData.totals.shippingCost.toFixed(2) : null,
+      total: orderData.totals.total.toFixed(2),
+      shippingAddress: orderData.shippingAddress || null,
+      billingAddress: orderData.billingAddress || null,
+      notes: orderData.notes || null,
+      trackOrderUrl: process.env.TRACK_ORDER_URL 
+        ? `${process.env.TRACK_ORDER_URL}/${orderData.orderId}` 
+        : `https://veronadeco.com/mis-pedidos/${orderData.orderId}`,
+      storeUrl: process.env.STORE_URL || 'https://veronadeco.com',
+      supportUrl: process.env.SUPPORT_URL || 'https://veronadeco.com/soporte'
     }
   };
 
