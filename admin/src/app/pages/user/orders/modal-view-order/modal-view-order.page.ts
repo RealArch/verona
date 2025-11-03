@@ -31,6 +31,7 @@ import {
 } from 'ionicons/icons';
 import { Order, OrderStatus } from 'src/app/interfaces/order';
 import { Orders } from 'src/app/services/orders';
+import { Popups } from 'src/app/services/popups';
 
 @Component({
   selector: 'app-modal-view-order',
@@ -58,6 +59,7 @@ export class ModalViewOrderPage implements OnInit {
   private modalController = inject(ModalController);
   private ordersService = inject(Orders);
   private toastController = inject(ToastController);
+  private popups = inject(Popups);
 
   isUpdatingStatus = false;
 
@@ -86,13 +88,46 @@ export class ModalViewOrderPage implements OnInit {
       return;
     }
 
+    // Confirmar con el usuario antes de proceder
+    const statusLabel = this.getStatusLabel(targetStatus);
+    const orderNumber = this.order.id.slice(-10).toUpperCase();
+    
+    let confirmTitle = '';
+    let confirmMessage = '';
+    let confirmButton = '';
+    
+    if (targetStatus === 'cancelled') {
+      confirmTitle = '¿Cancelar pedido?';
+      confirmMessage = `¿Estás seguro que deseas cancelar el pedido #${orderNumber}? Esta acción no se puede deshacer.`;
+      confirmButton = 'Sí, cancelar';
+    } else if (targetStatus === 'completed') {
+      confirmTitle = '¿Marcar como completado?';
+      confirmMessage = `¿Confirmas que el pedido #${orderNumber} ha sido completado?`;
+      confirmButton = 'Sí, completar';
+    } else {
+      confirmTitle = '¿Cambiar estado?';
+      confirmMessage = `¿Deseas cambiar el estado del pedido #${orderNumber} a ${statusLabel}?`;
+      confirmButton = 'Sí, cambiar';
+    }
+
+    const confirmed = await this.popups.confirm(
+      confirmTitle,
+      confirmMessage,
+      confirmButton,
+      'Cancelar'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
     this.isUpdatingStatus = true;
 
     try {
       await this.ordersService.updateOrderStatus(this.order.id, targetStatus);
       
       const toast = await this.toastController.create({
-        message: `Estado actualizado a ${this.getStatusLabel(targetStatus)}`,
+        message: `Estado actualizado a ${statusLabel}`,
         duration: 2500,
         position: 'top',
         color: 'success'

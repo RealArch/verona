@@ -8,6 +8,9 @@ export interface Counters {
   products: number;
   products_active: number;
   products_paused: number;
+  sales?: {
+    total: number;
+  };
 }
 
 @Injectable({

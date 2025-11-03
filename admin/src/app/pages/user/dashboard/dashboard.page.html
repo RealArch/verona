@@ -92,7 +92,7 @@
 
     <!-- Stats Cards Row 2 - Sales Info -->
     <ion-row class="mb-6">
-      <!-- Recent Orders Count -->
+      <!-- Total Sales -->
       <ion-col size="12" size-md="6" size-lg="4" class="mb-4">
         <div class="h-full rounded-2xl bg-white border-2 border-[#186440]/30 p-5 shadow-md hover:shadow-lg transition-all duration-300">
           <div class="flex items-center justify-between mb-4">
@@ -102,9 +102,9 @@
             <ion-icon name="trending-up-outline" class="text-[#186440] text-2xl"></ion-icon>
           </div>
           <div>
-            <div class="text-3xl font-bold text-gray-800 mb-1">{{ recentOrders().length }}</div>
-            <div class="text-gray-600 text-sm font-medium">Ventas recientes</div>
-            <div class="text-xs text-[#186440] mt-2">Últimas 5 órdenes</div>
+            <div class="text-3xl font-bold text-gray-800 mb-1">{{ getTotalSales() }}</div>
+            <div class="text-gray-600 text-sm font-medium">Ventas totales</div>
+            <div class="text-xs text-[#186440] mt-2">Todas las órdenes</div>
           </div>
         </div>
       </ion-col>

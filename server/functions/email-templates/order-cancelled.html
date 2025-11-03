@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<!-- Plantilla de email para pedidos cancelados -->
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido Cancelado - Verona</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            max-width: 650px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .header {
+            background: linear-gradient(135deg, #b71c1c 0%, #f44336 100%);
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 32px;
+            font-weight: 600;
+        }
+        .header p {
+            color: #ffffff;
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        .content {
+            padding: 40px 30px;
+            color: #333333;
+        }
+        .greeting {
+            font-size: 24px;
+            color: #333333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .message {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555555;
+            margin-bottom: 20px;
+        }
+        .order-summary-box {
+            background-color: #fff5f5;
+            border: 2px solid #f44336;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .order-summary-box h2 {
+            margin-top: 0;
+            color: #d32f2f;
+            font-size: 22px;
+            text-align: center;
+        }
+        .order-info {
+            display: table;
+            width: 100%;
+            margin: 20px 0;
+        }
+        .order-info-row {
+            display: table-row;
+        }
+        .order-info-label {
+            display: table-cell;
+            padding: 8px 0;
+            color: #777777;
+            font-size: 14px;
+            width: 40%;
+        }
+        .order-info-value {
+            display: table-cell;
+            padding: 8px 0;
+            color: #333333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background-color: #d32f2f;
+            color: #ffffff;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .cancellation-box {
+            background-color: #fff0f0;
+            border-left: 4px solid #f44336;
+            padding: 15px 20px;
+            margin: 25px 0;
+        }
+        .cancellation-box p {
+            margin: 5px 0;
+            color: #a31c1c;
+            font-size: 14px;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            table-layout: fixed;
+        }
+        .items-table thead {
+            background-color: #f0f0f0;
+        }
+        .items-table th {
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            color: #555555;
+            font-weight: 600;
+            text-transform: uppercase;
+            border-bottom: 2px solid #ddd;
+        }
+        .items-table th:nth-child(1) {
+            width: 50%;
+        }
+        .items-table th:nth-child(2) {
+            width: 15%;
+        }
+        .items-table th:nth-child(3) {
+            width: 17.5%;
+        }
+        .items-table th:nth-child(4) {
+            width: 17.5%;
+        }
+        .items-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #eeeeee;
+            font-size: 14px;
+            color: #555555;
+        }
+        .item-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+            margin-right: 8px;
+        }
+        .item-name {
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 4px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+        }
+        .item-variant {
+            font-size: 13px;
+            color: #777777;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        /* Ocultar labels de móvil en desktop */
+        .mobile-label {
+            display: none;
+        }
+        .color-badge {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        .totals-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 25px 0;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 15px;
+        }
+        .total-row.subtotal {
+            color: #555555;
+        }
+        .total-row.tax, .total-row.shipping {
+            color: #777777;
+            font-size: 14px;
+        }
+        .total-row.grand-total {
+            border-top: 2px solid #d32f2f;
+            margin-top: 10px;
+            padding-top: 15px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #d32f2f;
+        }
+        .support-box {
+            background-color: #fffef0;
+            border-left: 4px solid #f4b400;
+            padding: 15px 20px;
+            margin: 25px 0;
+        }
+        .support-box p {
+            margin: 5px 0;
+            color: #8a6d3b;
+            font-size: 14px;
+        }
+        .cta-button {
+            display: inline-block;
+            padding: 14px 30px;
+            background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%);
+            color: #ffffff !important;
+            text-decoration: none !important;
+            border-radius: 5px;
+            font-weight: 600;
+            margin: 20px 0;
+            text-align: center;
+        }
+        a.cta-button, .cta-button:link, .cta-button:visited {
+            color: #ffffff !important;
+            text-decoration: none !important;
+        }
+        .cta-button:hover {
+            opacity: 0.9;
+            color: #ffffff !important;
+            text-decoration: none !important;
+        }
+        .footer {
+            background-color: #333333;
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #f48fb1;
+            text-decoration: none;
+        }
+        .footer p {
+            margin: 10px 0;
+        }
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                width: 100% !important;
+            }
+            .content {
+                padding: 30px 20px;
+            }
+            .header {
+                padding: 30px 15px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .header p {
+                font-size: 14px;
+            }
+            .greeting {
+                font-size: 20px;
+            }
+            .message {
+                font-size: 14px;
+            }
+            .items-table thead {
+                display: none;
+            }
+            .items-table,
+            .items-table tbody,
+            .items-table tr {
+                display: block;
+                width: 100%;
+            }
+            .items-table tr {
+                margin-bottom: 20px;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 15px;
+                background-color: #ffffff;
+            }
+            .items-table td {
+                display: block;
+                width: 100% !important;
+                padding: 0;
+                border: none;
+                text-align: left !important;
+            }
+            .items-table td:nth-child(1) {
+                margin-bottom: 12px;
+            }
+            .item-image {
+                width: 50px;
+                height: 50px;
+                margin-right: 10px;
+            }
+            .item-name {
+                font-size: 15px;
+                line-height: 1.4;
+            }
+            .item-variant {
+                font-size: 12px;
+                margin-top: 4px;
+            }
+            .items-table td:nth-child(2),
+            .items-table td:nth-child(3),
+            .items-table td:nth-child(4) {
+                padding: 8px 0;
+                font-size: 14px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-top: 1px solid #f0f0f0;
+            }
+            .mobile-label {
+                display: inline;
+                font-weight: 600;
+                color: #555555;
+                margin-right: 8px;
+            }
+            .items-table td:nth-child(4) {
+                border-top: 2px solid #d32f2f;
+                padding-top: 10px;
+                margin-top: 4px;
+                font-weight: 700;
+                color: #d32f2f;
+                font-size: 16px;
+            }
+            .items-table td:nth-child(4) .mobile-label {
+                color: #d32f2f;
+            }
+            .totals-section {
+                padding: 15px;
+            }
+            .total-row {
+                font-size: 13px;
+            }
+            .total-row.grand-total {
+                font-size: 18px;
+            }
+            .footer {
+                padding: 25px 15px;
+                font-size: 13px;
+            }
+        }
+        @media only screen and (max-width: 400px) {
+            .header h1 {
+                font-size: 20px;
+            }
+            .items-table tr {
+                padding: 12px;
+            }
+            .item-image {
+                width: 45px;
+                height: 45px;
+            }
+            .item-name {
+                font-size: 14px;
+            }
+            .items-table td:nth-child(2),
+            .items-table td:nth-child(3),
+            .items-table td:nth-child(4) {
+                font-size: 13px;
+            }
+            .total-row.grand-total {
+                font-size: 16px;
+            }
+        }
+        * {
+            box-sizing: border-box;
+        }
+        .email-container * {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>✖ Pedido Cancelado</h1>
+            <p>Lamentamos los inconvenientes con tu orden</p>
+        </div>
+        <div class="content">
+            <p class="greeting">Hola {{customerFirstName}},</p>
+            <p class="message">{{statusMessage}}</p>
+            <div class="order-summary-box">
+                <h2>📦 Resumen del Pedido</h2>
+                <div class="order-info">
+                    <div class="order-info-row">
+                        <span class="order-info-label">Número de Orden:</span>
+                        <span class="order-info-value" style="text-transform: uppercase;">#{{orderId}}</span>
+                    </div>
+                    <div class="order-info-row">
+                        <span class="order-info-label">Fecha del Pedido:</span>
+                        <span class="order-info-value">{{orderDate}}</span>
+                    </div>
+                    <div class="order-info-row">
+                        <span class="order-info-label">Estado:</span>
+                        <span class="order-info-value"><span class="status-badge">{{orderStatus}}</span></span>
+                    </div>
+                    <div class="order-info-row">
+                        <span class="order-info-label">Método de Pago:</span>
+                        <span class="order-info-value">{{paymentMethod}}</span>
+                    </div>
+                    <div class="order-info-row">
+                        <span class="order-info-label">Total de Artículos:</span>
+                        <span class="order-info-value">{{itemCount}} artículo(s)</span>
+                    </div>
+                </div>
+            </div>
+            {{#if cancellationReason}}
+            <div class="cancellation-box">
+                <p><strong>Motivo de la cancelación:</strong></p>
+                <p>{{cancellationReason}}</p>
+            </div>
+            {{/if}}
+            <div class="delivery-method-box" style="background: linear-gradient(135deg, #455a64 0%, #607d8b 100%); color: #ffffff;">
+                <h3>🔔 Notificación</h3>
+                <p>El pedido ya no se procesará. Si realizaste algún pago, estaremos en contacto para gestionar el proceso correspondiente.</p>
+            </div>
+            <h3 style="color: #333333; margin-top: 30px;">Artículos del Pedido</h3>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th style="text-align: center;">Cantidad</th>
+                        <th style="text-align: right;">Precio Unit.</th>
+                        <th style="text-align: right;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each items}}
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                {{#if productImage}}
+                                <img src="{{productImage}}" alt="{{productName}}" class="item-image">
+                                {{/if}}
+                                <div>
+                                    <div class="item-name">{{productName}}</div>
+                                    {{#if variantName}}
+                                    <div class="item-variant">
+                                        {{#if variantColorHex}}
+                                        <span class="color-badge" style="background-color: {{variantColorHex}};"></span>
+                                        {{/if}}
+                                        {{variantName}}
+                                    </div>
+                                    {{/if}}
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align: center;"><span class="mobile-label">Cantidad:</span>{{quantity}}</td>
+                        <td style="text-align: right;"><span class="mobile-label">Precio unitario:</span>${{unitPrice}}</td>
+                        <td style="text-align: right; font-weight: 600;"><span class="mobile-label">Total:</span>${{totalPrice}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+            <div class="totals-section">
+                <div class="total-row subtotal">
+                    <span>Subtotal:</span>
+                    <span>${{subtotal}}</span>
+                </div>
+                <div class="total-row tax">
+                    <span>Impuestos ({{taxPercentage}}%):</span>
+                    <span>${{taxAmount}}</span>
+                </div>
+                {{#if shippingCost}}
+                <div class="total-row shipping">
+                    <span>Envío:</span>
+                    <span>${{shippingCost}}</span>
+                </div>
+                {{/if}}
+                <div class="total-row grand-total">
+                    <span>Total:</span>
+                    <span>${{total}}</span>
+                </div>
+            </div>
+            <div class="support-box">
+                <p><strong>¿Necesitas ayuda?</strong></p>
+                <p>Si tienes dudas sobre la cancelación, contáctanos.</p>
+                <p>{{#if supportEmail}}Escríbenos a <a href="mailto:{{supportEmail}}">{{supportEmail}}</a>{{else}}Visita nuestro centro de ayuda en <a href="{{supportUrl}}">{{supportUrl}}</a>{{/if}}</p>
+            </div>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{ctaUrl}}" class="cta-button">{{ctaLabel}}</a>
+            </div>
+            <p class="message">
+                Agradecemos tu comprensión y esperamos poder atenderte nuevamente muy pronto.
+            </p>
+            <p class="message" style="margin-top: 30px;">
+                Saludos cordiales,<br>
+                <strong>El equipo de Verona</strong>
+            </p>
+        </div>
+        <div class="footer">
+            <p style="margin: 0 0 10px 0;">
+                <strong>Verona</strong><br>
+                La nueva era de la remodelación
+            </p>
+            <div style="margin: 20px 0;">
+                <a href="{{storeUrl}}">Visitar tienda</a>
+            </div>
+            <p style="font-size: 12px; color: #999999; margin-top: 20px;">
+                Este correo fue enviado a {{customerEmail}}<br>
+                Número de orden: #<span style="text-transform: uppercase;">{{orderId}}</span>
+            </p>
+            <p style="font-size: 12px; color: #999999; margin-top: 10px;">
+                © {{year}} Verona. Todos los derechos reservados.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

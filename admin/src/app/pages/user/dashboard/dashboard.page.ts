@@ -71,6 +71,10 @@ export class DashboardPage implements OnInit, OnDestroy {
     return this.recentOrders().reduce((sum, order) => sum + (order.totals?.total || 0), 0);
   }
 
+  getTotalSales(): number {
+    return this.counters()?.sales?.total || 0;
+  }
+
   getPendingOrdersCount(): number {
     return this.recentOrders().filter(order => order.status === 'pending').length;
   }

@@ -21,6 +21,69 @@ export interface EmailData {
   templateData: Record<string, any>;
 }
 
+export interface OrderEmailItem {
+  productName: string;
+  productImage?: string;
+  variantName?: string;
+  variantColorHex?: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export interface OrderEmailTotals {
+  subtotal: number;
+  taxAmount: number;
+  taxPercentage: number;
+  shippingCost?: number | null;
+  total: number;
+  itemCount: number;
+}
+
+export interface OrderEmailPayload {
+  customerEmail: string;
+  customerFirstName: string;
+  orderId: string;
+  orderDate: string;
+  orderStatus: string;
+  paymentMethod: string;
+  deliveryMethod: string;
+  items: OrderEmailItem[];
+  totals: OrderEmailTotals;
+  shippingAddress?: any;
+  billingAddress?: any;
+  notes?: string | null;
+  cancellationReason?: string | null;
+  deliveryMessage?: string | null;
+}
+
+const deliveryMethodLabels: Record<string, string> = {
+  pickup: 'Recoger en Tienda',
+  homeDelivery: 'Entrega a Domicilio',
+  shipping: 'Envío por Paquetería',
+  arrangeWithSeller: 'Acordar con Vendedor'
+};
+
+const statusLabels: Record<string, string> = {
+  pending: 'Pendiente',
+  payment_pending: 'Pago Pendiente',
+  confirmed: 'Confirmado',
+  processing: 'En Proceso',
+  ready_for_pickup: 'Listo para Recoger',
+  ready_for_delivery: 'Listo para Envío',
+  out_for_delivery: 'En Camino',
+  shipped: 'Enviado',
+  delivered: 'Entregado',
+  picked_up: 'Recogido',
+  completed: 'Completado',
+  cancelled: 'Cancelado',
+  refunded: 'Reembolsado',
+  returned: 'Devuelto',
+  on_hold: 'En Espera',
+  disputed: 'En Disputa',
+  partially_delivered: 'Entrega Parcial'
+};
+
 /**
  * Interface para la configuración del transporter
  */
@@ -93,6 +156,50 @@ function parseTemplate(template: string, data: Record<string, any>): string {
   // Compilar y ejecutar la plantilla con Handlebars
   const compiledTemplate = Handlebars.compile(template);
   return compiledTemplate(templateData);
+}
+
+function buildOrderTemplateData(orderData: OrderEmailPayload) {
+  const orderIdDisplay = (orderData.orderId || '').toString().slice(-10).toUpperCase();
+  const trackOrderUrl = process.env.TRACK_ORDER_URL
+    ? `${process.env.TRACK_ORDER_URL}/${orderData.orderId}`
+    : `https://veronadeco.com/mis-pedidos/${orderData.orderId}`;
+
+  const templateData = {
+    customerFirstName: orderData.customerFirstName,
+    customerEmail: orderData.customerEmail,
+    orderId: orderIdDisplay,
+    orderDate: orderData.orderDate,
+    orderStatus: statusLabels[orderData.orderStatus] || orderData.orderStatus,
+    paymentMethod: orderData.paymentMethod,
+    itemCount: orderData.totals.itemCount,
+    deliveryMethodLabel: deliveryMethodLabels[orderData.deliveryMethod] || orderData.deliveryMethod,
+    items: orderData.items.map(item => ({
+      productName: item.productName,
+      productImage: item.productImage || '',
+      variantName: item.variantName || '',
+      variantColorHex: item.variantColorHex || '',
+      quantity: item.quantity,
+      unitPrice: Number(item.unitPrice).toFixed(2),
+      totalPrice: Number(item.totalPrice).toFixed(2)
+    })),
+    subtotal: Number(orderData.totals.subtotal).toFixed(2),
+    taxPercentage: orderData.totals.taxPercentage,
+    taxAmount: Number(orderData.totals.taxAmount).toFixed(2),
+    shippingCost:
+      orderData.totals.shippingCost !== undefined && orderData.totals.shippingCost !== null
+        ? Number(orderData.totals.shippingCost).toFixed(2)
+        : null,
+    total: Number(orderData.totals.total).toFixed(2),
+    shippingAddress: orderData.shippingAddress || null,
+    billingAddress: orderData.billingAddress || null,
+    notes: orderData.notes || null,
+    trackOrderUrl,
+    storeUrl: process.env.STORE_URL || 'https://veronadeco.com',
+    supportUrl: process.env.SUPPORT_URL || 'https://veronadeco.com/soporte',
+    supportEmail: process.env.SUPPORT_EMAIL || ''
+  };
+
+  return { orderIdDisplay, templateData };
 }
 
 /**
@@ -169,106 +276,59 @@ export async function sendWelcomeEmail(
 
 /**
  * Envía un email de confirmación de orden
- * @param orderData - Datos completos de la orden
- * @param emailConfig - Configuración opcional de email
  */
-export async function sendOrderConfirmationEmail(
-  orderData: {
-    customerEmail: string;
-    customerFirstName: string;
-    orderId: string;
-    orderDate: string;
-    orderStatus: string;
-    paymentMethod: string;
-    deliveryMethod: string;
-    items: Array<{
-      productName: string;
-      productImage?: string;
-      variantName?: string;
-      variantColorHex?: string;
-      quantity: number;
-      unitPrice: number;
-      totalPrice: number;
-    }>;
-    totals: {
-      subtotal: number;
-      taxAmount: number;
-      taxPercentage: number;
-      shippingCost?: number;
-      total: number;
-      itemCount: number;
-    };
-    shippingAddress?: any;
-    billingAddress?: any;
-    notes?: string;
-  }
-): Promise<void> {
-  // Mapear método de entrega a label legible
-  const deliveryMethodLabels: Record<string, string> = {
-    'pickup': 'Recoger en Tienda',
-    'homeDelivery': 'Entrega a Domicilio',
-    'shipping': 'Envío por Paquetería',
-    'arrangeWithSeller': 'Acordar con Vendedor'
-  };
-
-  // Mapear estado de orden a label legible
-  const statusLabels: Record<string, string> = {
-    'pending': 'Pendiente',
-    'payment_pending': 'Pago Pendiente',
-    'confirmed': 'Confirmado',
-    'processing': 'En Proceso',
-    'ready_for_pickup': 'Listo para Recoger',
-    'ready_for_delivery': 'Listo para Envío',
-    'out_for_delivery': 'En Camino',
-    'shipped': 'Enviado',
-    'delivered': 'Entregado',
-    'picked_up': 'Recogido',
-    'completed': 'Completado',
-    'cancelled': 'Cancelado',
-    'refunded': 'Reembolsado',
-    'returned': 'Devuelto',
-    'on_hold': 'En Espera',
-    'disputed': 'En Disputa',
-    'partially_delivered': 'Entrega Parcial'
-  };
-
-  const orderIdDisplay = (orderData.orderId || '').toString().slice(-10).toUpperCase();
+export async function sendOrderConfirmationEmail(orderData: OrderEmailPayload): Promise<void> {
+  const { orderIdDisplay, templateData } = buildOrderTemplateData(orderData);
 
   const emailData: EmailData = {
     to: orderData.customerEmail,
     subject: `Confirmación de Pedido #${orderIdDisplay} - Verona`,
     templateName: 'order-confirmation',
+    templateData
+  };
+
+  await sendTemplatedEmail(emailData);
+}
+
+/**
+ * Envía un email cuando la orden es cancelada
+ */
+export async function sendOrderCancelledEmail(orderData: OrderEmailPayload): Promise<void> {
+  const { orderIdDisplay, templateData } = buildOrderTemplateData(orderData);
+
+  const emailData: EmailData = {
+    to: orderData.customerEmail,
+    subject: `Pedido #${orderIdDisplay} cancelado - Verona`,
+    templateName: 'order-cancelled',
     templateData: {
-      customerFirstName: orderData.customerFirstName,
-      customerEmail: orderData.customerEmail,
-      orderId: orderIdDisplay,
-      orderDate: orderData.orderDate,
-      orderStatus: statusLabels[orderData.orderStatus] || orderData.orderStatus,
-      paymentMethod: orderData.paymentMethod,
-      itemCount: orderData.totals.itemCount,
-      deliveryMethodLabel: deliveryMethodLabels[orderData.deliveryMethod] || orderData.deliveryMethod,
-      items: orderData.items.map(item => ({
-        productName: item.productName,
-        productImage: item.productImage || '',
-        variantName: item.variantName || '',
-        variantColorHex: item.variantColorHex || '',
-        quantity: item.quantity,
-        unitPrice: item.unitPrice.toFixed(2),
-        totalPrice: item.totalPrice.toFixed(2)
-      })),
-      subtotal: orderData.totals.subtotal.toFixed(2),
-      taxPercentage: orderData.totals.taxPercentage,
-      taxAmount: orderData.totals.taxAmount.toFixed(2),
-      shippingCost: orderData.totals.shippingCost ? orderData.totals.shippingCost.toFixed(2) : null,
-      total: orderData.totals.total.toFixed(2),
-      shippingAddress: orderData.shippingAddress || null,
-      billingAddress: orderData.billingAddress || null,
-      notes: orderData.notes || null,
-      trackOrderUrl: process.env.TRACK_ORDER_URL 
-        ? `${process.env.TRACK_ORDER_URL}/${orderData.orderId}` 
-        : `https://veronadeco.com/mis-pedidos/${orderData.orderId}`,
-      storeUrl: process.env.STORE_URL || 'https://veronadeco.com',
-      supportUrl: process.env.SUPPORT_URL || 'https://veronadeco.com/soporte'
+      ...templateData,
+      statusMessage:
+        orderData.deliveryMessage || `Tu pedido #${orderIdDisplay} ha sido cancelado. Si necesitas ayuda, estamos aquí para apoyarte.`,
+      cancellationReason: orderData.cancellationReason || '',
+      ctaLabel: 'Ver detalle del pedido',
+      ctaUrl: templateData.trackOrderUrl
+    }
+  };
+
+  await sendTemplatedEmail(emailData);
+}
+
+/**
+ * Envía un email cuando la orden es completada
+ */
+export async function sendOrderCompletedEmail(orderData: OrderEmailPayload): Promise<void> {
+  const { orderIdDisplay, templateData } = buildOrderTemplateData(orderData);
+
+  const emailData: EmailData = {
+    to: orderData.customerEmail,
+    subject: `Pedido #${orderIdDisplay} completado - Verona`,
+    templateName: 'order-completed',
+    templateData: {
+      ...templateData,
+      statusMessage:
+        orderData.deliveryMessage || `Tu pedido #${orderIdDisplay} ha sido completado exitosamente. ¡Gracias por confiar en nosotros!`,
+      ctaLabel: 'Ver pedido',
+      ctaUrl: templateData.trackOrderUrl
     }
   };
 
