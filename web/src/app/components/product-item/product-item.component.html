@@ -4,7 +4,7 @@
         <!-- Imagen con relación de aspecto rectangular adaptable -->
         <div class="relative w-full aspect-[4/3] overflow-hidden">
 
-            @if(product.photos.length > 0) {
+            @if(product.photos && product.photos.length > 0 && product.photos[0]?.small?.url) {
             <img [src]="product.photos[0].small.url" [alt]="product.slug"
                 class="w-full h-full object-cover object-center absolute inset-0" />
             <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>

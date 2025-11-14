@@ -1,7 +1,7 @@
 import { Component, inject, Input, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonLabel, IonInput, ModalController, IonSpinner, IonIcon, IonImg, IonFooter, IonButtons } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonItem, IonLabel, IonInput, ModalController, IonSpinner, IonIcon, IonImg, IonFooter, IonButtons, ToastController } from '@ionic/angular/standalone';
 import { CategoriesService } from '../../../../services/categories.service';
 import { ProductsService } from 'src/app/services/products.service';
 import { AuthService } from 'src/app/services/auth.service';
@@ -35,6 +35,7 @@ export class CategoryModalComponent implements OnInit {
   private productsService = inject(ProductsService);
   private authService = inject(AuthService);
   private modalController = inject(ModalController);
+  private toastCtrl = inject(ToastController);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
 
@@ -72,9 +73,12 @@ export class CategoryModalComponent implements OnInit {
     if (!file) return;
 
     // Validar tipo de archivo
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      alert('Solo se permiten imágenes JPG, PNG o WEBP.');
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      await this.presentToast(`El archivo "${file.name}" no es un formato válido. Solo se permiten JPG, PNG y WEBP.`, 'warning');
+      // Limpiar el input
+      const input = event.target as HTMLInputElement;
+      input.value = '';
       return;
     }
 
@@ -195,5 +199,15 @@ export class CategoryModalComponent implements OnInit {
 
   cancel() {
     this.modalController.dismiss();
+  }
+
+  async presentToast(message: string, color: 'success' | 'warning' | 'danger') {
+    const toast = await this.toastCtrl.create({ 
+      message, 
+      duration: 3000, 
+      color, 
+      position: 'top' 
+    });
+    await toast.present();
   }
 }

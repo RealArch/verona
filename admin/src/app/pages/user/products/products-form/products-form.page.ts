@@ -770,7 +770,8 @@ export class ProductFormPage implements OnInit {
       });
       if (image.webPath) {
         const blob = await (await fetch(image.webPath)).blob();
-        const file = new File([blob], `photo_${Date.now()}.jpeg`, { type: 'image/jpeg' });
+        // Asegurar que la foto tomada sea en formato JPEG (permitido)
+        const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
         this.handleFiles([file]);
       }
     } catch (error) {
@@ -780,7 +781,17 @@ export class ProductFormPage implements OnInit {
 
   private handleFiles(files: File[]) {
     if (this.isUploading()) return;
+    
+    // Tipos de archivo permitidos
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    
     files.forEach(file => {
+      // Validar tipo de archivo
+      if (!allowedTypes.includes(file.type.toLowerCase())) {
+        this.presentToast(`El archivo "${file.name}" no es un formato válido. Solo se permiten JPG, PNG y WEBP.`, 'warning');
+        return;
+      }
+      
       const fileWrapper: ImageFile = {
         file,
         previewUrl: URL.createObjectURL(file),
