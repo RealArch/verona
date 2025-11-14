@@ -368,7 +368,7 @@ export class ProductComponent implements OnInit, OnDestroy, AfterViewInit {
       ? product.photos[0].large.url 
       : `${environment.baseUrl}/logos/logo.png`;
     
-    const price = product.price;
+    const price = product.price || product.minPrice || 0;
     const currency = 'USD';
     const availability = parseInt(product.stock) > 0 ? 'in stock' : 'out of stock';
     const categoryName = this.getCategoryName(product.categoryId);
