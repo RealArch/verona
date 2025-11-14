@@ -61,6 +61,7 @@ export interface OrderItem {
   variantName?: string;
   variantColorHex?: string;
   productImage?: string;
+  sku?: string; // SKU del producto o variante (siempre incluido, puede estar vacío)
 }
 
 export interface OrderTotals {

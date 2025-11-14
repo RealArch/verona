@@ -25,6 +25,7 @@ export interface OrderItem {
   variantId?: string;
   variantName?: string;
   variantColorHex?: string;
+  sku?: string;
 }
 
 export interface OrderTotals {

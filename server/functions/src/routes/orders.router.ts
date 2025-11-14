@@ -134,6 +134,8 @@ ordersRouter.post('/createOrder', async (req: Request, res: Response) => {
       const productUpdates: Array<{ ref: any; updates: any }> = [];
 
       // Leer todos los productos dentro de la transacción
+      const enrichedItems: any[] = [];
+      
       for (let i = 0; i < orderData.items.length; i++) {
         const item = orderData.items[i];
         const itemPrefix = `items[${i}]`;
@@ -151,6 +153,17 @@ ordersRouter.post('/createOrder', async (req: Request, res: Response) => {
         }
 
         const product = productDoc.data() as any;
+        
+        // Obtener SKU del producto o variante
+        let itemSku = '';
+        if (item.variantId) {
+          // Producto con variantes: obtener SKU de la variante
+          const variant = product.variants?.find((v: any) => v.id === item.variantId);
+          itemSku = variant?.sku || product.sku || '';
+        } else {
+          // Producto sin variantes: obtener SKU del producto
+          itemSku = product.sku || '';
+        }
 
         // 2. Verificar que el producto está activo
         if (product.status !== 'active') {
@@ -225,6 +238,12 @@ ordersRouter.post('/createOrder', async (req: Request, res: Response) => {
           ref: productRef,
           updates: stockUpdateData
         });
+
+        // Enriquecer el item con el SKU
+        enrichedItems.push({
+          ...item,
+          sku: itemSku
+        });
       }
 
       // 7. Verificar que el subtotal es correcto
@@ -272,6 +291,7 @@ ordersRouter.post('/createOrder', async (req: Request, res: Response) => {
       // Todas las validaciones pasaron: crear la orden y actualizar stocks
       const orderDocument = {
         ...orderData,
+        items: enrichedItems, // Usar items enriquecidos con SKU
         userData, // Agregar userData obtenido de Firestore
         status: 'pending',
         createdAt: now, // Usar timestamp generado fuera de la transacción

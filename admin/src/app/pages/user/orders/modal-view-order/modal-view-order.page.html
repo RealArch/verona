@@ -42,21 +42,24 @@
 
         <!-- Product Details -->
         <div class="flex-1 min-w-0">
-          <h5 class="font-medium text-gray-800">{{ item.productName }}</h5>
-          <p *ngIf="item.variantName" class="text-sm text-gray-600 flex items-center gap-2">
+          <div class="font-medium text-gray-800 my-0 text-lg">{{ item.productName }}</div>
+          <p *ngIf="item.variantName" class="text-sm text-gray-600 flex items-center gap-2 my-0" >
             {{ item.variantName }}
             <span *ngIf="item.variantColorHex" class="w-4 h-4 rounded-full border border-gray-300 inline-block ml-1"
               [style.background-color]="item.variantColorHex">
             </span>
           </p>
-          <p class="text-sm text-gray-600">Cantidad: {{ item.quantity }}</p>
+          <p class="text-sm text-gray-500 my-0">
+            SKU: {{ item.sku || '-' }}
+          </p>
+          <p class="text-sm text-gray-600 my-0">Cantidad: {{ item.quantity }}</p>
         </div>
 
         <!-- Price -->
         <div class="text-right">
-          <p class="font-semibold text-gray-800">{{ item.totalPrice ? formatCurrency(item.totalPrice) : '$0.00' }}
+          <p class="font-semibold text-gray-800 my-0">{{ item.totalPrice ? formatCurrency(item.totalPrice) : '$0.00' }}
           </p>
-          <p class="text-sm text-gray-600">{{ item.unitPrice ? formatCurrency(item.unitPrice) : '$0.00' }} c/u</p>
+          <p class="text-sm text-gray-600 my-0">{{ item.unitPrice ? formatCurrency(item.unitPrice) : '$0.00' }} c/u</p>
         </div>
       </div>
     </div>
@@ -68,10 +71,10 @@
 
       <!-- Billing Address -->
       <div>
-        <h4 class="text-sm font-semibold text-gray-500 uppercase mb-2 flex items-center gap-2">
+        <div class="text-sm font-semibold text-gray-500 uppercase mb-2 flex items-center gap-2">
           <ion-icon name="document-text-outline" class="text-base"></ion-icon>
           Dirección de Facturación
-        </h4>
+        </div>
         <div class="text-sm space-y-1" *ngIf="order.billingAddress">
           <p class="font-medium text-gray-800">{{ order.billingAddress.name }}</p>
           <p class="text-gray-600">
@@ -93,10 +96,10 @@
 
       <!-- Order Totals -->
       <div>
-        <h4 class="text-sm font-semibold text-gray-500 uppercase mb-2 flex items-center gap-2">
+        <div class="text-sm font-semibold text-gray-500 uppercase mb-2 flex items-center gap-2">
           <ion-icon name="cash-outline" class="text-base"></ion-icon>
           Resumen del Pedido
-        </h4>
+        </div>
         <div class="space-y-1 text-sm">
           <div class="flex justify-between">
             <span class="text-gray-600">Subtotal</span>

@@ -142,18 +142,22 @@
                             </h3>
                             <div class="flex flex-wrap gap-2">
                                 @for (variant of currentProduct()!.variants; track variant.id) {
-                                <div class="inline-flex items-center border rounded-full px-2 py-1 cursor-pointer transition-all whitespace-nowrap"
+                                <div class="inline-flex items-center gap-2 border rounded-lg px-3 py-2 cursor-pointer transition-all"
                                     [class.border-primary]="selectedVariant()?.id === variant.id"
                                     [class.bg-primary/10]="selectedVariant()?.id === variant.id"
                                     [class.border-base-300]="selectedVariant()?.id !== variant.id"
                                     (click)="selectVariant(variant)">
                                     @if (variant.colorHex) {
-                                    <div class="w-4 h-4 rounded-full border border-base-300 mr-2"
+                                    <div class="w-4 h-4 rounded-full border border-base-300 shrink-0"
                                         [style.background-color]="variant.colorHex"></div>
                                     }
-                                    <span class="font-medium mr-2">{{ variant.name }}</span>
-                                    <!-- <span class="text-sm text-base-content/60 mr-2">{{ variant.sku }}</span> -->
-                                    <span class="font-semibold">{{ variant.price | currency }}</span>
+                                    <div class="flex flex-col gap-1 min-w-0 flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-medium">{{ variant.name }}</span>
+                                            <span class="font-semibold ml-auto">{{ variant.price | currency }}</span>
+                                        </div>
+                                        <span class="text-xs text-base-content/50 leading-[4px]">{{ variant.sku || '-' }}</span>
+                                    </div>
                                 </div>
                                 }
                             </div>
