@@ -1,5 +1,11 @@
+# Version 1.0.4
+## status: up
+## Cambios
+-Correccion de errores
+-Proteccion multiples clicks en el crear articulo
+
 # Version 1.0.3
-## status: Draft
+## status: up
 ## Cambios
 
 -Permitir subida de imagenes en products solo png, jpg y webp

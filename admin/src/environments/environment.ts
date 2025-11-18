@@ -16,7 +16,7 @@ export const environment = {
             orders: 'orders_dev'
         }
     },
-    version: '1.0.3'
+    version: '1.0.4'
 };
 
 /*

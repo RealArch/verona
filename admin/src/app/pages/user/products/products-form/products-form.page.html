@@ -5,8 +5,9 @@
     </ion-buttons>
     <ion-title>{{ isEditMode() ? 'Editar' : 'Añadir' }} Producto</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="saveProduct()" [disabled]="productForm.invalid || isUploading()">
-        <ion-icon slot="icon-only" name="save"></ion-icon>
+      <ion-button (click)="saveProduct()" [disabled]="productForm.invalid || isUploading() || isSubmitting()">
+        <ion-spinner *ngIf="isSubmitting()" name="crescent" slot="icon-only"></ion-spinner>
+        <ion-icon *ngIf="!isSubmitting()" slot="icon-only" name="save"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -91,12 +92,12 @@
             </span>
           </div>
           <div *ngIf="selectedCategoryPath().length > 0" class="flex">
-            <ion-button class="m-auto mt-3"fill="outline" size="small" (click)="openCategorySelectionModal(true)">Cambiar</ion-button>
+            <ion-button class="m-auto mt-3" fill="outline" size="small" (click)="openCategorySelectionModal(true)">Cambiar</ion-button>
           </div>
           <div class="flex">
 
             <ion-button *ngIf="selectedCategoryPath().length === 0" class="m-auto"
-              (click)="openCategorySelectionModal(false)" [disabled]="isUploading()">
+              (click)="openCategorySelectionModal(false)">
               <ion-icon name="folder-outline" slot="start"></ion-icon>
               Seleccionar categoría
             </ion-button>

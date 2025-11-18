@@ -11,6 +11,6 @@ export const environment = {
       orders: 'orders_prod'
     }
   },
-  version: '1.0.3'
+  version: '1.0.4'
 
 };

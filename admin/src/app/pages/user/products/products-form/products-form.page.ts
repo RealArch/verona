@@ -75,6 +75,7 @@ export class ProductFormPage implements OnInit {
   existingImages = signal<ExistingImage[]>([]);
   imagesToDelete = signal<ProductPhoto[]>([]);
   isUploading = signal(false);
+  isSubmitting = signal(false); // ⭐ NUEVO: Prevenir múltiples submissions
   productType = signal<'individual' | 'variants'>('individual');
   
   private variantsSub: Subscription | undefined;
@@ -104,6 +105,13 @@ export class ProductFormPage implements OnInit {
 
   ngOnDestroy() {
     this.variantsSub?.unsubscribe();
+    
+    // ⭐ Liberar URLs de objetos para prevenir memory leaks
+    this.imageFiles().forEach(file => {
+      if (file.previewUrl) {
+        URL.revokeObjectURL(file.previewUrl);
+      }
+    });
   }
 
   // --- Getters para el Formulario ---
@@ -338,7 +346,57 @@ export class ProductFormPage implements OnInit {
 
           }
         });
+    } else {
+      // ⭐ MODO CREACIÓN: Limpiar completamente el formulario
+      this.isEditMode.set(false);
+      this.resetFormForCreation();
     }
+  }
+
+  /**
+   * ⭐ NUEVO: Resetear completamente el formulario para modo creación
+   * Esto previene que se muestre información del producto anterior
+   */
+  private resetFormForCreation() {
+    // Limpiar el formulario principal
+    this.productForm.reset({
+      name: '',
+      slug: '',
+      description: '',
+      price: null,
+      stock: null,
+      sku: '',
+      categoryId: null,
+      status: 'active',
+      hasDynamicPricing: false
+    });
+
+    // Limpiar arrays del formulario
+    const photosArray = this.productForm.get('photos') as FormArray;
+    photosArray.clear();
+
+    const variantsArray = this.productForm.get('variants') as FormArray;
+    variantsArray.clear();
+
+    const dynamicPricesArray = this.productForm.get('dynamicPrices') as FormArray;
+    dynamicPricesArray.clear();
+
+    // Limpiar signals
+    this.imageFiles.set([]);
+    this.existingImages.set([]);
+    this.imagesToDelete.set([]);
+    this.selectedCategoryPath.set([]);
+    this.productType.set('individual');
+    this.isUploading.set(false);
+    this.isSubmitting.set(false);
+
+    // Habilitar campos del producto principal
+    this.productForm.get('price')?.enable();
+    this.productForm.get('sku')?.enable();
+    this.productForm.get('price')?.setValidators([Validators.required, Validators.min(0)]);
+    this.productForm.get('price')?.updateValueAndValidity();
+
+    console.log('✅ Formulario limpiado para nuevo producto');
   }
 
   private getVariantType(variant: any): string {
@@ -862,6 +920,12 @@ export class ProductFormPage implements OnInit {
 
   // --- Guardado del Producto ---
   async saveProduct() {
+    // ⭐ PROTECCIÓN: Prevenir múltiples submissions
+    if (this.isSubmitting()) {
+      console.warn('Ya se está procesando una solicitud de guardado...');
+      return;
+    }
+
     if (this.productForm.invalid || this.isUploading()) {
       this.presentToast('Por favor, completa el formulario y espera a que terminen de subirse las imágenes.', 'warning');
       return;
@@ -929,6 +993,9 @@ export class ProductFormPage implements OnInit {
       }
     }
 
+    // ⭐ BLOQUEAR: Iniciar proceso de guardado
+    this.isSubmitting.set(true);
+
     try {
       // Obtener solo los campos que existen en el formulario
       const formData = this.getFormData();
@@ -946,6 +1013,9 @@ export class ProductFormPage implements OnInit {
     } catch (error) {
       console.error('Error saving product:', error);
       this.presentToast('Error al guardar el producto', 'danger');
+    } finally {
+      // ⭐ DESBLOQUEAR: Siempre liberar el flag, incluso si hay error
+      this.isSubmitting.set(false);
     }
   }
 
