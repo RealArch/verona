@@ -32,7 +32,8 @@ export function prepareProductDataForAlgolia(productData: any, productId: string
         // Estado y disponibilidad
         status: productData.status,
         processing: productData.processing,
-        
+        minPrice: productData.minPrice,
+        maxPrice: productData.maxPrice,
         // Imágenes (mantener estructura completa con todos los tamaños)
         photos: productData.photos?.map((photo: any) => ({
             thumbnail: photo.thumbnail ? {
