@@ -1,5 +1,9 @@
+ion-split-pane {
+    --side-width: 250px;
+}
+
 .minimal-menu {
-    max-width: 280px;
+    // max-width: 280px;
     --background: transparent;
 
     ion-content {

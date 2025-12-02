@@ -170,8 +170,13 @@ service cloud.firestore {
     // COLECCIÓN: metadata
     // ==========================================
     match /metadata/{document} {
-      // Lectura: Admin puede leer contadores y metadatos
-      allow read: if isAdmin();
+      // Lectura del documento counters: Permitir sin autenticación
+      // (necesario para verificar si existen admins antes del login)
+      allow get: if document == 'counters';
+      
+      // Otras lecturas: Solo admin
+      allow list: if isAdmin();
+      allow read: if document != 'counters' && isAdmin();
       
       // Escritura: Solo a través de triggers del servidor
       allow write: if false;

@@ -1,3 +1,9 @@
+# Version 1.0.5
+## status: up
+## Cambios
+-Correccion de errores de responsive
+-Añadido buscador para la seccion de Productos
+
 # Version 1.0.4
 ## status: up
 ## Cambios

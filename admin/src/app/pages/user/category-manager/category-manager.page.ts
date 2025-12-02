@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonIcon,
   ModalController, IonButton, IonBackButton, IonGrid, IonRow, IonCol, IonCard,
-  IonCardHeader, IonCardContent, IonItem, IonLabel, IonImg, IonAvatar, IonSkeletonText } from '@ionic/angular/standalone';
+  IonCardHeader, IonCardContent, IonItem, IonLabel, IonImg, IonAvatar, IonSkeletonText, IonMenuButton } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { create, trash, add, addCircleOutline, folderOpenOutline, createOutline, trashOutline, fileTrayOutline, folderOutline } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
@@ -23,7 +23,7 @@ import { Category } from 'src/app/interfaces/category';
   imports: [IonAvatar, IonImg, 
     IonCard, IonCardHeader, IonCardContent, IonItem, IonLabel,
     IonGrid, IonRow, IonCol, IonButton, IonIcon, IonButtons, IonContent,
-    IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule, IonBackButton, IonSkeletonText
+    IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule, IonBackButton, IonSkeletonText, IonMenuButton
   ]
 })
 export class CategoryManagerPage implements OnInit, OnDestroy {

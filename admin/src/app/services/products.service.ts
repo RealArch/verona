@@ -18,8 +18,9 @@ import {
 import { Storage, ref, uploadBytes, getDownloadURL, deleteObject, uploadBytesResumable } from '@angular/fire/storage';
 import { Observable, map } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { algoliasearch } from 'algoliasearch';
 import { environment } from 'src/environments/environment';
-import { Product, ProductStatus } from 'src/app/interfaces/product';
+import { Product, ProductStatus, ProductSearchFilters, ProductSearchResult } from 'src/app/interfaces/product';
 import { ProductPhoto } from 'src/app/interfaces/product-photo';
 
 
@@ -27,6 +28,7 @@ import { ProductPhoto } from 'src/app/interfaces/product-photo';
   providedIn: 'root'
 })
 export class ProductsService {
+  private algoliaClient: any;
   private firestore: Firestore = inject(Firestore);
   private storage: Storage = inject(Storage);
   private http: HttpClient = inject(HttpClient);
@@ -34,6 +36,13 @@ export class ProductsService {
   private zone: NgZone = inject(NgZone);
   private productsCollection = collection(this.firestore, 'products');
   private readonly API_URL = environment.useEmulators ? 'http://localhost:5001/verona-ffbcd/us-central1/api' : '/api';
+
+  constructor() {
+    this.algoliaClient = algoliasearch(
+      environment.algolia.appId,
+      environment.algolia.apiKey
+    );
+  }
 
   getProductsByStatus(status: 'all' | 'active' | 'paused'): Observable<Product[]> {
     return runInInjectionContext(this.injector, () => {
@@ -125,11 +134,9 @@ export class ProductsService {
     });
   }
   //funcion para actualizar el status de un producto. puede ser active, paused
-  updateStatus(productId: string, status: ProductStatus): Promise<void> {
-    return runInInjectionContext(this.injector, () => {
-      const productDoc = doc(this.firestore, `products/${productId}`);
-      return updateDoc(productDoc, { status, updatedAt: serverTimestamp() });
-    });
+  async updateStatus(productId: string, status: ProductStatus): Promise<void> {
+    const productDoc = doc(this.firestore, `products/${productId}`);
+    await updateDoc(productDoc, { status, updatedAt: serverTimestamp() });
   }
 
   async deleteTempImage(path: string): Promise<void> {
@@ -187,6 +194,84 @@ export class ProductsService {
         return true;
       }
     });
+  }
+
+  /**
+   * Busca productos en Algolia con filtros y paginación
+   * @param query - Texto de búsqueda (nombre, descripción, SKU)
+   * @param page - Número de página (0-indexed)
+   * @param hitsPerPage - Cantidad de resultados por página
+   * @param filters - Filtros de búsqueda opcionales
+   * @returns Promise con los resultados de la búsqueda
+   */
+  async searchProducts(
+    query: string = '',
+    page: number = 0,
+    hitsPerPage: number = 20,
+    filters?: ProductSearchFilters
+  ): Promise<ProductSearchResult> {
+    try {
+      // Construir el string de filtros para Algolia
+      const filterStrings: string[] = [];
+
+      // Filtro por status (puede ser uno o varios: active, paused, archived)
+      if (filters?.status && filters.status.length > 0) {
+        const statusFilters = filters.status.map(s => `status:${s}`).join(' OR ');
+        filterStrings.push(`(${statusFilters})`);
+      }
+
+      // Combinar todos los filtros con AND
+      const filtersString = filterStrings.length > 0 
+        ? filterStrings.join(' AND ') 
+        : '';
+
+      // Realizar la búsqueda en Algolia
+      const { results } = await this.algoliaClient.search({
+        requests: [
+          {
+            indexName: environment.algolia.indexes.products,
+            query: query,
+            page,
+            hitsPerPage,
+            filters: filtersString,
+          }
+        ]
+      });
+
+      const searchResults = results[0];
+      const totalPages = Math.ceil(searchResults.nbHits / hitsPerPage);
+
+      // Mapear los hits de Algolia a objetos Product válidos
+      const products: Product[] = searchResults.hits.map((hit: any) => ({
+        id: hit.objectID || hit.id || '',
+        name: hit.name || '',
+        slug: hit.slug || '',
+        price: hit.price || 0,
+        stock: hit.stock || 0,
+        sku: hit.sku || '',
+        categoryId: hit.categoryId || '',
+        status: hit.status || 'active',
+        photos: hit.photos || [],
+        processing: hit.processing || false,
+        variationAttributes: hit.variationAttributes || [],
+        variants: hit.variants || [],
+        pausedVariantsCount: hit.pausedVariantsCount || 0,
+        hasDynamicPricing: hit.hasDynamicPricing || false,
+        dynamicPrices: hit.dynamicPrices || []
+      }));
+
+      return {
+        products,
+        total: searchResults.nbHits,
+        page: searchResults.page + 1,
+        pageSize: hitsPerPage,
+        totalPages,
+        hasMore: searchResults.page < searchResults.nbPages - 1
+      };
+    } catch (error) {
+      console.error('Error searching products in Algolia:', error);
+      throw error;
+    }
   }
 
   // Generate URL-friendly slug from text

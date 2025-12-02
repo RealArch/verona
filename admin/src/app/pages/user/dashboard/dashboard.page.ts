@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonIcon, IonGrid, IonRow, IonCol, IonButton, IonBadge, IonSpinner, IonCard, IonCardContent, ModalController } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonIcon, IonGrid, IonRow, IonCol, IonButton, IonBadge, IonSpinner, IonCard, IonCardContent, ModalController, IonButtons, IonMenuButton } from '@ionic/angular/standalone';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
 import { layers, people, statsChart, receiptOutline, chevronForwardOutline, calendarOutline, trendingUpOutline, cubeOutline, checkmarkCircleOutline, pauseCircleOutline, cartOutline, cashOutline } from 'ionicons/icons';
@@ -17,7 +17,7 @@ import { ModalViewOrderPage } from '../orders/modal-view-order/modal-view-order.
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss'],
   standalone: true,
-  imports: [IonCardContent, IonCard, IonSpinner, IonBadge, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
+  imports: [IonButtons, IonMenuButton, IonCardContent, IonCard, IonSpinner, IonBadge, IonButton, IonIcon, IonGrid, IonRow, IonCol, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
 })
 export class DashboardPage implements OnInit, OnDestroy {
   private metadata = inject(Metadata);

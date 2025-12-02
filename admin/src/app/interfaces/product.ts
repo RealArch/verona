@@ -73,3 +73,18 @@ export interface DynamicPriceRange {
 }
 
 export type ProductStatus = 'active' | 'paused' | 'archived';
+
+// Interfaces para búsqueda de productos con Algolia
+export interface ProductSearchFilters {
+    query?: string;
+    status?: ProductStatus[];
+}
+
+export interface ProductSearchResult {
+    products: Product[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+    hasMore: boolean;
+}

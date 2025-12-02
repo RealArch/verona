@@ -1003,13 +1003,24 @@ export class ProductFormPage implements OnInit {
       if (this.isEditMode() && this.productId()) {
         await this.productsService.updateProduct(this.productId()!, formData);
         this.presentToast('Producto actualizado con éxito', 'success');
+        
+        // Detectar si hubo cambios de imagen
+        const hasImageChanges = this.imageFiles().length > 0 || this.imagesToDelete().length > 0;
+        
+        // Navegar con el ID del producto editado y si hubo cambios de imagen
+        this.router.navigate(['/products'], { 
+          state: { 
+            editedProductId: this.productId(),
+            hasImageChanges: hasImageChanges
+          } 
+        });
       } else {
         formData.totalSales = 0
         await this.productsService.addProduct({ ...formData, processing: true });
         this.presentToast('Producto creado con éxito. Se está procesando.', 'success');
         console.log(formData)
+        this.router.navigate(['/products']);
       }
-      this.router.navigate(['/products']);
     } catch (error) {
       console.error('Error saving product:', error);
       this.presentToast('Error al guardar el producto', 'danger');

@@ -44,7 +44,8 @@ import {
   callOutline, 
   locationOutline, 
   chevronDownOutline, 
-  refreshOutline } from 'ionicons/icons';
+  refreshOutline,
+  searchOutline } from 'ionicons/icons';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import { ModalViewOrderPage } from './modal-view-order/modal-view-order.page';
 
@@ -90,6 +91,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   isLoading = false;
   hasMore = true;
   searchQuery = '';
+  isSearchActive = false;
   currentPage = 0;
   pageSize = 20;
 
@@ -119,7 +121,7 @@ export class OrdersPage implements OnInit, OnDestroy {
   dateTo: string | undefined = undefined;
 
   constructor() {
-    addIcons({chevronDownOutline,refreshOutline,calendarOutline,receiptOutline,chevronForwardOutline,closeOutline,documentTextOutline,callOutline,cashOutline,locationOutline,chatbubblesOutline,personOutline,checkmarkCircle,timeOutline,bicycleOutline,carOutline,airplaneOutline});
+    addIcons({chevronDownOutline,refreshOutline,calendarOutline,receiptOutline,chevronForwardOutline,closeOutline,documentTextOutline,callOutline,cashOutline,locationOutline,chatbubblesOutline,personOutline,checkmarkCircle,timeOutline,bicycleOutline,carOutline,airplaneOutline,searchOutline});
   }
 
   async ngOnInit() {
@@ -195,6 +197,17 @@ export class OrdersPage implements OnInit, OnDestroy {
     } finally {
       this.isLoading = false;
     }
+  }
+
+  closeSearch() {
+    this.isSearchActive = false;
+    this.searchQuery = '';
+    this.updateQueryParams();
+  }
+
+  onSearchClear() {
+    this.searchQuery = '';
+    this.updateQueryParams();
   }
 
   async onSearchChange(event: any) {

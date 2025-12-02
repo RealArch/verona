@@ -1,27 +1,68 @@
-<ion-header>
+<ion-header class="ion-no-border">
   <ion-toolbar color="primary">
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>Gestor de Productos</ion-title>
+
+    <ion-row class="w--full ion-align-items-center ion-hide-md-down">
+      <ion-col size="12" size-md="8" class="flex">
+        <ion-title>Gestor de Productos</ion-title>
+      </ion-col>
+      <ion-col size="12" size-md="4" class="py-0 flex justify-end items-center gap-2">
+        <ion-searchbar animated="true" mode="ios" [(ngModel)]="searchQuery" (ionInput)="onSearchChange($event)" (ionClear)="onSearchClear()"
+          placeholder="Buscar productos..." [debounce]="500" class="searchbar"
+          style="max-width: 320px; padding: 8px 16px;">
+        </ion-searchbar>
+      </ion-col>
+    </ion-row>
+
+    <!-- Mobile View -->
+    <ion-title class="ion-hide-md-up" *ngIf="!isSearchActive">Gestor de Productos</ion-title>
+    <ion-buttons slot="end" class="ion-hide-md-up" *ngIf="!isSearchActive">
+      <ion-button (click)="isSearchActive = true">
+        <ion-icon slot="icon-only" name="search-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+
+    <div class="w-full flex items-center ion-hide-md-up" *ngIf="isSearchActive">
+      <ion-searchbar animated="true" mode="ios" [(ngModel)]="searchQuery" (ionInput)="onSearchChange($event)" (ionClear)="onSearchClear()"
+        placeholder="Buscar productos..." [debounce]="500" class="searchbar flex-1"
+        style="padding: 8px 0 8px 16px;">
+      </ion-searchbar>
+      <ion-button (click)="closeSearch()">
+        <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+      </ion-button>
+    </div>
+
   </ion-toolbar>
-  <ion-toolbar>
-    <ion-segment [(ngModel)]="filterStatus" (ionChange)="segmentChanged($event)">
-      <ion-segment-button value="all">
-        <ion-label>Todos</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="active">
-        <ion-label>Activos</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="paused">
-        <ion-label>Pausados</ion-label>
-      </ion-segment-button>
-    </ion-segment>
+  <ion-toolbar color="light" class="px-5">
+    <ion-grid fixed>
+
+      <div class="flex gap-3 flex-wrap items-center">
+        <!-- Filtro de Estado -->
+        <ion-select mode="ios" [(ngModel)]="selectedStatus" (ionChange)="onStatusChange($event)"
+          interface="popover" class="chip-select" shape="round">
+          <ion-select-option *ngFor="let option of statusOptions" [value]="option.value">
+            {{ option.label }}
+          </ion-select-option>
+          <div slot="label" class="flex items-center gap-2">
+            <span class="text-gray-600">Estado:</span>
+            <ion-icon name="chevron-down-outline" class="text-sm"></ion-icon>
+          </div>
+        </ion-select>
+
+        <!-- Botón de Reset -->
+        <ion-button fill="clear" size="small" (click)="resetFilters()" class="reset-button" *ngIf="hasActiveFilters()">
+          <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </div>
+    </ion-grid>
+
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <ion-grid fixed class="pb-20">
+  <ion-grid fixed class="pb-20 px-0 pt-0">
 
     @if (loading) {
     <div class="">
@@ -64,10 +105,10 @@
       <p>¡Añade tu primer producto!</p>
     </div>
     } @else {
-    <ion-list style="contain: inline-size;">
+    <ion-list class="ion-no-padding">
       @for (product of products; track product.id) {
       <ion-item-sliding disabled style="overflow: visible;">
-        <ion-item color="light" class="rounded mb-2 shadow-md"  lines="none" [routerLink]="['/products', product.id,'edit']">
+        <ion-item button detail="false" color="light" class="rounded mb-2 shadow-md"  lines="none" (click)="navigateToProduct(product.id!)">
           <ion-thumbnail slot="start" class="product-thumbnail">
             @if (product.processing === false) {
             @if(product.photos.length > 0) {
@@ -109,60 +150,62 @@
                   </ion-row>
                 </ion-col>
 
-                <ion-col size="12" size-md="3" class="ion-text-left ion-text-md-center">
-                  <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" [ngClass]="{
-                        'bg-green-200 text-green-800': product.status === 'active',
-                        'bg-yellow-100 text-yellow-800': product.status === 'paused'
-                      }">
-                    <div class="w-1.5 h-1.5 rounded-full mr-1.5" [ngClass]="{
-                           'bg-green-500': product.status === 'active',
-                           'bg-yellow-500': product.status === 'paused'
-                         }">
-                    </div>
-                    {{ product.status | titlecase }}
-                  </span>
-                </ion-col>
+                <ion-col size="12" size-md="6">
+                  <div class="flex items-center justify-between md:justify-end gap-4 h-full">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" [ngClass]="{
+                          'bg-green-200 text-green-800': product.status === 'active',
+                          'bg-yellow-100 text-yellow-800': product.status === 'paused'
+                        }">
+                      <div class="w-1.5 h-1.5 rounded-full mr-1.5" [ngClass]="{
+                             'bg-green-500': product.status === 'active',
+                             'bg-yellow-500': product.status === 'paused'
+                           }">
+                      </div>
+                      {{ product.status | titlecase }}
+                    </span>
 
-                <ion-col size="12" size-md="3" class="ion-hide-md-down">
-                  <ion-buttons class="justify-end">
-                    <ion-button (click)="deleteProduct(product.id!);stopPropagation($event)">
-                      <ion-icon slot="icon-only" color="danger" size="small" name="trash"></ion-icon>
+                    <ion-button fill="clear" color="medium" [id]="'menu-trigger-'+product.id" (click)="stopPropagation($event)">
+                      <ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon>
                     </ion-button>
-                    <ion-button [id]="'menu-trigger'+product.id" (click)="stopPropagation($event)">
-                      <ion-icon slot="icon-only" size="small" name="ellipsis-vertical"></ion-icon>
-                    </ion-button>
-                    <ion-popover [trigger]="'menu-trigger'+product.id" triggerAction="click" showBackdrop="false">
+                    <ion-popover [trigger]="'menu-trigger-'+product.id" triggerAction="click" [dismissOnSelect]="true">
                       <ng-template>
-                        <ion-content>
-                          <ion-item button lines="none" (click)="changeStatus(product.id!)">
-                            @if(product.status === 'active') {
-                            <ion-label>Pausar</ion-label>
-                            } @else {
-                            <ion-label>Activar</ion-label>
-                            }
-                          </ion-item>
+                        <ion-content class="ion-no-padding">
+                          <ion-list lines="none">
+                            <ion-item button (click)="navigateToProduct(product.id!)">
+                              <ion-icon slot="start" name="create-outline" size="small"></ion-icon>
+                              <ion-label>Editar</ion-label>
+                            </ion-item>
+                            <ion-item button (click)="changeStatus(product.id!)">
+                              <ion-icon slot="start" [name]="product.status === 'active' ? 'pause-outline' : 'play-outline'" size="small"></ion-icon>
+                              <ion-label>{{ product.status === 'active' ? 'Pausar' : 'Activar' }}</ion-label>
+                            </ion-item>
+                            <ion-item button (click)="deleteProduct(product.id!)" lines="none">
+                              <ion-icon slot="start" name="trash-outline" color="danger" size="small"></ion-icon>
+                              <ion-label color="danger">Eliminar</ion-label>
+                            </ion-item>
+                          </ion-list>
                         </ion-content>
                       </ng-template>
                     </ion-popover>
-                  </ion-buttons>
+                  </div>
                 </ion-col>
 
               </ion-row>
             </ion-grid>
           </ion-label>
-
         </ion-item>
-        <ion-item-options side="end">
-          <ion-item-option (click)="deleteProduct(product.id!)" color="danger" expandable>
-            <ion-icon slot="icon-only" name="trash"></ion-icon>
-          </ion-item-option>
-        </ion-item-options>
       </ion-item-sliding>
       }
     </ion-list>
     }
     }
+
   </ion-grid>
+
+  <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreProducts($event)">
+    <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más productos...">
+    </ion-infinite-scroll-content>
+  </ion-infinite-scroll>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button [routerLink]="['/products/add']">

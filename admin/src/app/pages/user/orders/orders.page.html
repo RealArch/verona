@@ -4,20 +4,35 @@
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
 
-    <ion-row class="w--full">
-      <ion-col size="8" class="flex ">
+    <ion-row class="w--full ion-align-items-center ion-hide-md-down">
+      <ion-col size="12" size-md="8" class="flex">
         <ion-title>Ventas</ion-title>
       </ion-col>
-      <ion-col size="4" class="py-0 flex justify-end items-center gap-2">
-        <ion-searchbar animated="true" mode="ios" [(ngModel)]="searchQuery" (ionInput)="onSearchChange($event)"
+      <ion-col size="12" size-md="4" class="py-0 flex justify-end items-center gap-2">
+        <ion-searchbar animated="true" mode="ios" [(ngModel)]="searchQuery" (ionInput)="onSearchChange($event)" (ionClear)="onSearchClear()"
           placeholder="Por nombre o email" [debounce]="500" class="searchbar"
           style="max-width: 320px; padding: 8px 16px;">
         </ion-searchbar>
-        <!-- <ion-button fill="clear" size="small" (click)="refreshSearch()" class="refresh-search-btn">
-          <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
-        </ion-button> -->
       </ion-col>
     </ion-row>
+
+    <!-- Mobile View -->
+    <ion-title class="ion-hide-md-up" *ngIf="!isSearchActive">Ventas</ion-title>
+    <ion-buttons slot="end" class="ion-hide-md-up" *ngIf="!isSearchActive">
+      <ion-button (click)="isSearchActive = true">
+        <ion-icon slot="icon-only" name="search-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+
+    <div class="w-full flex items-center ion-hide-md-up" *ngIf="isSearchActive">
+      <ion-searchbar animated="true" mode="ios" [(ngModel)]="searchQuery" (ionInput)="onSearchChange($event)" (ionClear)="onSearchClear()"
+        placeholder="Por nombre o email" [debounce]="500" class="searchbar flex-1"
+        style="padding: 8px 0 8px 16px;">
+      </ion-searchbar>
+      <ion-button (click)="closeSearch()">
+        <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+      </ion-button>
+    </div>
 
   </ion-toolbar>
   <ion-toolbar color="light" class="px-5">

@@ -16,10 +16,7 @@ export function prepareProductDataForAlgolia(productData: any, productId: string
         id: productData.id || productId,
         name: productData.name,
         slug: productData.slug,
-        
-        // Descripciones
-        // description: productData.description,
-        // plain_description: productData.plain_description,
+
         
         // Precios y stock
         price: productData.price,
@@ -38,31 +35,19 @@ export function prepareProductDataForAlgolia(productData: any, productId: string
         photos: productData.photos?.map((photo: any) => ({
             thumbnail: photo.thumbnail ? {
                 url: photo.thumbnail.url,
-                // name: photo.thumbnail.name,
-                // path: photo.thumbnail.path,
-                // type: photo.thumbnail.type,
-                // processing: photo.thumbnail.processing
+                
             } : undefined,
             small: photo.small ? {
                 url: photo.small.url,
-                // name: photo.small.name,
-                // path: photo.small.path,
-                // type: photo.small.type,
-                // processing: photo.small.processing
+                
             } : undefined,
             medium: photo.medium ? {
                 url: photo.medium.url,
-                // name: photo.medium.name,
-                // path: photo.medium.path,
-                // type: photo.medium.type,
-                // processing: photo.medium.processing
+                
             } : undefined,
             large: photo.large ? {
                 url: photo.large.url,
-                // name: photo.large.name,
-                // path: photo.large.path,
-                // type: photo.large.type,
-                // processing: photo.large.processing
+               
             } : undefined,
             processing: photo.processing
         })) || [],
